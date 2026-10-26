@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createConfig } from '../../src/core/config';
-import { RestScheduler, type Clock, type Ticker } from '../../src/core/scheduler';
-import type { EngineEvent, Snapshot } from '../../src/core/state';
+import {
+  RestScheduler,
+  type Clock,
+  type Snapshot,
+  type Ticker,
+} from '../../src/core/scheduler';
+import type { EngineEvent } from '../../src/core/state';
 
 const MIN = 60_000;
 const SEC = 1_000;
@@ -97,11 +102,13 @@ describe('RestScheduler', () => {
     const { scheduler, snapshots, time } = setup();
     scheduler.start();
     time.advance(20 * MIN - 15 * SEC);
+    // The warning-started emission already reported 15 seconds.
+    expect(snapshots.at(-1)?.secondsRemaining).toBe(15);
     snapshots.length = 0;
 
     time.advance(5 * SEC);
     const seconds = snapshots.map((s) => s.secondsRemaining);
-    expect(seconds).toEqual([15, 14, 13, 12, 11]);
+    expect(seconds).toEqual([14, 13, 12, 11, 10]);
   });
 
   it('emits no updates while simply working', () => {
