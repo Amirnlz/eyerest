@@ -18,15 +18,9 @@ Cross-platform desktop app (Linux, Windows, macOS) that reminds the user to rest
 3. Apply design system
 4. Extra features
 
-## Phase 1 progress
+## Progress
 
-| Step | Scope | Status |
-| ---- | ----- | ------ |
-| 1 | Project scaffold, core engine (pure state machine), scheduler service, logic tests | this archive |
-| 2 | Overlay UI (warning + rest views, Skip/Postpone) with UI tests | next |
-| 3 | Electron shell: top-right always-on-top overlay window, screen dim, tray | planned |
-| 4 | Media pause adapters per OS (MPRIS / media keys / system APIs) | planned |
-| 5 | Packaging for Linux, Windows, macOS | planned |
+See `docs/ROADMAP.md` for the full plan and the per-step status board.
 
 ## Architecture
 
@@ -37,7 +31,10 @@ src/core/
   engine.ts     transition(state, action, config): pure, no I/O, no clock
   scheduler.ts  RestScheduler: drives the engine via injected Clock + Ticker
   index.ts      public API
-tests/core/     unit tests for each module
+src/renderer/   view model, copy, unstyled overlay components (no Electron, no IPC)
+tests/core/     logic tests for the engine and scheduler
+tests/renderer/ logic tests (node) and UI tests (jsdom, Testing Library)
+harness/        dev-only page to click through overlay states
 ```
 
 Design rules:
@@ -59,6 +56,9 @@ npm install
 npm run typecheck
 npm test
 npm run check     # typecheck + tests
+npm run dev:renderer   # dev harness for overlay states
 ```
+
+UI test files (`*.test.tsx`) start with `// @vitest-environment jsdom`. Logic tests run in node.
 
 Requires Node 20+.
