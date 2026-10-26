@@ -4,7 +4,12 @@
   "private": true,
   "description": "Cross-platform desktop reminder: 20-20-20 eye rests with overlay, skip and postpone.",
   "type": "module",
+  "main": "./out/main/index.js",
   "scripts": {
+    "dev": "electron-vite dev",
+    "dev:fast": "EYEREST_FAST=1 electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -22,8 +27,11 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "electron": "^45.0.0",
+    "electron-vite": "^6.0.0",
     "jsdom": "^26.0.0",
     "typescript": "^5.6.0",
+    "vite": "^7.0.0",
     "vitest": "^5.0.5"
   }
 }

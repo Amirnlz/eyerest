@@ -31,10 +31,19 @@ src/core/
   engine.ts     transition(state, action, config): pure, no I/O, no clock
   scheduler.ts  RestScheduler: drives the engine via injected Clock + Ticker
   index.ts      public API
-src/renderer/   view model, copy, unstyled overlay components (no Electron, no IPC)
-tests/core/     logic tests for the engine and scheduler
-tests/renderer/ logic tests (node) and UI tests (jsdom, Testing Library)
+src/shared/     IPC contract (channel names, kinds, EyerestApi type)
+src/main/       Electron main process: runtime composition, controller, IPC handlers
+src/preload/    contextBridge bridge (createBridge is Electron-free and tested)
+src/renderer/   view model, copy, overlay components, App, useSchedulerSnapshot
+tests/          core, main, preload, shared, renderer tests; tests/helpers has fakes
 harness/        dev-only page to click through overlay states
+```
+
+Data flow:
+
+```
+RestScheduler -> SchedulerController -> broadcast sender --(eyerest:snapshot)--> renderer
+renderer --(eyerest:skip / postpone / get-snapshot)--> ipc handlers -> controller -> scheduler
 ```
 
 Design rules:
@@ -57,8 +66,14 @@ npm run typecheck
 npm test
 npm run check     # typecheck + tests
 npm run dev:renderer   # dev harness for overlay states
+npm run dev            # Electron app (real durations)
+npm run dev:fast       # Electron app, EYEREST_FAST=1 (macOS/Linux shell)
+npm run build          # production build into out/
 ```
+
+Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
+On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
 
 UI test files (`*.test.tsx`) start with `// @vitest-environment jsdom`. Logic tests run in node.
 
-Requires Node 20+.
+Requires Node 22.12+ (Vitest 5 and Electron 45 both need it).
