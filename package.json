@@ -1,0 +1,17 @@
+{
+  "name": "eyerest",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-platform desktop reminder: 20-20-20 eye rests with overlay, skip and postpone.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run test"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
