@@ -1,9 +1,9 @@
-import type { Rect } from "../../src/main/overlay/bounds";
+import type { Rect } from '../../src/main/overlay/bounds';
 import type {
   DisplayPort,
   OverlayWindowFactory,
   OverlayWindowPort,
-} from "../../src/main/overlay/ports";
+} from '../../src/main/overlay/ports';
 
 export class FakeOverlayWindow implements OverlayWindowPort {
   /** Every call in order, e.g. `['setBounds', 'showInactive', 'hide']`. */
@@ -17,15 +17,15 @@ export class FakeOverlayWindow implements OverlayWindowPort {
   constructor(readonly createdWith: Rect) {}
 
   setBounds(bounds: Rect): void {
-    this.calls.push("setBounds");
+    this.calls.push('setBounds');
     this.boundsHistory.push(bounds);
   }
   showInactive(): void {
-    this.calls.push("showInactive");
+    this.calls.push('showInactive');
     this.visible = true;
   }
   hide(): void {
-    this.calls.push("hide");
+    this.calls.push('hide');
     this.visible = false;
   }
   setInteractive(interactive: boolean): void {
@@ -36,7 +36,7 @@ export class FakeOverlayWindow implements OverlayWindowPort {
     return this.destroyed;
   }
   destroy(): void {
-    this.calls.push("destroy");
+    this.calls.push('destroy');
     this.destroyed = true;
     this.visible = false;
   }
@@ -57,7 +57,7 @@ export class FakeWindowFactory implements OverlayWindowFactory {
 
   get last(): FakeOverlayWindow {
     const window = this.windows.at(-1);
-    if (!window) throw new Error("No window created yet");
+    if (!window) throw new Error('No window created yet');
     return window;
   }
 }

@@ -45,7 +45,11 @@ describe('computeOverlayBounds', () => {
   });
 
   it('handles a work area at a non-zero origin', () => {
-    const bounds = computeOverlayBounds({ x: 1920, y: -200, width: 2560, height: 1440 }, size, margin);
+    const bounds = computeOverlayBounds(
+      { x: 1920, y: -200, width: 2560, height: 1440 },
+      size,
+      margin,
+    );
     expect(bounds.x).toBe(1920 + 2560 - 16 - 360);
     expect(bounds.y).toBe(-200 + 16);
   });

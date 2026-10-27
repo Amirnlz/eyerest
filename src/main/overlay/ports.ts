@@ -1,4 +1,4 @@
-import type { Rect } from "./bounds";
+import type { Rect } from './bounds';
 
 /** The part of an Electron `BrowserWindow` the overlay manager uses. */
 export interface OverlayWindowPort {

@@ -1,22 +1,22 @@
-import type { Snapshot } from "../../core/scheduler";
-import type { Phase } from "../../core/state";
+import type { Snapshot } from '../../core/scheduler';
+import type { Phase } from '../../core/state';
 import {
   OVERLAY_MARGIN,
   OVERLAY_SIZE,
   type OverlayLayout,
-} from "../../shared/overlay-layout";
-import type { SnapshotSender } from "../scheduler-controller";
+} from '../../shared/overlay-layout';
+import type { SnapshotSender } from '../scheduler-controller';
 import {
   computeOverlayBounds,
   computeSurfaceBounds,
   type Rect,
   type Size,
-} from "./bounds";
+} from './bounds';
 import type {
   DisplayPort,
   OverlayWindowFactory,
   OverlayWindowPort,
-} from "./ports";
+} from './ports';
 
 export interface OverlayWindowManagerOptions {
   /** `positioned` (default): small top-right window. `surface`: whole work area. */
@@ -29,12 +29,12 @@ export interface OverlayWindowManagerOptions {
 
 /** Phases in which the overlay is on screen. */
 export function isOverlayPhase(phase: Phase): boolean {
-  return phase === "warning" || phase === "resting";
+  return phase === 'warning' || phase === 'resting';
 }
 
 /** Only the rest has buttons; the warning lets clicks through. */
 export function isInteractivePhase(phase: Phase): boolean {
-  return phase === "resting";
+  return phase === 'resting';
 }
 
 /**
@@ -69,7 +69,7 @@ export class OverlayWindowManager implements SnapshotSender {
     private readonly displays: DisplayPort,
     options: OverlayWindowManagerOptions = {},
   ) {
-    this.layout = options.layout ?? "positioned";
+    this.layout = options.layout ?? 'positioned';
     this.size = options.size ?? OVERLAY_SIZE;
     this.margin = options.margin ?? OVERLAY_MARGIN;
     this.log = options.log ?? (() => {});
@@ -128,7 +128,7 @@ export class OverlayWindowManager implements SnapshotSender {
 
   private hide(): void {
     if (!this.shown) return;
-    this.log("hide");
+    this.log('hide');
     this.shown = false;
 
     const window = this.window;
@@ -160,7 +160,7 @@ export class OverlayWindowManager implements SnapshotSender {
 
   private currentBounds(): Rect {
     const workArea = this.displays.getPrimaryWorkArea();
-    return this.layout === "surface"
+    return this.layout === 'surface'
       ? computeSurfaceBounds(workArea)
       : computeOverlayBounds(workArea, this.size, this.margin);
   }

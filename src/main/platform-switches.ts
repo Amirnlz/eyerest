@@ -30,21 +30,22 @@ export function resolveStartupConfig(
   platform: NodeJS.Platform,
   env: Readonly<Record<string, string | undefined>>,
 ): StartupConfig {
-  if (platform !== "linux")
+  if (platform !== 'linux') {
     return { switches: [], disableHardwareAcceleration: false };
+  }
 
   return {
     switches: resolveOzoneSwitches(env),
-    disableHardwareAcceleration: env["EYEREST_GPU"] !== "1",
+    disableHardwareAcceleration: env['EYEREST_GPU'] !== '1',
   };
 }
 
 function resolveOzoneSwitches(
   env: Readonly<Record<string, string | undefined>>,
 ): CommandLineSwitch[] {
-  const requested = (env["EYEREST_OZONE"] ?? "").trim().toLowerCase();
-  if (requested === "x11" || requested === "wayland") {
-    return [{ name: "ozone-platform", value: requested }];
+  const requested = (env['EYEREST_OZONE'] ?? '').trim().toLowerCase();
+  if (requested === 'x11' || requested === 'wayland') {
+    return [{ name: 'ozone-platform', value: requested }];
   }
   return [];
 }

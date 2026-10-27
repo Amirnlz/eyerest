@@ -1,16 +1,16 @@
-import { RestScheduler, type SchedulerOptions } from "../core/scheduler";
-import type { IpcMainLike } from "../shared/ipc";
-import { registerIpcHandlers } from "./ipc-handlers";
-import { resolveConfig } from "./runtime-config";
+import { RestScheduler, type SchedulerOptions } from '../core/scheduler';
+import type { IpcMainLike } from '../shared/ipc';
+import { registerIpcHandlers } from './ipc-handlers';
+import { resolveConfig } from './runtime-config';
 import {
   SchedulerController,
   type SnapshotSender,
-} from "./scheduler-controller";
+} from './scheduler-controller';
 import {
   createBroadcastSender,
   createCompositeSender,
   type WebContentsLike,
-} from "./snapshot-sender";
+} from './snapshot-sender';
 
 export interface MainRuntimeDeps {
   readonly env: Readonly<Record<string, string | undefined>>;

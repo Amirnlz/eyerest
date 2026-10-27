@@ -1,4 +1,4 @@
-import { OVERLAY_MARGIN, OVERLAY_SIZE } from "../../shared/overlay-layout";
+import { OVERLAY_MARGIN, OVERLAY_SIZE } from '../../shared/overlay-layout';
 
 export interface Rect {
   readonly x: number;

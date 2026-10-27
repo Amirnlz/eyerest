@@ -1,7 +1,7 @@
 import {
   isOverlayLayout,
   type OverlayLayout,
-} from "../../shared/overlay-layout";
+} from '../../shared/overlay-layout';
 
 /**
  * Chooses how the overlay window is laid out.
@@ -17,17 +17,18 @@ export function resolvePlacement(
   env: Readonly<Record<string, string | undefined>>,
   ozoneSwitch: string,
 ): OverlayLayout {
-  const forced = (env["EYEREST_PLACEMENT"] ?? "").trim().toLowerCase();
+  const forced = (env['EYEREST_PLACEMENT'] ?? '').trim().toLowerCase();
   if (isOverlayLayout(forced)) return forced;
 
-  if (platform !== "linux") return "positioned";
+  if (platform !== 'linux') return 'positioned';
 
   const ozone = ozoneSwitch.trim().toLowerCase();
-  if (ozone === "wayland") return "surface";
-  if (ozone === "x11") return "positioned";
+  if (ozone === 'wayland') return 'surface';
+  if (ozone === 'x11') return 'positioned';
 
-  const sessionType = (env["XDG_SESSION_TYPE"] ?? "").trim().toLowerCase();
-  if (sessionType === "wayland" || Boolean(env["WAYLAND_DISPLAY"]))
-    return "surface";
-  return "positioned";
+  const sessionType = (env['XDG_SESSION_TYPE'] ?? '').trim().toLowerCase();
+  if (sessionType === 'wayland' || Boolean(env['WAYLAND_DISPLAY'])) {
+    return 'surface';
+  }
+  return 'positioned';
 }

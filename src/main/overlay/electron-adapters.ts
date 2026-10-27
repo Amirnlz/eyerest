@@ -1,6 +1,6 @@
-import { BrowserWindow, type Screen } from "electron";
-import type { OverlayLayout } from "../../shared/overlay-layout";
-import type { DisplayPort, OverlayWindowFactory } from "./ports";
+import { BrowserWindow, type Screen } from 'electron';
+import type { OverlayLayout } from '../../shared/overlay-layout';
+import type { DisplayPort, OverlayWindowFactory } from './ports';
 
 /**
  * Thin Electron bindings for the overlay ports. All decisions live in
@@ -9,8 +9,8 @@ import type { DisplayPort, OverlayWindowFactory } from "./ports";
  */
 
 export type RendererTarget =
-  | { readonly kind: "url"; readonly url: string }
-  | { readonly kind: "file"; readonly path: string };
+  | { readonly kind: 'url'; readonly url: string }
+  | { readonly kind: 'file'; readonly path: string };
 
 export interface ElectronWindowFactoryOptions {
   readonly preloadPath: string;
@@ -21,7 +21,7 @@ export interface ElectronWindowFactoryOptions {
 export function createElectronWindowFactory(
   options: ElectronWindowFactoryOptions,
 ): OverlayWindowFactory {
-  const transparent = options.layout === "surface";
+  const transparent = options.layout === 'surface';
 
   return {
     create(bounds) {
@@ -36,7 +36,7 @@ export function createElectronWindowFactory(
         // The small positioned window stays opaque in Phase 1: the unstyled UI
         // is unreadable over a transparent background.
         transparent,
-        backgroundColor: transparent ? "#00000000" : "#ffffff",
+        backgroundColor: transparent ? '#00000000' : '#ffffff',
         resizable: false,
         movable: false,
         minimizable: false,
@@ -57,15 +57,15 @@ export function createElectronWindowFactory(
 
       // Highest level: stays above fullscreen apps on macOS and Windows.
       // Linux ignores the level; X11 honours it, native Wayland has no always-on-top.
-      window.setAlwaysOnTop(true, "screen-saver");
+      window.setAlwaysOnTop(true, 'screen-saver');
 
-      if (process.platform === "darwin") {
+      if (process.platform === 'darwin') {
         window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
       }
 
       // Failures here would otherwise leave a blank or missing window with no explanation.
       window.webContents.on(
-        "did-fail-load",
+        'did-fail-load',
         (_event, code, description, url) => {
           console.error(
             `[overlay] did-fail-load ${code} ${description} ${url}`,
@@ -74,7 +74,7 @@ export function createElectronWindowFactory(
       );
       // A crashed renderer must never leave an invisible window capturing clicks:
       // destroy it, and the manager creates a fresh one on the next snapshot.
-      window.webContents.on("render-process-gone", (_event, details) => {
+      window.webContents.on('render-process-gone', (_event, details) => {
         console.error(
           `[overlay] render-process-gone ${details.reason}; destroying window`,
         );
@@ -102,9 +102,9 @@ function loadRenderer(
   target: RendererTarget,
   layout: OverlayLayout,
 ): void {
-  if (target.kind === "url") {
+  if (target.kind === 'url') {
     const url = new URL(target.url);
-    url.searchParams.set("layout", layout);
+    url.searchParams.set('layout', layout);
     void window.loadURL(url.toString());
   } else {
     void window.loadFile(target.path, { query: { layout } });
@@ -116,13 +116,13 @@ export function createElectronDisplayPort(screen: Screen): DisplayPort {
     getPrimaryWorkArea: () => screen.getPrimaryDisplay().workArea,
 
     onChange(listener) {
-      screen.on("display-added", listener);
-      screen.on("display-removed", listener);
-      screen.on("display-metrics-changed", listener);
+      screen.on('display-added', listener);
+      screen.on('display-removed', listener);
+      screen.on('display-metrics-changed', listener);
       return () => {
-        screen.removeListener("display-added", listener);
-        screen.removeListener("display-removed", listener);
-        screen.removeListener("display-metrics-changed", listener);
+        screen.removeListener('display-added', listener);
+        screen.removeListener('display-removed', listener);
+        screen.removeListener('display-metrics-changed', listener);
       };
     },
   };

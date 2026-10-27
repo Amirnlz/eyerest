@@ -1,4 +1,4 @@
-import { _electron as electron, expect, test } from "@playwright/test";
+import { _electron as electron, expect, test } from '@playwright/test';
 
 /**
  * Smoke tests: launch the built app in fast mode and watch the real overlay
@@ -8,14 +8,14 @@ import { _electron as electron, expect, test } from "@playwright/test";
  * The layout is forced per test, so both code paths are covered on any machine.
  */
 
-type Layout = "positioned" | "surface";
+type Layout = 'positioned' | 'surface';
 
 async function launch(layout: Layout) {
   const app = await electron.launch({
-    args: [".", ...(process.env["CI"] ? ["--no-sandbox"] : [])],
+    args: ['.', ...(process.env['CI'] ? ['--no-sandbox'] : [])],
     env: {
       ...process.env,
-      EYEREST_FAST: "1",
+      EYEREST_FAST: '1',
       EYEREST_PLACEMENT: layout,
     } as Record<string, string>,
   });
@@ -38,15 +38,15 @@ async function launch(layout: Layout) {
 const MARGIN = 16;
 const TOLERANCE = 2;
 
-test("positioned: overlay appears top-right during the rest, then disappears", async () => {
+test('positioned: overlay appears top-right during the rest, then disappears', async () => {
   // Native Wayland cannot position windows, so the geometry check does not apply there.
   test.skip(
-    process.platform === "linux" &&
-      process.env["XDG_SESSION_TYPE"] === "wayland",
-    "native Wayland cannot position windows; the surface layout covers it",
+    process.platform === 'linux' &&
+      process.env['XDG_SESSION_TYPE'] === 'wayland',
+    'native Wayland cannot position windows; the surface layout covers it',
   );
 
-  const { app, overlayState } = await launch("positioned");
+  const { app, overlayState } = await launch('positioned');
   try {
     await expect
       .poll(async () => (await overlayState())?.visible, { timeout: 30_000 })
@@ -74,8 +74,8 @@ test("positioned: overlay appears top-right during the rest, then disappears", a
   }
 });
 
-test("surface: window covers the work area and the panel is drawn top-right, then disappears", async () => {
-  const { app, overlayState } = await launch("surface");
+test('surface: window covers the work area and the panel is drawn top-right, then disappears', async () => {
+  const { app, overlayState } = await launch('surface');
   try {
     await expect
       .poll(async () => (await overlayState())?.visible, { timeout: 30_000 })
@@ -98,7 +98,7 @@ test("surface: window covers the work area and the panel is drawn top-right, the
     expect(page).toBeDefined();
     if (!page) return;
 
-    const panel = page.getByRole("region");
+    const panel = page.getByRole('region');
     await expect(panel).toBeVisible({ timeout: 10_000 });
     const box = await panel.boundingBox();
     expect(box).not.toBeNull();

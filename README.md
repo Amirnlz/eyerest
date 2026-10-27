@@ -24,7 +24,7 @@ See `docs/ROADMAP.md` for the full plan and the per-step status board.
 
 ## Architecture
 
-```
+```text
 src/core/
   config.ts     RestConfig, defaults, validation
   state.ts      EngineState / EngineAction / EngineEvent types, remainingMs()
@@ -43,7 +43,7 @@ e2e/            Playwright smoke tests that launch the real built app
 
 Data flow:
 
-```
+```text
 RestScheduler -> SchedulerController -> broadcast sender --(eyerest:snapshot)--> renderer
 renderer --(eyerest:skip / postpone / get-snapshot)--> ipc handlers -> controller -> scheduler
 ```
