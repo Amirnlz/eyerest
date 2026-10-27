@@ -242,6 +242,121 @@ describe('OverlayWindowManager', () => {
     });
   });
 
+  describe('interactivity', () => {
+    it('is click-through during the warning', () => {
+      const { factory, manager } = setup();
+      manager.send(warning(15));
+
+      expect(factory.last.interactive).toBe(false);
+      expect(factory.last.calls).not.toContain('setInteractive(true)');
+    });
+
+    it('becomes interactive for the rest, before it is shown', () => {
+      const { factory, manager } = setup();
+      manager.send(resting(20));
+
+      expect(factory.last.interactive).toBe(true);
+      expect(factory.last.calls).toEqual(['setInteractive(true)', 'setBounds', 'showInactive']);
+    });
+
+    it('switches from click-through to interactive when the warning turns into the rest', () => {
+      const { factory, manager } = setup();
+      manager.send(warning(1));
+      manager.send(resting(20));
+
+      expect(factory.last.interactive).toBe(true);
+      expect(factory.last.count('showInactive')).toBe(1);
+      expect(factory.last.count('setInteractive(true)')).toBe(1);
+    });
+
+    it('does not call setInteractive again while the mode is unchanged', () => {
+      const { factory, manager } = setup();
+      manager.send(resting(20));
+      manager.send(resting(19));
+      manager.send(resting(18));
+
+      expect(factory.last.count('setInteractive(true)')).toBe(1);
+    });
+
+    it('returns to click-through when the rest ends', () => {
+      const { factory, manager } = setup();
+      manager.send(resting(1));
+      manager.send(WORKING);
+
+      expect(factory.last.interactive).toBe(false);
+      expect(factory.last.visible).toBe(false);
+    });
+
+    it('is click-through again on the next warning after a skipped rest', () => {
+      const { factory, manager } = setup();
+      manager.send(resting(10));
+      manager.send(WORKING);
+      manager.send(warning(15));
+
+      expect(factory.last.interactive).toBe(false);
+    });
+
+    it('a recreated window is made interactive again if the rest is still running', () => {
+      const { factory, manager } = setup();
+      manager.send(resting(20));
+      factory.windows[0]!.destroyed = true;
+
+      manager.send(resting(19));
+
+      expect(factory.last.interactive).toBe(true);
+    });
+  });
+
+  describe('surface layout', () => {
+    function surface(workArea = HD) {
+      const factory = new FakeWindowFactory();
+      const displays = new FakeDisplays(workArea);
+      const manager = new OverlayWindowManager(factory, displays, { layout: 'surface' });
+      return { factory, displays, manager };
+    }
+
+    it('covers the whole work area instead of the top-right corner', () => {
+      const { factory, manager } = surface();
+      manager.send(warning(15));
+
+      expect(factory.last.createdWith).toEqual(HD);
+      expect(factory.last.boundsHistory[0]).toEqual(HD);
+    });
+
+    it('keeps the work-area offset of bars and docks', () => {
+      const area = { x: 0, y: 32, width: 1920, height: 1048 };
+      const { factory, manager } = surface(area);
+      manager.send(resting(20));
+
+      expect(factory.last.boundsHistory[0]).toEqual(area);
+    });
+
+    it('follows display changes', () => {
+      const { factory, displays, manager } = surface();
+      manager.send(resting(20));
+
+      displays.change({ x: 0, y: 0, width: 2560, height: 1440 });
+
+      expect(factory.last.boundsHistory.at(-1)).toEqual({
+        x: 0,
+        y: 0,
+        width: 2560,
+        height: 1440,
+      });
+    });
+
+    it('logs which layout it uses', () => {
+      const messages: string[] = [];
+      const manager = new OverlayWindowManager(new FakeWindowFactory(), new FakeDisplays(HD), {
+        layout: 'surface',
+        log: (message) => messages.push(message),
+      });
+      manager.start();
+
+      expect(messages[0]).toContain('(surface)');
+    });
+  });
+
   describe('diagnostics', () => {
     it('logs window creation, show and hide with the bounds used', () => {
       const messages: string[] = [];
@@ -253,7 +368,7 @@ describe('OverlayWindowManager', () => {
       manager.send(WORKING);
 
       expect(messages).toEqual([
-        `window created ${JSON.stringify(HD_BOUNDS)}`,
+        `window created (positioned) ${JSON.stringify(HD_BOUNDS)}`,
         `show ${JSON.stringify(HD_BOUNDS)}`,
         'hide',
       ]);

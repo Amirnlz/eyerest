@@ -1,9 +1,9 @@
-import type { Rect } from '../../src/main/overlay/bounds';
+import type { Rect } from "../../src/main/overlay/bounds";
 import type {
   DisplayPort,
   OverlayWindowFactory,
   OverlayWindowPort,
-} from '../../src/main/overlay/ports';
+} from "../../src/main/overlay/ports";
 
 export class FakeOverlayWindow implements OverlayWindowPort {
   /** Every call in order, e.g. `['setBounds', 'showInactive', 'hide']`. */
@@ -11,26 +11,32 @@ export class FakeOverlayWindow implements OverlayWindowPort {
   readonly boundsHistory: Rect[] = [];
   destroyed = false;
   visible = false;
+  /** Mirrors the real window: new windows are click-through. */
+  interactive = false;
 
   constructor(readonly createdWith: Rect) {}
 
   setBounds(bounds: Rect): void {
-    this.calls.push('setBounds');
+    this.calls.push("setBounds");
     this.boundsHistory.push(bounds);
   }
   showInactive(): void {
-    this.calls.push('showInactive');
+    this.calls.push("showInactive");
     this.visible = true;
   }
   hide(): void {
-    this.calls.push('hide');
+    this.calls.push("hide");
     this.visible = false;
+  }
+  setInteractive(interactive: boolean): void {
+    this.calls.push(`setInteractive(${interactive})`);
+    this.interactive = interactive;
   }
   isDestroyed(): boolean {
     return this.destroyed;
   }
   destroy(): void {
-    this.calls.push('destroy');
+    this.calls.push("destroy");
     this.destroyed = true;
     this.visible = false;
   }
@@ -51,7 +57,7 @@ export class FakeWindowFactory implements OverlayWindowFactory {
 
   get last(): FakeOverlayWindow {
     const window = this.windows.at(-1);
-    if (!window) throw new Error('No window created yet');
+    if (!window) throw new Error("No window created yet");
     return window;
   }
 }
@@ -59,7 +65,9 @@ export class FakeWindowFactory implements OverlayWindowFactory {
 export class FakeDisplays implements DisplayPort {
   private readonly listeners = new Set<() => void>();
 
-  constructor(public workArea: Rect = { x: 0, y: 0, width: 1920, height: 1080 }) {}
+  constructor(
+    public workArea: Rect = { x: 0, y: 0, width: 1920, height: 1080 },
+  ) {}
 
   getPrimaryWorkArea(): Rect {
     return this.workArea;

@@ -1,9 +1,10 @@
 import { BrowserWindow, type Screen } from "electron";
+import type { OverlayLayout } from "../../shared/overlay-layout";
 import type { DisplayPort, OverlayWindowFactory } from "./ports";
 
 /**
  * Thin Electron bindings for the overlay ports. All decisions live in
- * `OverlayWindowManager` and `computeOverlayBounds`; this file only talks to
+ * `OverlayWindowManager` and the bounds functions; this file only talks to
  * Electron, so it is covered by the Playwright smoke test instead of unit tests.
  */
 
@@ -14,11 +15,14 @@ export type RendererTarget =
 export interface ElectronWindowFactoryOptions {
   readonly preloadPath: string;
   readonly target: RendererTarget;
+  readonly layout: OverlayLayout;
 }
 
 export function createElectronWindowFactory(
   options: ElectronWindowFactoryOptions,
 ): OverlayWindowFactory {
+  const transparent = options.layout === "surface";
+
   return {
     create(bounds) {
       const window = new BrowserWindow({
@@ -28,10 +32,11 @@ export function createElectronWindowFactory(
         height: bounds.height,
         show: false,
         frame: false,
-        // Opaque on purpose in Phase 1: the unstyled UI is unreadable over a
-        // transparent background. Phase 3 revisits transparency with the design.
-        transparent: false,
-        backgroundColor: "#ffffff",
+        // The surface layout covers the whole work area and must be see-through.
+        // The small positioned window stays opaque in Phase 1: the unstyled UI
+        // is unreadable over a transparent background.
+        transparent,
+        backgroundColor: transparent ? "#00000000" : "#ffffff",
         resizable: false,
         movable: false,
         minimizable: false,
@@ -47,8 +52,11 @@ export function createElectronWindowFactory(
         },
       });
 
+      // A new window lets clicks through; the manager makes it interactive for the rest.
+      window.setIgnoreMouseEvents(true);
+
       // Highest level: stays above fullscreen apps on macOS and Windows.
-      // Linux ignores the level; behaviour there depends on the window manager.
+      // Linux ignores the level; X11 honours it, native Wayland has no always-on-top.
       window.setAlwaysOnTop(true, "screen-saver");
 
       if (process.platform === "darwin") {
@@ -64,19 +72,43 @@ export function createElectronWindowFactory(
           );
         },
       );
+      // A crashed renderer must never leave an invisible window capturing clicks:
+      // destroy it, and the manager creates a fresh one on the next snapshot.
       window.webContents.on("render-process-gone", (_event, details) => {
-        console.error(`[overlay] render-process-gone ${details.reason}`);
+        console.error(
+          `[overlay] render-process-gone ${details.reason}; destroying window`,
+        );
+        if (!window.isDestroyed()) window.destroy();
       });
 
-      if (options.target.kind === "url") {
-        void window.loadURL(options.target.url);
-      } else {
-        void window.loadFile(options.target.path);
-      }
+      loadRenderer(window, options.target, options.layout);
 
-      return window;
+      return {
+        setBounds: (next) => window.setBounds(next),
+        showInactive: () => window.showInactive(),
+        hide: () => window.hide(),
+        setInteractive: (interactive) =>
+          window.setIgnoreMouseEvents(!interactive),
+        isDestroyed: () => window.isDestroyed(),
+        destroy: () => window.destroy(),
+      };
     },
   };
+}
+
+/** The layout is passed to the renderer as a `?layout=` query parameter. */
+function loadRenderer(
+  window: BrowserWindow,
+  target: RendererTarget,
+  layout: OverlayLayout,
+): void {
+  if (target.kind === "url") {
+    const url = new URL(target.url);
+    url.searchParams.set("layout", layout);
+    void window.loadURL(url.toString());
+  } else {
+    void window.loadFile(target.path, { query: { layout } });
+  }
 }
 
 export function createElectronDisplayPort(screen: Screen): DisplayPort {

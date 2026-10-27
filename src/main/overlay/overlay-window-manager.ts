@@ -1,10 +1,14 @@
 import type { Snapshot } from "../../core/scheduler";
 import type { Phase } from "../../core/state";
+import {
+  OVERLAY_MARGIN,
+  OVERLAY_SIZE,
+  type OverlayLayout,
+} from "../../shared/overlay-layout";
 import type { SnapshotSender } from "../scheduler-controller";
 import {
-  DEFAULT_OVERLAY_MARGIN,
-  DEFAULT_OVERLAY_SIZE,
   computeOverlayBounds,
+  computeSurfaceBounds,
   type Rect,
   type Size,
 } from "./bounds";
@@ -15,6 +19,8 @@ import type {
 } from "./ports";
 
 export interface OverlayWindowManagerOptions {
+  /** `positioned` (default): small top-right window. `surface`: whole work area. */
+  readonly layout?: OverlayLayout;
   readonly size?: Size;
   readonly margin?: number;
   /** Optional diagnostics, e.g. `console.info` when `EYEREST_DEBUG=1`. */
@@ -26,25 +32,34 @@ export function isOverlayPhase(phase: Phase): boolean {
   return phase === "warning" || phase === "resting";
 }
 
+/** Only the rest has buttons; the warning lets clicks through. */
+export function isInteractivePhase(phase: Phase): boolean {
+  return phase === "resting";
+}
+
 /**
- * Owns the overlay window: shows it on warning and rest, hides it otherwise,
- * and keeps it in the top-right corner of the primary display.
+ * Owns the overlay window: shows it on warning and rest, hides it otherwise.
  *
  * - One window is created up front (hidden) and reused for every rest, so
- *   showing it is instant. If the OS or the user destroys it, the next show
- *   creates a new one.
- * - Bounds are recomputed when the overlay is shown and whenever the displays
- *   change while it is visible.
+ *   showing it is instant. If the OS, the user or a renderer crash destroys
+ *   it, the next snapshot creates a new one.
+ * - Layout `positioned`: a small window in the top-right of the primary
+ *   display's work area. Layout `surface`: a window covering the work area;
+ *   the renderer draws the panel at the top-right. Bounds are recomputed when
+ *   the overlay is shown and whenever the displays change while it is visible.
+ * - The warning is click-through; the rest receives clicks.
  * - Implements `SnapshotSender`, so it plugs into the same pipeline as the
  *   renderer broadcast.
  */
 export class OverlayWindowManager implements SnapshotSender {
+  private readonly layout: OverlayLayout;
   private readonly size: Size;
   private readonly margin: number;
   private readonly log: (message: string) => void;
 
   private window: OverlayWindowPort | null = null;
   private shown = false;
+  private interactive = false;
   private started = false;
   private disposed = false;
   private stopDisplayWatch: (() => void) | null = null;
@@ -54,8 +69,9 @@ export class OverlayWindowManager implements SnapshotSender {
     private readonly displays: DisplayPort,
     options: OverlayWindowManagerOptions = {},
   ) {
-    this.size = options.size ?? DEFAULT_OVERLAY_SIZE;
-    this.margin = options.margin ?? DEFAULT_OVERLAY_MARGIN;
+    this.layout = options.layout ?? "positioned";
+    this.size = options.size ?? OVERLAY_SIZE;
+    this.margin = options.margin ?? OVERLAY_MARGIN;
     this.log = options.log ?? (() => {});
   }
 
@@ -72,7 +88,13 @@ export class OverlayWindowManager implements SnapshotSender {
   send(snapshot: Snapshot): void {
     if (this.disposed) return;
     this.start();
-    this.setVisible(isOverlayPhase(snapshot.state.phase));
+
+    const phase = snapshot.state.phase;
+    if (isOverlayPhase(phase)) {
+      this.show(isInteractivePhase(phase));
+    } else {
+      this.hide();
+    }
   }
 
   dispose(): void {
@@ -83,24 +105,39 @@ export class OverlayWindowManager implements SnapshotSender {
     if (this.window && !this.window.isDestroyed()) this.window.destroy();
     this.window = null;
     this.shown = false;
+    this.interactive = false;
   }
 
-  private setVisible(visible: boolean): void {
-    if (visible) {
-      const window = this.ensureWindow();
-      if (this.shown) return;
-      const bounds = this.currentBounds();
-      window.setBounds(bounds);
-      window.showInactive();
-      this.shown = true;
-      this.log(`show ${JSON.stringify(bounds)}`);
-      return;
+  private show(interactive: boolean): void {
+    const window = this.ensureWindow();
+
+    // Set before showing, so the window never flashes in the wrong mode.
+    if (interactive !== this.interactive) {
+      window.setInteractive(interactive);
+      this.interactive = interactive;
+      this.log(`interactive=${interactive}`);
     }
 
+    if (this.shown) return;
+    const bounds = this.currentBounds();
+    window.setBounds(bounds);
+    window.showInactive();
+    this.shown = true;
+    this.log(`show ${JSON.stringify(bounds)}`);
+  }
+
+  private hide(): void {
     if (!this.shown) return;
     this.log("hide");
     this.shown = false;
-    if (this.window && !this.window.isDestroyed()) this.window.hide();
+
+    const window = this.window;
+    if (!window || window.isDestroyed()) return;
+    window.hide();
+    if (this.interactive) {
+      window.setInteractive(false);
+      this.interactive = false;
+    }
   }
 
   private handleDisplayChange(): void {
@@ -116,15 +153,15 @@ export class OverlayWindowManager implements SnapshotSender {
     const bounds = this.currentBounds();
     this.window = this.factory.create(bounds);
     this.shown = false;
-    this.log(`window created ${JSON.stringify(bounds)}`);
+    this.interactive = false;
+    this.log(`window created (${this.layout}) ${JSON.stringify(bounds)}`);
     return this.window;
   }
 
   private currentBounds(): Rect {
-    return computeOverlayBounds(
-      this.displays.getPrimaryWorkArea(),
-      this.size,
-      this.margin,
-    );
+    const workArea = this.displays.getPrimaryWorkArea();
+    return this.layout === "surface"
+      ? computeSurfaceBounds(workArea)
+      : computeOverlayBounds(workArea, this.size, this.margin);
   }
 }

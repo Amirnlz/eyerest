@@ -16,19 +16,23 @@ describe('resolveStartupConfig', () => {
   });
 
   describe('Linux display backend', () => {
-    it('forces X11 by default, so the overlay can be positioned', () => {
-      expect(resolveStartupConfig('linux', {}).switches).toEqual(X11);
+    it('leaves the choice to Electron by default', () => {
+      expect(resolveStartupConfig('linux', {}).switches).toEqual([]);
     });
 
-    it('forces X11 even when the session is Wayland', () => {
-      expect(resolveStartupConfig('linux', { XDG_SESSION_TYPE: 'wayland' }).switches).toEqual(X11);
+    it('does not force a backend in a Wayland session', () => {
+      expect(resolveStartupConfig('linux', { XDG_SESSION_TYPE: 'wayland' }).switches).toEqual([]);
     });
 
-    it('allows native Wayland through EYEREST_OZONE=wayland', () => {
+    it('forces X11 with EYEREST_OZONE=x11', () => {
+      expect(resolveStartupConfig('linux', { EYEREST_OZONE: 'x11' }).switches).toEqual(X11);
+    });
+
+    it('forces native Wayland with EYEREST_OZONE=wayland', () => {
       expect(resolveStartupConfig('linux', { EYEREST_OZONE: 'wayland' }).switches).toEqual(WAYLAND);
     });
 
-    it('leaves the choice to Electron with EYEREST_OZONE=auto', () => {
+    it('treats EYEREST_OZONE=auto as no override', () => {
       expect(resolveStartupConfig('linux', { EYEREST_OZONE: 'auto' }).switches).toEqual([]);
     });
 
@@ -36,11 +40,11 @@ describe('resolveStartupConfig', () => {
       expect(resolveStartupConfig('linux', { EYEREST_OZONE: ' Wayland ' }).switches).toEqual(
         WAYLAND,
       );
-      expect(resolveStartupConfig('linux', { EYEREST_OZONE: 'AUTO' }).switches).toEqual([]);
+      expect(resolveStartupConfig('linux', { EYEREST_OZONE: 'X11' }).switches).toEqual(X11);
     });
 
-    it.each(['', 'x12', 'true', undefined])('falls back to X11 for %s', (value) => {
-      expect(resolveStartupConfig('linux', { EYEREST_OZONE: value }).switches).toEqual(X11);
+    it.each(['', 'x12', 'true', undefined])('ignores the value %s', (value) => {
+      expect(resolveStartupConfig('linux', { EYEREST_OZONE: value }).switches).toEqual([]);
     });
   });
 

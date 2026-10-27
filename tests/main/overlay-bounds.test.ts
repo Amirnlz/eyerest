@@ -3,8 +3,10 @@ import {
   DEFAULT_OVERLAY_MARGIN,
   DEFAULT_OVERLAY_SIZE,
   computeOverlayBounds,
+  computeSurfaceBounds,
   type Rect,
 } from '../../src/main/overlay/bounds';
+import { OVERLAY_MARGIN, OVERLAY_SIZE } from '../../src/shared/overlay-layout';
 
 const size = { width: 360, height: 220 };
 const margin = 16;
@@ -122,5 +124,43 @@ describe('computeOverlayBounds', () => {
     expect(DEFAULT_OVERLAY_SIZE.width).toBeGreaterThan(0);
     expect(DEFAULT_OVERLAY_SIZE.height).toBeGreaterThan(0);
     expect(DEFAULT_OVERLAY_MARGIN).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('computeSurfaceBounds', () => {
+  it('covers the whole work area', () => {
+    expect(computeSurfaceBounds({ x: 0, y: 0, width: 1920, height: 1080 })).toEqual({
+      x: 0,
+      y: 0,
+      width: 1920,
+      height: 1080,
+    });
+  });
+
+  it('keeps the work-area offset (bars and docks)', () => {
+    expect(computeSurfaceBounds({ x: 70, y: 32, width: 1850, height: 1048 })).toEqual({
+      x: 70,
+      y: 32,
+      width: 1850,
+      height: 1048,
+    });
+  });
+
+  it('returns whole numbers for fractional work areas', () => {
+    const bounds = computeSurfaceBounds({ x: 0.4, y: 31.6, width: 1536.9, height: 816.8 });
+    expect(bounds).toEqual({ x: 0, y: 32, width: 1536, height: 816 });
+  });
+
+  it('never returns a negative size', () => {
+    const bounds = computeSurfaceBounds({ x: 0, y: 0, width: -5, height: -1 });
+    expect(bounds.width).toBe(0);
+    expect(bounds.height).toBe(0);
+  });
+});
+
+describe('shared layout constants', () => {
+  it('are the defaults used for the positioned window', () => {
+    expect(DEFAULT_OVERLAY_SIZE).toBe(OVERLAY_SIZE);
+    expect(DEFAULT_OVERLAY_MARGIN).toBe(OVERLAY_MARGIN);
   });
 });

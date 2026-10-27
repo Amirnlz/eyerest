@@ -6,6 +6,7 @@ import {
   type RendererTarget,
 } from "./overlay/electron-adapters";
 import { OverlayWindowManager } from "./overlay/overlay-window-manager";
+import { resolvePlacement } from "./overlay/placement";
 import { resolveStartupConfig } from "./platform-switches";
 import { createMainRuntime, type MainRuntime } from "./runtime";
 
@@ -30,10 +31,13 @@ function resolveRendererTarget(): RendererTarget {
 }
 
 void app.whenReady().then(() => {
+  const ozone = app.commandLine.getSwitchValue("ozone-platform");
+  const layout = resolvePlacement(process.platform, process.env, ozone);
+
   // One diagnostic line: placement problems are usually a display-backend issue.
   console.info(
     `[eyerest] platform=${process.platform} session=${process.env["XDG_SESSION_TYPE"] ?? "n/a"} ` +
-      `ozone=${app.commandLine.getSwitchValue("ozone-platform") || "default"} ` +
+      `ozone=${ozone || "default"} layout=${layout} ` +
       `gpu=${startup.disableHardwareAcceleration ? "off" : "default"} debug=${debug}`,
   );
 
@@ -43,9 +47,11 @@ void app.whenReady().then(() => {
         new URL("../preload/index.cjs", import.meta.url),
       ),
       target: resolveRendererTarget(),
+      layout,
     }),
     createElectronDisplayPort(screen),
     {
+      layout,
       log: debug
         ? (message) => console.info(`[overlay] ${message}`)
         : undefined,

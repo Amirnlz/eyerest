@@ -13,14 +13,11 @@ export interface StartupConfig {
 /**
  * Display and GPU settings that must be decided before Electron is ready.
  *
- * Linux display backend: on native Wayland an application cannot choose its
- * own window position (the compositor places it, usually in the centre) and
- * cannot reliably stay on top. X11/XWayland keeps both working, so X11 is the
- * default. Override with `EYEREST_OZONE`:
- * - `x11` (default): force X11/XWayland
- * - `wayland`: force native Wayland
- * - `auto`: leave the choice to Electron
- * Unknown values fall back to the default.
+ * Linux display backend: left to Electron by default (native Wayland in a
+ * Wayland session, X11 otherwise). The overlay does not depend on the choice,
+ * because native Wayland gets the `surface` layout (see `resolvePlacement`).
+ * Override with `EYEREST_OZONE=x11|wayland`. On some machines X11/XWayland
+ * draws blank windows, which is why it is not forced.
  *
  * Linux GPU: the overlay is a small, mostly static panel that gains nothing
  * from hardware acceleration, while some Linux GPU/driver combinations crash
@@ -46,8 +43,8 @@ function resolveOzoneSwitches(
   env: Readonly<Record<string, string | undefined>>,
 ): CommandLineSwitch[] {
   const requested = (env["EYEREST_OZONE"] ?? "").trim().toLowerCase();
-  if (requested === "auto") return [];
-  if (requested === "wayland")
-    return [{ name: "ozone-platform", value: "wayland" }];
-  return [{ name: "ozone-platform", value: "x11" }];
+  if (requested === "x11" || requested === "wayland") {
+    return [{ name: "ozone-platform", value: requested }];
+  }
+  return [];
 }

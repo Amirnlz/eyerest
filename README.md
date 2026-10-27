@@ -74,9 +74,16 @@ npm run build          # production build into out/
 npm run e2e            # build + Playwright smoke test (launches the real app)
 ```
 
-Linux display backend: the app forces X11/XWayland by default, because native Wayland
-cannot position windows (the overlay would appear in the centre). Override with
-`EYEREST_OZONE=wayland` or `EYEREST_OZONE=auto`.
+Overlay layout: where apps can position windows (Windows, macOS, Linux on X11) the overlay is a small
+window at the top-right (`positioned`). On native Wayland apps cannot choose a window position, so the
+overlay is a transparent window covering the work area and the panel is drawn at the top-right by CSS
+(`surface`). During the warning the window is click-through; during the rest it receives clicks.
+Override with `EYEREST_PLACEMENT=positioned|surface`.
+
+Linux display and GPU: the display backend is left to Electron (`EYEREST_OZONE=x11|wayland` forces one).
+Hardware acceleration is off on Linux (some GPU drivers crash the GPU process and leave windows blank);
+`EYEREST_GPU=1` turns it back on.
+Debug: `EYEREST_DEBUG=1` prints a line each time the overlay window is created, shown, hidden or changes mode.
 
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.

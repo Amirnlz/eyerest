@@ -6,11 +6,17 @@ export interface OverlayWindowPort {
   /** Shows the window without taking keyboard focus from the user's app. */
   showInactive(): void;
   hide(): void;
+  /**
+   * `false`: clicks pass through the window to the apps below (the warning).
+   * `true`: the window receives clicks (the rest, with its buttons).
+   * A new window starts click-through.
+   */
+  setInteractive(interactive: boolean): void;
   isDestroyed(): boolean;
   destroy(): void;
 }
 
-/** Creates the (initially hidden) overlay window at the given bounds. */
+/** Creates the (initially hidden, click-through) overlay window at the given bounds. */
 export interface OverlayWindowFactory {
   create(bounds: Rect): OverlayWindowPort;
 }
