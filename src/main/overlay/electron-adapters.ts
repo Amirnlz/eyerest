@@ -1,5 +1,6 @@
 import { BrowserWindow, type Screen } from 'electron';
 import type { OverlayLayout } from '../../shared/overlay-layout';
+import { OVERLAY_LEVEL } from '../window-levels';
 import type { DisplayPort, OverlayWindowFactory } from './ports';
 
 /**
@@ -57,7 +58,7 @@ export function createElectronWindowFactory(
 
       // Highest level: stays above fullscreen apps on macOS and Windows.
       // Linux ignores the level; X11 honours it, native Wayland has no always-on-top.
-      window.setAlwaysOnTop(true, 'screen-saver');
+      window.setAlwaysOnTop(true, OVERLAY_LEVEL);
 
       if (process.platform === 'darwin') {
         window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
@@ -87,6 +88,7 @@ export function createElectronWindowFactory(
         setBounds: (next) => window.setBounds(next),
         showInactive: () => window.showInactive(),
         hide: () => window.hide(),
+        moveTop: () => window.moveTop(),
         setInteractive: (interactive) =>
           window.setIgnoreMouseEvents(!interactive),
         isDestroyed: () => window.isDestroyed(),
@@ -111,19 +113,24 @@ function loadRenderer(
   }
 }
 
+/** Subscribes to display add, remove and resize. Returns the unsubscribe function. */
+export function watchDisplayChanges(
+  screen: Screen,
+  listener: () => void,
+): () => void {
+  screen.on('display-added', listener);
+  screen.on('display-removed', listener);
+  screen.on('display-metrics-changed', listener);
+  return () => {
+    screen.removeListener('display-added', listener);
+    screen.removeListener('display-removed', listener);
+    screen.removeListener('display-metrics-changed', listener);
+  };
+}
+
 export function createElectronDisplayPort(screen: Screen): DisplayPort {
   return {
     getPrimaryWorkArea: () => screen.getPrimaryDisplay().workArea,
-
-    onChange(listener) {
-      screen.on('display-added', listener);
-      screen.on('display-removed', listener);
-      screen.on('display-metrics-changed', listener);
-      return () => {
-        screen.removeListener('display-added', listener);
-        screen.removeListener('display-removed', listener);
-        screen.removeListener('display-metrics-changed', listener);
-      };
-    },
+    onChange: (listener) => watchDisplayChanges(screen, listener),
   };
 }

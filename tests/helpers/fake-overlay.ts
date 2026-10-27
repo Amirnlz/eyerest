@@ -28,6 +28,9 @@ export class FakeOverlayWindow implements OverlayWindowPort {
     this.calls.push('hide');
     this.visible = false;
   }
+  moveTop(): void {
+    this.calls.push('moveTop');
+  }
   setInteractive(interactive: boolean): void {
     this.calls.push(`setInteractive(${interactive})`);
     this.interactive = interactive;

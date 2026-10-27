@@ -21,8 +21,8 @@ const surfacePanelStyle: CSSProperties = {
   top: OVERLAY_MARGIN,
   right: OVERLAY_MARGIN,
   width: OVERLAY_SIZE.width,
+  height: OVERLAY_SIZE.height,
   boxSizing: 'border-box',
-  padding: 8,
   background: '#ffffff',
   color: '#000000',
   border: '1px solid #888888',
@@ -37,7 +37,12 @@ export function App({ api, layout = 'positioned' }: AppProps) {
   if (viewModel.mode === 'hidden') return null;
 
   const overlay = (
-    <Overlay viewModel={viewModel} onSkip={() => api.skip()} onPostpone={() => api.postpone()} />
+    <Overlay
+      viewModel={viewModel}
+      onSkip={() => api.skip()}
+      onPostpone={() => api.postpone()}
+      surface={layout === 'surface'}
+    />
   );
 
   return layout === 'surface' ? <div style={surfacePanelStyle}>{overlay}</div> : overlay;

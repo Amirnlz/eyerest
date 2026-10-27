@@ -97,6 +97,18 @@ export class OverlayWindowManager implements SnapshotSender {
     }
   }
 
+  /**
+   * Raises the visible overlay above other windows. Called after the dim
+   * layer is shown: on Windows and X11 the most recently shown window wins
+   * within a level, and the dim must never cover the Skip and Postpone buttons.
+   */
+  raise(): void {
+    if (this.disposed || !this.shown) return;
+    if (!this.window || this.window.isDestroyed()) return;
+    this.window.moveTop();
+    this.log('raised');
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;

@@ -1,5 +1,10 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { fileURLToPath } from 'node:url';
+import { DimLayerManager } from './dim/dim-layer-manager';
+import {
+  createElectronDimDisplayPort,
+  createElectronDimWindowFactory,
+} from './dim/electron-dim-adapters';
 import {
   createElectronDisplayPort,
   createElectronWindowFactory,
@@ -21,6 +26,7 @@ const debug = process.env['EYEREST_DEBUG'] === '1';
 
 let runtime: MainRuntime | null = null;
 let overlay: OverlayWindowManager | null = null;
+let dim: DimLayerManager | null = null;
 
 function resolveRendererTarget(): RendererTarget {
   const devServerUrl = process.env['ELECTRON_RENDERER_URL'];
@@ -59,14 +65,26 @@ void app.whenReady().then(() => {
     },
   );
 
+  // Dim sits below the overlay. After it is shown, the overlay is re-raised so
+  // it stays on top on platforms where show order decides stacking.
+  dim = new DimLayerManager(
+    createElectronDimWindowFactory(),
+    createElectronDimDisplayPort(screen),
+    {
+      onShown: () => overlay?.raise(),
+      log: debug ? (message) => console.info(`[dim] ${message}`) : undefined,
+    },
+  );
+
   runtime = createMainRuntime({
     env: process.env,
     ipcMain,
     getTargets: () =>
       BrowserWindow.getAllWindows().map((window) => window.webContents),
-    extraSenders: [overlay],
+    extraSenders: [dim, overlay],
   });
 
+  dim.start();
   overlay.start();
   runtime.start();
 });
@@ -80,4 +98,6 @@ app.on('before-quit', () => {
   runtime = null;
   overlay?.dispose();
   overlay = null;
+  dim?.dispose();
+  dim = null;
 });

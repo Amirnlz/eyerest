@@ -6,6 +6,8 @@ export interface OverlayWindowPort {
   /** Shows the window without taking keyboard focus from the user's app. */
   showInactive(): void;
   hide(): void;
+  /** Raises the window above other windows of the same level (Windows, X11). */
+  moveTop(): void;
   /**
    * `false`: clicks pass through the window to the apps below (the warning).
    * `true`: the window receives clicks (the rest, with its buttons).

@@ -64,8 +64,8 @@ Known platform risks (we handle them in the step that owns them):
 | 1.1 | Core engine and scheduler | DONE |
 | 1.2 | Overlay UI components | DONE |
 | 1.3 | Typed IPC and main-process wiring | DONE |
-| 1.4 | Overlay window manager | DONE (Wayland surface layout pending your check) |
-| 1.5 | Screen dim layer | TODO |
+| 1.4 | Overlay window manager | DONE |
+| 1.5 | Screen dim layer | DONE |
 | 1.6 | Media control port and Linux adapter | TODO |
 | 1.7 | Media adapters for Windows and macOS | TODO |
 | 1.8 | App lifecycle: tray, single instance, settings file | TODO |

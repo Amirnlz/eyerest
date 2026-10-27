@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { launchApp, overlayPage, overlayState } from './helpers';
 
 /**
  * Smoke tests: launch the built app in fast mode and watch the real overlay
@@ -7,33 +8,6 @@ import { _electron as electron, expect, test } from '@playwright/test';
  *
  * The layout is forced per test, so both code paths are covered on any machine.
  */
-
-type Layout = 'positioned' | 'surface';
-
-async function launch(layout: Layout) {
-  const app = await electron.launch({
-    args: ['.', ...(process.env['CI'] ? ['--no-sandbox'] : [])],
-    env: {
-      ...process.env,
-      EYEREST_FAST: '1',
-      EYEREST_PLACEMENT: layout,
-    } as Record<string, string>,
-  });
-
-  const overlayState = () =>
-    app.evaluate(({ BrowserWindow, screen }) => {
-      const win = BrowserWindow.getAllWindows()[0];
-      if (!win || win.isDestroyed()) return null;
-      return {
-        visible: win.isVisible(),
-        alwaysOnTop: win.isAlwaysOnTop(),
-        bounds: win.getBounds(),
-        workArea: screen.getPrimaryDisplay().workArea,
-      };
-    });
-
-  return { app, overlayState };
-}
 
 const MARGIN = 16;
 const TOLERANCE = 2;
@@ -46,13 +20,13 @@ test('positioned: overlay appears top-right during the rest, then disappears', a
     'native Wayland cannot position windows; the surface layout covers it',
   );
 
-  const { app, overlayState } = await launch('positioned');
+  const app = await launchApp('positioned');
   try {
     await expect
-      .poll(async () => (await overlayState())?.visible, { timeout: 30_000 })
+      .poll(async () => (await overlayState(app))?.visible, { timeout: 30_000 })
       .toBe(true);
 
-    const shown = await overlayState();
+    const shown = await overlayState(app);
     expect(shown).not.toBeNull();
     if (!shown) return;
 
@@ -67,7 +41,7 @@ test('positioned: overlay appears top-right during the rest, then disappears', a
     expect(Math.abs(topGap - MARGIN)).toBeLessThanOrEqual(TOLERANCE);
 
     await expect
-      .poll(async () => (await overlayState())?.visible, { timeout: 30_000 })
+      .poll(async () => (await overlayState(app))?.visible, { timeout: 30_000 })
       .toBe(false);
   } finally {
     await app.close();
@@ -75,13 +49,13 @@ test('positioned: overlay appears top-right during the rest, then disappears', a
 });
 
 test('surface: window covers the work area and the panel is drawn top-right, then disappears', async () => {
-  const { app, overlayState } = await launch('surface');
+  const app = await launchApp('surface');
   try {
     await expect
-      .poll(async () => (await overlayState())?.visible, { timeout: 30_000 })
+      .poll(async () => (await overlayState(app))?.visible, { timeout: 30_000 })
       .toBe(true);
 
-    const shown = await overlayState();
+    const shown = await overlayState(app);
     expect(shown).not.toBeNull();
     if (!shown) return;
 
@@ -94,7 +68,7 @@ test('surface: window covers the work area and the panel is drawn top-right, the
     ).toBeLessThanOrEqual(TOLERANCE);
 
     // The panel sits top-right inside the window: check it in the page.
-    const page = app.windows()[0];
+    const page = overlayPage(app);
     expect(page).toBeDefined();
     if (!page) return;
 
@@ -113,7 +87,7 @@ test('surface: window covers the work area and the panel is drawn top-right, the
     expect(box.y).toBeLessThanOrEqual(MARGIN + TOLERANCE + 2);
 
     await expect
-      .poll(async () => (await overlayState())?.visible, { timeout: 30_000 })
+      .poll(async () => (await overlayState(app))?.visible, { timeout: 30_000 })
       .toBe(false);
   } finally {
     await app.close();
