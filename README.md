@@ -24,7 +24,7 @@ See `docs/ROADMAP.md` for the full plan and the per-step status board.
 
 ## Architecture
 
-```markdown
+```
 src/core/
   config.ts     RestConfig, defaults, validation
   state.ts      EngineState / EngineAction / EngineEvent types, remainingMs()
@@ -43,7 +43,7 @@ e2e/            Playwright smoke tests that launch the real built app
 
 Data flow:
 
-```markdown
+```
 RestScheduler -> SchedulerController -> broadcast sender --(eyerest:snapshot)--> renderer
 renderer --(eyerest:skip / postpone / get-snapshot)--> ipc handlers -> controller -> scheduler
 ```
@@ -62,17 +62,28 @@ Design rules:
 
 ## Commands
 
+Requires Node 22.12+ (Vitest 5 and Electron 45 both need it). Install dependencies before running
+the app or checks.
+
 ```bash
 npm install
 npm run typecheck
 npm test
-npm run check     # typecheck + tests
+npm run lint       # lint and formatting checks
+npm run lint:fix   # apply safe lint and formatting fixes
+npm run check      # typecheck + lint + tests
 npm run dev:renderer   # dev harness for overlay states
 npm run dev            # Electron app (real durations)
 npm run dev:fast       # Electron app, EYEREST_FAST=1 (macOS/Linux shell)
 npm run build          # production build into out/
 npm run e2e            # build + Playwright smoke test (launches the real app)
 ```
+
+## Contributing
+
+Contributors should read [CONTRIBUTING.md](CONTRIBUTING.md) for the code style and lint rules. Run
+`npm run check` before submitting a change. Use `npm run lint:fix` to apply automatic fixes;
+`npm run format:check` and `npm run format` are also available as formatting aliases.
 
 Overlay layout: where apps can position windows (Windows, macOS, Linux on X11) the overlay is a small
 window at the top-right (`positioned`). On native Wayland apps cannot choose a window position, so the
@@ -88,6 +99,4 @@ Debug: `EYEREST_DEBUG=1` prints a line each time the overlay window is created, 
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
 
-UI test files (`*.test.tsx`) start with `// @vitest-environment jsdom`. Logic tests run in node.
-
-Requires Node 22.12+ (Vitest 5 and Electron 45 both need it).
+UI test files (`*.test.tsx`) start with `// @vitest-environment jsdom`. Logic tests run in Node.
