@@ -24,7 +24,7 @@ See `docs/ROADMAP.md` for the full plan and the per-step status board.
 
 ## Architecture
 
-```
+```markdown
 src/core/
   config.ts     RestConfig, defaults, validation
   state.ts      EngineState / EngineAction / EngineEvent types, remainingMs()
@@ -33,15 +33,17 @@ src/core/
   index.ts      public API
 src/shared/     IPC contract (channel names, kinds, EyerestApi type)
 src/main/       Electron main process: runtime composition, controller, IPC handlers
+src/main/overlay/  top-right overlay window: bounds maths, manager, Electron adapters
 src/preload/    contextBridge bridge (createBridge is Electron-free and tested)
 src/renderer/   view model, copy, overlay components, App, useSchedulerSnapshot
 tests/          core, main, preload, shared, renderer tests; tests/helpers has fakes
 harness/        dev-only page to click through overlay states
+e2e/            Playwright smoke tests that launch the real built app
 ```
 
 Data flow:
 
-```
+```markdown
 RestScheduler -> SchedulerController -> broadcast sender --(eyerest:snapshot)--> renderer
 renderer --(eyerest:skip / postpone / get-snapshot)--> ipc handlers -> controller -> scheduler
 ```
@@ -60,7 +62,7 @@ Design rules:
 
 ## Commands
 
-```
+```bash
 npm install
 npm run typecheck
 npm test
@@ -69,6 +71,7 @@ npm run dev:renderer   # dev harness for overlay states
 npm run dev            # Electron app (real durations)
 npm run dev:fast       # Electron app, EYEREST_FAST=1 (macOS/Linux shell)
 npm run build          # production build into out/
+npm run e2e            # build + Playwright smoke test (launches the real app)
 ```
 
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.

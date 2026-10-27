@@ -10,6 +10,6 @@ if (!container) throw new Error('Missing #root element');
 
 createRoot(container).render(
   <StrictMode>
-    <App api={api} debug />
+    <App api={api} />
   </StrictMode>,
 );

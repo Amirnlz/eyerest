@@ -1,10 +1,32 @@
-import { IPC } from '../shared/ipc';
-import type { SnapshotSender } from './scheduler-controller';
+import { IPC } from "../shared/ipc";
+import type { SnapshotSender } from "./scheduler-controller";
 
 /** The part of Electron's `webContents` the sender uses. */
 export interface WebContentsLike {
   isDestroyed(): boolean;
   send(channel: string, ...args: unknown[]): void;
+}
+
+/**
+ * Fans one snapshot out to several senders (renderer broadcast, overlay
+ * window, later dimming and media). One failing sender never blocks the rest.
+ */
+export function createCompositeSender(
+  senders: readonly SnapshotSender[],
+  onError: (error: unknown) => void = (error) =>
+    console.error("[composite-sender] sender failed", error),
+): SnapshotSender {
+  return {
+    send(snapshot) {
+      for (const sender of senders) {
+        try {
+          sender.send(snapshot);
+        } catch (error) {
+          onError(error);
+        }
+      }
+    },
+  };
 }
 
 /**
@@ -14,7 +36,7 @@ export interface WebContentsLike {
 export function createBroadcastSender(
   getTargets: () => readonly WebContentsLike[],
   onError: (error: unknown) => void = (error) =>
-    console.error('[snapshot-sender] send failed', error),
+    console.error("[snapshot-sender] send failed", error),
 ): SnapshotSender {
   return {
     send(snapshot) {

@@ -1,58 +1,55 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
-import { fileURLToPath } from 'node:url';
-import { createMainRuntime, type MainRuntime } from './runtime';
+import { app, BrowserWindow, ipcMain, screen } from "electron";
+import { fileURLToPath } from "node:url";
+import {
+  createElectronDisplayPort,
+  createElectronWindowFactory,
+  type RendererTarget,
+} from "./overlay/electron-adapters";
+import { OverlayWindowManager } from "./overlay/overlay-window-manager";
+import { createMainRuntime, type MainRuntime } from "./runtime";
 
 let runtime: MainRuntime | null = null;
+let overlay: OverlayWindowManager | null = null;
 
-/**
- * TEMPORARY window for Step 1.3 so the full flow can be seen.
- * Step 1.4 replaces it with the frameless top-right overlay window.
- */
-function createWindow(): BrowserWindow {
-  const window = new BrowserWindow({
-    width: 480,
-    height: 360,
-    show: false,
-    webPreferences: {
-      preload: fileURLToPath(new URL('../preload/index.cjs', import.meta.url)),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  });
-
-  window.once('ready-to-show', () => window.show());
-
-  const devServerUrl = process.env['ELECTRON_RENDERER_URL'];
-  if (devServerUrl) {
-    void window.loadURL(devServerUrl);
-  } else {
-    void window.loadFile(fileURLToPath(new URL('../renderer/index.html', import.meta.url)));
-  }
-
-  return window;
+function resolveRendererTarget(): RendererTarget {
+  const devServerUrl = process.env["ELECTRON_RENDERER_URL"];
+  if (devServerUrl) return { kind: "url", url: devServerUrl };
+  return {
+    kind: "file",
+    path: fileURLToPath(new URL("../renderer/index.html", import.meta.url)),
+  };
 }
 
 void app.whenReady().then(() => {
+  overlay = new OverlayWindowManager(
+    createElectronWindowFactory({
+      preloadPath: fileURLToPath(
+        new URL("../preload/index.cjs", import.meta.url),
+      ),
+      target: resolveRendererTarget(),
+    }),
+    createElectronDisplayPort(screen),
+  );
+
   runtime = createMainRuntime({
     env: process.env,
     ipcMain,
-    getTargets: () => BrowserWindow.getAllWindows().map((window) => window.webContents),
+    getTargets: () =>
+      BrowserWindow.getAllWindows().map((window) => window.webContents),
+    extraSenders: [overlay],
   });
 
-  createWindow();
+  overlay.start();
   runtime.start();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+// No `window-all-closed` quit: the app has no regular window and lives on
+// without one. The tray menu with Quit arrives in Step 1.8. Until then, stop
+// the dev server with Ctrl+C.
 
-app.on('before-quit', () => {
+app.on("before-quit", () => {
   runtime?.dispose();
   runtime = null;
+  overlay?.dispose();
+  overlay = null;
 });
