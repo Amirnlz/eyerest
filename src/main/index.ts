@@ -6,7 +6,16 @@ import {
   type RendererTarget,
 } from "./overlay/electron-adapters";
 import { OverlayWindowManager } from "./overlay/overlay-window-manager";
+import { resolveStartupConfig } from "./platform-switches";
 import { createMainRuntime, type MainRuntime } from "./runtime";
+
+// Must run before the app is ready: it chooses the display backend and GPU use.
+const startup = resolveStartupConfig(process.platform, process.env);
+if (startup.disableHardwareAcceleration) app.disableHardwareAcceleration();
+for (const { name, value } of startup.switches)
+  app.commandLine.appendSwitch(name, value);
+
+const debug = process.env["EYEREST_DEBUG"] === "1";
 
 let runtime: MainRuntime | null = null;
 let overlay: OverlayWindowManager | null = null;
@@ -21,6 +30,13 @@ function resolveRendererTarget(): RendererTarget {
 }
 
 void app.whenReady().then(() => {
+  // One diagnostic line: placement problems are usually a display-backend issue.
+  console.info(
+    `[eyerest] platform=${process.platform} session=${process.env["XDG_SESSION_TYPE"] ?? "n/a"} ` +
+      `ozone=${app.commandLine.getSwitchValue("ozone-platform") || "default"} ` +
+      `gpu=${startup.disableHardwareAcceleration ? "off" : "default"} debug=${debug}`,
+  );
+
   overlay = new OverlayWindowManager(
     createElectronWindowFactory({
       preloadPath: fileURLToPath(
@@ -29,6 +45,11 @@ void app.whenReady().then(() => {
       target: resolveRendererTarget(),
     }),
     createElectronDisplayPort(screen),
+    {
+      log: debug
+        ? (message) => console.info(`[overlay] ${message}`)
+        : undefined,
+    },
   );
 
   runtime = createMainRuntime({

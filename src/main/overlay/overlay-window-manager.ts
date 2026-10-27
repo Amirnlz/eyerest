@@ -17,6 +17,8 @@ import type {
 export interface OverlayWindowManagerOptions {
   readonly size?: Size;
   readonly margin?: number;
+  /** Optional diagnostics, e.g. `console.info` when `EYEREST_DEBUG=1`. */
+  readonly log?: (message: string) => void;
 }
 
 /** Phases in which the overlay is on screen. */
@@ -39,6 +41,7 @@ export function isOverlayPhase(phase: Phase): boolean {
 export class OverlayWindowManager implements SnapshotSender {
   private readonly size: Size;
   private readonly margin: number;
+  private readonly log: (message: string) => void;
 
   private window: OverlayWindowPort | null = null;
   private shown = false;
@@ -53,6 +56,7 @@ export class OverlayWindowManager implements SnapshotSender {
   ) {
     this.size = options.size ?? DEFAULT_OVERLAY_SIZE;
     this.margin = options.margin ?? DEFAULT_OVERLAY_MARGIN;
+    this.log = options.log ?? (() => {});
   }
 
   /** Creates the hidden window and starts watching displays. Safe to call twice. */
@@ -85,27 +89,34 @@ export class OverlayWindowManager implements SnapshotSender {
     if (visible) {
       const window = this.ensureWindow();
       if (this.shown) return;
-      window.setBounds(this.currentBounds());
+      const bounds = this.currentBounds();
+      window.setBounds(bounds);
       window.showInactive();
       this.shown = true;
+      this.log(`show ${JSON.stringify(bounds)}`);
       return;
     }
 
     if (!this.shown) return;
+    this.log("hide");
     this.shown = false;
     if (this.window && !this.window.isDestroyed()) this.window.hide();
   }
 
   private handleDisplayChange(): void {
     if (!this.shown || !this.window || this.window.isDestroyed()) return;
-    this.window.setBounds(this.currentBounds());
+    const bounds = this.currentBounds();
+    this.window.setBounds(bounds);
+    this.log(`display changed, moved to ${JSON.stringify(bounds)}`);
   }
 
   /** Returns a live window, creating a new one if there is none or it was destroyed. */
   private ensureWindow(): OverlayWindowPort {
     if (this.window && !this.window.isDestroyed()) return this.window;
-    this.window = this.factory.create(this.currentBounds());
+    const bounds = this.currentBounds();
+    this.window = this.factory.create(bounds);
     this.shown = false;
+    this.log(`window created ${JSON.stringify(bounds)}`);
     return this.window;
   }
 

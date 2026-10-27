@@ -74,6 +74,10 @@ npm run build          # production build into out/
 npm run e2e            # build + Playwright smoke test (launches the real app)
 ```
 
+Linux display backend: the app forces X11/XWayland by default, because native Wayland
+cannot position windows (the overlay would appear in the centre). Override with
+`EYEREST_OZONE=wayland` or `EYEREST_OZONE=auto`.
+
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
 

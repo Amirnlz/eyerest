@@ -55,6 +55,19 @@ export function createElectronWindowFactory(
         window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
       }
 
+      // Failures here would otherwise leave a blank or missing window with no explanation.
+      window.webContents.on(
+        "did-fail-load",
+        (_event, code, description, url) => {
+          console.error(
+            `[overlay] did-fail-load ${code} ${description} ${url}`,
+          );
+        },
+      );
+      window.webContents.on("render-process-gone", (_event, details) => {
+        console.error(`[overlay] render-process-gone ${details.reason}`);
+      });
+
       if (options.target.kind === "url") {
         void window.loadURL(options.target.url);
       } else {

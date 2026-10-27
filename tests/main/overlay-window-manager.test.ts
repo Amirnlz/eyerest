@@ -242,6 +242,44 @@ describe('OverlayWindowManager', () => {
     });
   });
 
+  describe('diagnostics', () => {
+    it('logs window creation, show and hide with the bounds used', () => {
+      const messages: string[] = [];
+      const manager = new OverlayWindowManager(new FakeWindowFactory(), new FakeDisplays(HD), {
+        log: (message) => messages.push(message),
+      });
+
+      manager.send(warning(15));
+      manager.send(WORKING);
+
+      expect(messages).toEqual([
+        `window created ${JSON.stringify(HD_BOUNDS)}`,
+        `show ${JSON.stringify(HD_BOUNDS)}`,
+        'hide',
+      ]);
+    });
+
+    it('logs a display change only while the overlay is visible', () => {
+      const messages: string[] = [];
+      const displays = new FakeDisplays(HD);
+      const manager = new OverlayWindowManager(new FakeWindowFactory(), displays, {
+        log: (message) => messages.push(message),
+      });
+      manager.start();
+      displays.change({ x: 0, y: 0, width: 1366, height: 768 });
+      expect(messages.some((m) => m.startsWith('display changed'))).toBe(false);
+
+      manager.send(resting(20));
+      displays.change(HD);
+      expect(messages.some((m) => m.startsWith('display changed'))).toBe(true);
+    });
+
+    it('works without a logger', () => {
+      const { manager } = setup();
+      expect(() => manager.send(warning(15))).not.toThrow();
+    });
+  });
+
   describe('dispose', () => {
     it('destroys the window and stops watching displays', () => {
       const { factory, displays, manager } = setup();
