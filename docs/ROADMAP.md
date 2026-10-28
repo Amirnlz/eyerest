@@ -66,8 +66,8 @@ Known platform risks (we handle them in the step that owns them):
 | 1.3 | Typed IPC and main-process wiring | DONE |
 | 1.4 | Overlay window manager | DONE |
 | 1.5 | Screen dim layer | DONE |
-| 1.6 | Media control port and Linux adapter | TODO |
-| 1.7 | Media adapters for Windows and macOS | TODO |
+| 1.6 | Media control port and Linux adapter | PARTIAL DONE (browser pauses; VLC and Spotify do not; research pending) |
+| 1.7 | Media adapters for Windows and macOS | PAUSED (needs research; do not start before your research) |
 | 1.8 | App lifecycle: tray, single instance, settings file | TODO |
 | 1.9 | Packaging, CI matrix, E2E smoke | TODO |
 | 2.1 | Design direction and tokens | TODO |
@@ -189,6 +189,8 @@ Tests:
 
 Done when: on Linux, a playing browser or Spotify tab pauses at rest start. Other OSes use `NullMediaController` until 1.7.
 
+Status: PARTIAL DONE. Port, wiring, null controller and the Linux MPRIS adapter (via `busctl`) are delivered and tested. Real-player results on Linux: a browser (YouTube) pauses; VLC does not; Spotify does not. Open research (yours): why VLC and Spotify do not pause (for example the MPRIS plugin disabled in VLC, packaged Spotify such as snap or flatpak using a different bus name or sandbox, or whether they appear on the session bus at all). No further media work until that research is done.
+
 Send this: `Start Step 1.6`
 
 ### Step 1.7: Media adapters for Windows and macOS
@@ -208,7 +210,9 @@ Tests:
 
 Done when: media pauses on Windows and macOS for the players listed in the compatibility table.
 
-Send this: `Start Step 1.7`, plus a statement of which players you use daily (browser, Spotify, VLC, etc.).
+Status: PAUSED. It needs research first and does not start before the owner's media research is finished. Every later task that depends on media pausing (4.4 Resume media after rest, the compatibility table and manual media checklist) is paused with it.
+
+Send this: `Start Step 1.7`, plus a statement of which players you use daily (browser, Spotify, VLC, etc.), only after the research is done.
 
 ### Step 1.8: App lifecycle: tray, single instance, settings file
 
@@ -366,7 +370,7 @@ We pick and order these when Phase 3 closes. Each becomes its own step with the 
 | 4.1 | Settings window | Edit durations, long-rest cadence, postpone length. Uses the existing validated config. |
 | 4.2 | Idle detection | Pause the work timer when the user is away; reset after a long absence. |
 | 4.3 | Launch at login | Per-OS autostart behavior. |
-| 4.4 | Resume media after rest | Uses the handle returned by the media controller. |
+| 4.4 | Resume media after rest | Uses the handle returned by the media controller. PAUSED: depends on the media research (Steps 1.6 and 1.7). |
 | 4.5 | Sound cues | Soft sound at rest start and end, volume and mute setting. |
 | 4.6 | Guided eye exercises | Short animated prompts during the 20 s rest (look far, rotate eyes, blink). |
 | 4.7 | Do not disturb | Skip rests during fullscreen presentations or calls. |

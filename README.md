@@ -35,6 +35,7 @@ src/shared/     IPC contract (channel names, kinds, EyerestApi type)
 src/main/       Electron main process: runtime composition, controller, IPC handlers
 src/main/overlay/  top-right overlay window: bounds maths, manager, Electron adapters
 src/main/dim/      screen dim layer: one window per display, manager, Electron adapters
+src/main/media/    media pause at rest start: port, null controller, Linux MPRIS adapter (busctl)
 src/preload/    contextBridge bridge (createBridge is Electron-free and tested)
 src/renderer/   view model, copy, overlay components, App, useSchedulerSnapshot
 tests/          core, main, preload, shared, renderer tests; tests/helpers has fakes

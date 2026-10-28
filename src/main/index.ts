@@ -10,6 +10,8 @@ import {
   createElectronWindowFactory,
   type RendererTarget,
 } from './overlay/electron-adapters';
+import { createMediaController } from './media/create-media-controller';
+import { RestMediaPauser } from './media/rest-media-pauser';
 import { OverlayWindowManager } from './overlay/overlay-window-manager';
 import { resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
@@ -76,12 +78,21 @@ void app.whenReady().then(() => {
     },
   );
 
+  // Pauses playing media once per rest start (Linux MPRIS; other platforms no-op).
+  const mediaLog = debug
+    ? (message: string) => console.info(`[media] ${message}`)
+    : undefined;
+  const media = new RestMediaPauser(
+    createMediaController(process.platform, mediaLog),
+    { log: mediaLog },
+  );
+
   runtime = createMainRuntime({
     env: process.env,
     ipcMain,
     getTargets: () =>
       BrowserWindow.getAllWindows().map((window) => window.webContents),
-    extraSenders: [dim, overlay],
+    extraSenders: [dim, overlay, media],
   });
 
   dim.start();
