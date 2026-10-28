@@ -31,7 +31,7 @@
     "@eslint/css": "^2.0.1",
     "@eslint/js": "^9.39.5",
     "@eslint/json": "^2.1.1",
-    "@eslint/markdown": "^8.0.3",
+    "@eslint/markdown": "^7.5.1",
     "@playwright/test": "^1.64.0",
     "@stylistic/eslint-plugin": "^5.5.0",
     "@testing-library/jest-dom": "^6.6.0",
@@ -53,5 +53,9 @@
     "typescript-eslint": "^8.72.1",
     "vite": "^7.0.0",
     "vitest": "^5.0.5"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "electron-winstaller@5.4.0": true
   }
 }
