@@ -28,3 +28,20 @@ edges, focus) meets WCAG AA through the tokens above, not through shadow.
 
 Theme selection: `data-theme="light|dark"` forces a theme; without it, `prefers-color-scheme` decides,
 light by default.
+
+## Typography
+
+Source: `src/design/typography.ts`. CSS: `buildTypeCss()` (`--er-font-family-*`, `--er-type-<role>-*`).
+`buildDesignCss()` in `src/design/build.ts` is the single entry that concatenates every token block.
+
+| Role | Size | Weight | Use |
+| ---- | ---- | ------ | --- |
+| `display` | 3rem | 600 | Countdown. Tabular numerals. |
+| `title` | 1.25rem | 600 | Panel heading. |
+| `body` | 0.9375rem | 400 | Messages. Line height 1.5. |
+| `label` | 0.875rem | 600 | Buttons. |
+| `caption` | 0.75rem | 500 | Helper text. |
+
+Family: Manrope (variable, bundled, OFL) first, system sans stack as fallback. No remote fonts: the CSP
+is `default-src 'self'`. Font file wiring is a separate step because it adds a dependency.
+Sizes in rem. No tracked all-caps text.
