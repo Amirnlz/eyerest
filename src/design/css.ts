@@ -9,7 +9,10 @@ export function cssVarName(name: ColorTokenName): string {
 
 function declarations(theme: ThemeName, indent: string): string {
   return colorTokenNames
-    .map((name) => `${indent}${cssVarName(name)}: ${resolveToken(themes[theme][name])};`)
+    .map(
+      (name) =>
+        `${indent}${cssVarName(name)}: ${resolveToken(themes[theme][name])};`,
+    )
     .join('\n');
 }
 

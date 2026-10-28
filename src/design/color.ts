@@ -1,6 +1,10 @@
 /** Pure color math. No DOM, no Electron. Used by tokens validation and contrast tests. */
 
-export type Rgb = { readonly r: number; readonly g: number; readonly b: number };
+export type Rgb = {
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+};
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/;
 const HEX8 = /^#[0-9a-fA-F]{8}$/;

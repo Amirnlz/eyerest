@@ -19,10 +19,13 @@ describe('contrastRatio', () => {
   });
 });
 
-describe.each(['light', 'dark'] as const satisfies readonly ThemeName[])('%s WCAG AA', (theme) => {
-  it.each(contrastPairs)('$foreground on $background ($use)', (pair) => {
-    const fg = resolveToken(themes[theme][pair.foreground]);
-    const bg = resolveToken(themes[theme][pair.background]);
-    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(pair.minRatio);
-  });
-});
+describe.each(['light', 'dark'] as const satisfies readonly ThemeName[])(
+  '%s WCAG AA',
+  (theme) => {
+    it.each(contrastPairs)('$foreground on $background ($use)', (pair) => {
+      const fg = resolveToken(themes[theme][pair.foreground]);
+      const bg = resolveToken(themes[theme][pair.background]);
+      expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(pair.minRatio);
+    });
+  },
+);

@@ -5,23 +5,30 @@ import { colorTokenNames, resolveToken, themes } from '../../src/design/tokens';
 const css = buildColorCss();
 
 describe('buildColorCss', () => {
-  it.each(colorTokenNames)('declares %s in light, dark and the media query', (name) => {
-    const occurrences = css.split(`${cssVarName(name)}:`).length - 1;
-    expect(occurrences).toBe(3);
-  });
+  it.each(colorTokenNames)(
+    'declares %s in light, dark and the media query',
+    (name) => {
+      const occurrences = css.split(`${cssVarName(name)}:`).length - 1;
+      expect(occurrences).toBe(3);
+    },
+  );
 
   it('emits the resolved value for each theme', () => {
     for (const name of colorTokenNames) {
-      expect(css).toContain(`${cssVarName(name)}: ${resolveToken(themes.light[name])};`);
-      expect(css).toContain(`${cssVarName(name)}: ${resolveToken(themes.dark[name])};`);
+      expect(css).toContain(
+        `${cssVarName(name)}: ${resolveToken(themes.light[name])};`,
+      );
+      expect(css).toContain(
+        `${cssVarName(name)}: ${resolveToken(themes.dark[name])};`,
+      );
     }
   });
 
   it('uses light as default and honors an explicit data-theme over the OS preference', () => {
     expect(css).toMatch(/^:root,\n\[data-theme='light'\] \{/);
-    expect(css).toContain('[data-theme=\'dark\'] {');
+    expect(css).toContain("[data-theme='dark'] {");
     expect(css).toContain(':root:not([data-theme])');
-    const dataDark = css.indexOf('[data-theme=\'dark\']');
+    const dataDark = css.indexOf("[data-theme='dark']");
     expect(css.indexOf('prefers-color-scheme: dark')).toBeGreaterThan(dataDark);
   });
 

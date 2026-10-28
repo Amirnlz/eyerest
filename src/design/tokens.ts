@@ -30,7 +30,9 @@ export const palette = {
 export type PaletteName = keyof typeof palette;
 
 /** Values a semantic token may hold: a palette reference or a literal alpha color (#rrggbbaa). */
-export type TokenValue = { readonly ref: PaletteName } | { readonly alpha: string };
+export type TokenValue =
+  | { readonly ref: PaletteName }
+  | { readonly alpha: string };
 
 export const colorTokenNames = [
   // Surfaces
@@ -53,7 +55,7 @@ export const colorTokenNames = [
   'scrim',
 ] as const;
 
-export type ColorTokenName = typeof colorTokenNames[number];
+export type ColorTokenName = (typeof colorTokenNames)[number];
 export type ThemeName = 'light' | 'dark';
 export type ThemeColors = Readonly<Record<ColorTokenName, TokenValue>>;
 
@@ -62,32 +64,32 @@ const alpha = (hex8: string): TokenValue => ({ alpha: hex8 });
 
 export const themes: Readonly<Record<ThemeName, ThemeColors>> = {
   light: {
-    'canvas': ref('neutral-100'),
-    'surface': ref('neutral-100'),
+    canvas: ref('neutral-100'),
+    surface: ref('neutral-100'),
     'surface-inset': ref('neutral-200'),
     'text-primary': ref('neutral-900'),
     'text-secondary': ref('neutral-600'),
     'border-strong': ref('neutral-400'),
     'focus-ring': ref('neutral-900'),
-    'accent': ref('neutral-800'),
+    accent: ref('neutral-800'),
     'on-accent': ref('neutral-50'),
     'shadow-light': alpha('#FFFFFFE6'),
     'shadow-dark': alpha('#00000026'),
-    'scrim': alpha('#00000066'),
+    scrim: alpha('#00000066'),
   },
   dark: {
-    'canvas': ref('neutral-850'),
-    'surface': ref('neutral-850'),
+    canvas: ref('neutral-850'),
+    surface: ref('neutral-850'),
     'surface-inset': ref('neutral-925'),
     'text-primary': ref('neutral-75'),
     'text-secondary': ref('neutral-300'),
     'border-strong': ref('neutral-700'),
     'focus-ring': ref('neutral-75'),
-    'accent': ref('neutral-150'),
+    accent: ref('neutral-150'),
     'on-accent': ref('neutral-850'),
     'shadow-light': alpha('#FFFFFF14'),
     'shadow-dark': alpha('#000000A6'),
-    'scrim': alpha('#00000066'),
+    scrim: alpha('#00000066'),
   },
 };
 
@@ -110,19 +112,64 @@ export type ContrastPair = {
  * never on `accent` (same tone in both themes by design).
  */
 export const contrastPairs: readonly ContrastPair[] = [
-  { foreground: 'text-primary', background: 'canvas', minRatio: 4.5, use: 'body text' },
-  { foreground: 'text-primary', background: 'surface', minRatio: 4.5, use: 'panel text' },
-  { foreground: 'text-primary', background: 'surface-inset', minRatio: 4.5, use: 'pressed text' },
-  { foreground: 'text-secondary', background: 'canvas', minRatio: 4.5, use: 'helper text' },
-  { foreground: 'text-secondary', background: 'surface', minRatio: 4.5, use: 'panel helper' },
+  {
+    foreground: 'text-primary',
+    background: 'canvas',
+    minRatio: 4.5,
+    use: 'body text',
+  },
+  {
+    foreground: 'text-primary',
+    background: 'surface',
+    minRatio: 4.5,
+    use: 'panel text',
+  },
+  {
+    foreground: 'text-primary',
+    background: 'surface-inset',
+    minRatio: 4.5,
+    use: 'pressed text',
+  },
+  {
+    foreground: 'text-secondary',
+    background: 'canvas',
+    minRatio: 4.5,
+    use: 'helper text',
+  },
+  {
+    foreground: 'text-secondary',
+    background: 'surface',
+    minRatio: 4.5,
+    use: 'panel helper',
+  },
   {
     foreground: 'text-secondary',
     background: 'surface-inset',
     minRatio: 4.5,
     use: 'pressed helper',
   },
-  { foreground: 'on-accent', background: 'accent', minRatio: 4.5, use: 'primary button label' },
-  { foreground: 'border-strong', background: 'surface', minRatio: 3, use: 'control boundary' },
-  { foreground: 'focus-ring', background: 'surface', minRatio: 3, use: 'focus indicator' },
-  { foreground: 'accent', background: 'surface', minRatio: 3, use: 'primary button edge' },
+  {
+    foreground: 'on-accent',
+    background: 'accent',
+    minRatio: 4.5,
+    use: 'primary button label',
+  },
+  {
+    foreground: 'border-strong',
+    background: 'surface',
+    minRatio: 3,
+    use: 'control boundary',
+  },
+  {
+    foreground: 'focus-ring',
+    background: 'surface',
+    minRatio: 3,
+    use: 'focus indicator',
+  },
+  {
+    foreground: 'accent',
+    background: 'surface',
+    minRatio: 3,
+    use: 'primary button edge',
+  },
 ];
