@@ -70,7 +70,7 @@ Known platform risks (we handle them in the step that owns them):
 | 1.7 | Media adapters for Windows and macOS | PAUSED (needs research; do not start before your research) |
 | 1.8 | App lifecycle: tray, single instance, settings file | DONE |
 | 1.9 | Packaging, CI matrix, E2E smoke | DONE |
-| 2.1 | Design direction and tokens | TODO |
+| 2.1 | Design direction and tokens | IN PROGRESS (color tokens delivered, awaiting approval) |
 | 2.2 | Primitive components | TODO |
 | 2.3 | Overlay-specific components, motion, accessibility | TODO |
 | 2.4 | Component gallery and visual regression baseline | TODO |
