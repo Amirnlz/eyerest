@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import 'virtual:eyerest-design.css';
 import { isOverlayLayout } from '../shared/overlay-layout';
 import { App } from './App';
 

@@ -56,15 +56,21 @@ describe('elevationValue', () => {
 });
 
 describe('buildElevationCss', () => {
-  it('declares flat and every level once', () => {
-    expect(css.split(`${elevationVar('flat')}: none;`)).toHaveLength(2);
+  it('declares flat and every level in all three theme scopes', () => {
+    expect(css.split(`${elevationVar('flat')}: none;`)).toHaveLength(4);
     for (const name of elevationNames) {
-      expect(css.split(`${elevationVar(name)}:`)).toHaveLength(2);
+      expect(css.split(`${elevationVar(name)}:`)).toHaveLength(4);
     }
   });
 
-  it('is theme independent: colors come only from color tokens, no literals', () => {
+  it('never declares on a bare :root (var() would resolve to the light theme)', () => {
+    expect(css).not.toMatch(/^:root \{/m);
+    expect(css).toMatch(/^:root,\n\[data-theme='light'\] \{/);
+    expect(css).toContain("[data-theme='dark'] {");
+    expect(css).toContain(':root:not([data-theme])');
+  });
+
+  it('takes colors only from color tokens, no literals', () => {
     expect(css).not.toMatch(/#[0-9a-f]{3,8}|rgb|hsl|oklch/i);
-    expect(css).not.toContain('data-theme');
   });
 });

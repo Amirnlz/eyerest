@@ -77,3 +77,13 @@ Source: `src/design/motion.ts`. CSS: `buildMotionCss()`. Values from the `better
   `prefers-reduced-motion: reduce`. Durations stay, so the opacity fade still plays.
 - Theme-switch transition suppression (disable transitions for one frame during a theme flip) is a
   runtime helper. It ships with theme switching in Phase 3, not as a token.
+
+## Wiring
+
+- `virtual:eyerest-design.css` (`src/design/vite-plugin.ts`) serves `buildDesignCss()` to the renderer
+  (`electron.vite.config.ts`) and the dev harness (`harness/vite.config.ts`). Token edits need a
+  dev-server restart.
+- Theming rule: any custom property whose value uses `var(--er-color-*)` is declared through
+  `themedBlocks()` (`src/design/theme-scope.ts`), never on a bare `:root`. A `var()` resolves where it
+  is declared, so a bare `:root` declaration keeps light colors inside `[data-theme='dark']`.
+- No global background is set: the overlay window is transparent on Wayland (`surface` layout).

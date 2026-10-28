@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'electron-vite';
+import { designCssPlugin } from './src/design/vite-plugin';
 
 export default defineConfig({
   main: {
@@ -20,6 +21,7 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
+    plugins: [designCssPlugin()],
     build: {
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/renderer/index.html') },

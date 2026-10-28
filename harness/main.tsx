@@ -4,6 +4,7 @@
  */
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import 'virtual:eyerest-design.css';
 import type { Snapshot } from '../src/core/scheduler';
 import { Overlay, toOverlayViewModel } from '../src/renderer';
 
@@ -22,9 +23,15 @@ function buildSnapshot(scenario: Scenario, seconds: number): Snapshot {
     case 'idle':
       return { state: { phase: 'idle' }, secondsRemaining: null };
     case 'working':
-      return { state: { phase: 'working', restAt: 0, restsDone: 0 }, secondsRemaining: null };
+      return {
+        state: { phase: 'working', restAt: 0, restsDone: 0 },
+        secondsRemaining: null,
+      };
     case 'warning':
-      return { state: { phase: 'warning', restAt: 0, restsDone: 0 }, secondsRemaining: seconds };
+      return {
+        state: { phase: 'warning', restAt: 0, restsDone: 0 },
+        secondsRemaining: seconds,
+      };
     case 'eye-rest':
       return {
         state: { phase: 'resting', kind: 'eye', endsAt: 0, restsDone: 0 },
@@ -52,7 +59,8 @@ function Harness() {
     setSeconds(nextMax);
   };
 
-  const record = (intent: string) => setLog((entries) => [intent, ...entries].slice(0, 8));
+  const record = (intent: string) =>
+    setLog((entries) => [intent, ...entries].slice(0, 8));
 
   return (
     <main>
