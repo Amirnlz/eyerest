@@ -10,9 +10,12 @@ export interface AppProps {
   /**
    * `positioned`: the window is the panel, so the panel fills it.
    * `surface`: the window covers the work area, so the panel is placed at the
-   * top-right here. The window is transparent, so nothing else is drawn.
+   * top-right here. The window is transparent except for an integrated rest
+   * scrim on native Wayland.
    */
   readonly layout?: OverlayLayout;
+  /** Draw dim and rest content in one window for native Wayland stacking. */
+  readonly integratedDim?: boolean;
 }
 
 /** Temporary Phase 1 look for the panel in the surface layout. Phase 2 replaces it. */
@@ -26,10 +29,22 @@ const surfacePanelStyle: CSSProperties = {
   background: '#ffffff',
   color: '#000000',
   border: '1px solid #888888',
+  zIndex: 1,
+};
+
+const integratedSurfaceStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+};
+
+const integratedDimStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(32, 32, 32, 0.6)',
 };
 
 /** Connects the overlay to the main process through the preload bridge. */
-export function App({ api, layout = 'positioned' }: AppProps) {
+export function App({ api, layout = 'positioned', integratedDim = false }: AppProps) {
   const snapshot = useSchedulerSnapshot(api);
   if (snapshot === null) return null;
 
@@ -45,5 +60,22 @@ export function App({ api, layout = 'positioned' }: AppProps) {
     />
   );
 
-  return layout === 'surface' ? <div style={surfacePanelStyle}>{overlay}</div> : overlay;
+  if (layout !== 'surface') return overlay;
+
+  if (integratedDim) {
+    return (
+      <div style={integratedSurfaceStyle}>
+        {viewModel.mode === 'rest' ? (
+          <div
+            aria-hidden="true"
+            data-testid="integrated-dim"
+            style={integratedDimStyle}
+          />
+        ) : null}
+        <div style={surfacePanelStyle}>{overlay}</div>
+      </div>
+    );
+  }
+
+  return <div style={surfacePanelStyle}>{overlay}</div>;
 }

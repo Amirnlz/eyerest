@@ -29,10 +29,14 @@ test('a second launch exits at once and shows nothing', async () => {
     const executable = await app.evaluate(() => process.execPath);
 
     const exitCode = await new Promise<number | null>((resolve, reject) => {
-      const second = spawn(executable, ['.', ...(process.env['CI'] ? ['--no-sandbox'] : [])], {
-        stdio: 'ignore',
-        env: { ...process.env, EYEREST_FAST: '1' },
-      });
+      const second = spawn(
+        executable,
+        ['.', ...(process.platform === 'linux' ? ['--no-sandbox'] : [])],
+        {
+          stdio: 'ignore',
+          env: { ...process.env, EYEREST_FAST: '1' },
+        },
+      );
       const timer = setTimeout(() => {
         second.kill();
         reject(new Error('second instance did not exit within 15 s'));

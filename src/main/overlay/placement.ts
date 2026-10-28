@@ -32,3 +32,25 @@ export function resolvePlacement(
   }
   return 'positioned';
 }
+
+/** Whether Electron is using native Wayland, where separate window stacking is unavailable. */
+export function isNativeWayland(
+  platform: NodeJS.Platform,
+  env: Readonly<Record<string, string | undefined>>,
+  ozoneSwitch: string,
+): boolean {
+  if (platform !== 'linux') return false;
+
+  const ozone = ozoneSwitch.trim().toLowerCase();
+  if (ozone === 'x11') return false;
+  if (ozone === 'wayland') return true;
+
+  const requested = (env['EYEREST_OZONE'] ?? '').trim().toLowerCase();
+  if (requested === 'x11') return false;
+  if (requested === 'wayland') return true;
+
+  return (
+    (env['XDG_SESSION_TYPE'] ?? '').trim().toLowerCase() === 'wayland' ||
+    Boolean(env['WAYLAND_DISPLAY'])
+  );
+}

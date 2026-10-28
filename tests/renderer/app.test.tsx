@@ -130,6 +130,20 @@ describe('App', () => {
       expect(api.postpone).toHaveBeenCalledTimes(1);
     });
 
+    it('draws the dim scrim behind the panel during rest in integrated mode', () => {
+      const api = createFakeApi();
+      render(<App api={api} layout="surface" integratedDim />);
+
+      act(() => api.push(warning(15)));
+      expect(screen.queryByTestId('integrated-dim')).not.toBeInTheDocument();
+
+      act(() => api.push(resting(20)));
+      expect(screen.getByTestId('integrated-dim')).toHaveStyle({
+        background: 'rgba(32, 32, 32, 0.6)',
+      });
+      expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument();
+    });
+
     it('does not add a wrapper in the positioned layout', () => {
       const api = createFakeApi();
       const { container } = render(<App api={api} layout="positioned" />);

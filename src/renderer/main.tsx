@@ -12,9 +12,11 @@ if (!container) throw new Error('Missing #root element');
 // The main process passes the layout as `?layout=positioned|surface`.
 const requestedLayout = new URLSearchParams(window.location.search).get('layout');
 const layout = isOverlayLayout(requestedLayout) ? requestedLayout : 'positioned';
+const integratedDim =
+  new URLSearchParams(window.location.search).get('integratedDim') === '1';
 
 createRoot(container).render(
   <StrictMode>
-    <App api={api} layout={layout} />
+    <App api={api} layout={layout} integratedDim={integratedDim} />
   </StrictMode>,
 );

@@ -14,7 +14,7 @@ import {
 import { createMediaController } from './media/create-media-controller';
 import { RestMediaPauser } from './media/rest-media-pauser';
 import { OverlayWindowManager } from './overlay/overlay-window-manager';
-import { resolvePlacement } from './overlay/placement';
+import { isNativeWayland, resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
 import { createMainRuntime, type MainRuntime } from './runtime';
 import { createNodeSettingsFs } from './settings/node-settings-fs';
@@ -57,6 +57,8 @@ void app.whenReady().then(() => {
 
   const ozone = app.commandLine.getSwitchValue('ozone-platform');
   const layout = resolvePlacement(process.platform, process.env, ozone);
+  const integratedDim =
+    layout === 'surface' && isNativeWayland(process.platform, process.env, ozone);
 
   // One diagnostic line: placement problems are usually a display-backend issue.
   console.info(
@@ -72,6 +74,7 @@ void app.whenReady().then(() => {
       ),
       target: resolveRendererTarget(),
       layout,
+      integratedDim,
     }),
     createElectronDisplayPort(screen),
     {
@@ -82,12 +85,14 @@ void app.whenReady().then(() => {
     },
   );
 
-  // Dim sits below the overlay. After it is shown, the overlay is re-raised so
-  // it stays on top on platforms where show order decides stacking.
+  // On platforms with separate windows, the overlay receives each snapshot
+  // before the dim layer. It becomes interactive first; then the dim is shown
+  // and re-raises it. Native Wayland instead draws both in the overlay window.
   dim = new DimLayerManager(
     createElectronDimWindowFactory(),
     createElectronDimDisplayPort(screen),
     {
+      enabled: !integratedDim,
       onShown: () => overlay?.raise(),
       log: debug ? (message) => console.info(`[dim] ${message}`) : undefined,
     },
@@ -128,7 +133,7 @@ void app.whenReady().then(() => {
     ipcMain,
     getTargets: () =>
       BrowserWindow.getAllWindows().map((window) => window.webContents),
-    extraSenders: [dim, overlay, media, tray],
+    extraSenders: [overlay, dim, media, tray],
   });
 
   dim.start();

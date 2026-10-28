@@ -10,6 +10,8 @@ import type {
 } from './ports';
 
 export interface DimLayerManagerOptions {
+  /** Disable separate dim windows when the renderer draws an integrated scrim. */
+  readonly enabled?: boolean;
   /** `true` (default): the dim swallows clicks on the apps below. */
   readonly blockClicks?: boolean;
   /**
@@ -33,6 +35,7 @@ export function isDimPhase(phase: Phase): boolean {
  * Implements `SnapshotSender`, so it plugs into the same pipeline as the overlay.
  */
 export class DimLayerManager implements SnapshotSender {
+  private readonly enabled: boolean;
   private readonly blockClicks: boolean;
   private readonly onShown: () => void;
   private readonly log: (message: string) => void;
@@ -48,6 +51,7 @@ export class DimLayerManager implements SnapshotSender {
     private readonly displays: DimDisplayPort,
     options: DimLayerManagerOptions = {},
   ) {
+    this.enabled = options.enabled ?? true;
     this.blockClicks = options.blockClicks ?? true;
     this.onShown = options.onShown ?? (() => {});
     this.log = options.log ?? (() => {});
@@ -55,7 +59,7 @@ export class DimLayerManager implements SnapshotSender {
 
   /** Creates the hidden windows and starts watching displays. Safe to call twice. */
   start(): void {
-    if (this.started || this.disposed) return;
+    if (!this.enabled || this.started || this.disposed) return;
     this.started = true;
     this.reconcile(this.displays.getDisplays(), false);
     this.stopDisplayWatch = this.displays.onChange(() =>
@@ -64,7 +68,7 @@ export class DimLayerManager implements SnapshotSender {
   }
 
   send(snapshot: Snapshot): void {
-    if (this.disposed) return;
+    if (!this.enabled || this.disposed) return;
     this.start();
     if (isDimPhase(snapshot.state.phase)) this.show();
     else this.hide();

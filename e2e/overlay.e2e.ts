@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { isNativeWayland } from '../src/main/overlay/placement';
 import { launchApp, overlayPage, overlayState } from './helpers';
 
 /**
@@ -71,6 +72,21 @@ test('surface: window covers the work area and the panel is drawn top-right, the
     const page = overlayPage(app);
     expect(page).toBeDefined();
     if (!page) return;
+
+    if (
+      isNativeWayland(
+        process.platform,
+        process.env,
+        process.env['EYEREST_OZONE'] ?? '',
+      )
+    ) {
+      await expect(page.getByTestId('integrated-dim')).toBeVisible();
+      await page.getByRole('button', { name: /skip/i }).click();
+      await expect
+        .poll(async () => (await overlayState(app))?.visible, { timeout: 5_000 })
+        .toBe(false);
+      return;
+    }
 
     const panel = page.getByRole('region');
     await expect(panel).toBeVisible({ timeout: 10_000 });

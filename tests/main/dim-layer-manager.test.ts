@@ -34,6 +34,14 @@ describe('isDimPhase', () => {
 
 describe('DimLayerManager', () => {
   describe('start', () => {
+    it('does not create separate windows when disabled', () => {
+      const { factory, manager } = setup([D1, D2], { enabled: false });
+      manager.start();
+      manager.send(resting(5));
+
+      expect(factory.windows).toHaveLength(0);
+    });
+
     it('creates one hidden window per display at the display bounds', () => {
       const { factory, manager } = setup([D1, D2]);
       manager.start();

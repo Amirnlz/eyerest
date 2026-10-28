@@ -30,7 +30,7 @@ function setup() {
     env: { EYEREST_FAST: '1' },
     ipcMain,
     getTargets: () => [],
-    extraSenders: [dim, overlay],
+    extraSenders: [overlay, dim],
     schedulerOptions: { clock: time, ticker: time, tickIntervalMs: 250 },
   });
   dim.start();
@@ -83,6 +83,9 @@ describe('runtime + dim layer', () => {
     const { time, overlayFactory } = setup();
     time.advance(20 * SEC);
     expect(overlayFactory.last.count('moveTop')).toBe(1);
+    expect(overlayFactory.last.calls.indexOf('setInteractive(true)')).toBeLessThan(
+      overlayFactory.last.calls.indexOf('moveTop'),
+    );
     time.advance(3 * SEC);
     expect(overlayFactory.last.count('moveTop')).toBe(1);
   });

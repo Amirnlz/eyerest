@@ -9,7 +9,7 @@ export type Layout = 'positioned' | 'surface';
 
 export async function launchApp(layout: Layout = 'positioned') {
   return electron.launch({
-    args: ['.', ...(process.env['CI'] ? ['--no-sandbox'] : [])],
+    args: ['.', ...(process.platform === 'linux' ? ['--no-sandbox'] : [])],
     env: {
       ...process.env,
       EYEREST_FAST: '1',

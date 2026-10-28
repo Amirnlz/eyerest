@@ -37,7 +37,7 @@ function setup(settingsOverrides: Partial<RestConfig> = {}) {
     settingsOverrides,
     ipcMain: createFakeIpcMain(),
     getTargets: () => [],
-    extraSenders: [dim, overlay, tray],
+    extraSenders: [overlay, dim, tray],
     schedulerOptions: { clock: time, ticker: time, tickIntervalMs: 250 },
   });
   dim.start();

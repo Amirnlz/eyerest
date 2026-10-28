@@ -17,6 +17,8 @@ export interface ElectronWindowFactoryOptions {
   readonly preloadPath: string;
   readonly target: RendererTarget;
   readonly layout: OverlayLayout;
+  /** Draw the dim and rest panel in this window when native Wayland forbids stacking. */
+  readonly integratedDim?: boolean;
 }
 
 export function createElectronWindowFactory(
@@ -82,7 +84,12 @@ export function createElectronWindowFactory(
         if (!window.isDestroyed()) window.destroy();
       });
 
-      loadRenderer(window, options.target, options.layout);
+      loadRenderer(
+        window,
+        options.target,
+        options.layout,
+        options.integratedDim,
+      );
 
       return {
         setBounds: (next) => window.setBounds(next),
@@ -103,13 +110,17 @@ function loadRenderer(
   window: BrowserWindow,
   target: RendererTarget,
   layout: OverlayLayout,
+  integratedDim = false,
 ): void {
   if (target.kind === 'url') {
     const url = new URL(target.url);
     url.searchParams.set('layout', layout);
+    if (integratedDim) url.searchParams.set('integratedDim', '1');
     void window.loadURL(url.toString());
   } else {
-    void window.loadFile(target.path, { query: { layout } });
+    void window.loadFile(target.path, {
+      query: { layout, ...(integratedDim ? { integratedDim: '1' } : {}) },
+    });
   }
 }
 

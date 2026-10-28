@@ -13,6 +13,11 @@ npm run dev:renderer # browser harness for the overlay states (no Electron)
 
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
 
+Development starts Electron with Chromium's sandbox disabled. This avoids startup failures
+from the downloaded Linux `chrome-sandbox` helper, which is not installed with root ownership
+and setuid permissions in a normal project checkout. Packaged builds do not use this development
+flag.
+
 The app has no main window. It lives in the system tray: next rest time, Pause/Resume reminders, Quit.
 Stop `npm run dev` with Ctrl+C or the tray's Quit. Only one instance runs per user: close a running
 `npm run dev` before running `npm run e2e` or the packaged app.
@@ -33,6 +38,8 @@ npm run e2e          # builds, then launches the real app with Playwright (fast 
 E2E opens real windows. On a Linux machine without a display, run it under xvfb:
 `xvfb-run -a npx playwright test` (after `npm run build`). On native Wayland the overlay and dim
 geometry checks are skipped, because Wayland apps cannot choose window positions.
+On native Wayland, the rest panel and dim scrim share one surface window because the compositor
+does not let Electron control stacking between separate windows.
 
 ## Package
 

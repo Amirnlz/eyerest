@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isNativeWayland } from '../../src/main/overlay/placement';
 import { resolveStartupConfig } from '../../src/main/platform-switches';
 
 const X11 = [{ name: 'ozone-platform', value: 'x11' }];
@@ -70,5 +71,24 @@ describe('resolveStartupConfig', () => {
       expect(config.switches).toEqual(WAYLAND);
       expect(config.disableHardwareAcceleration).toBe(true);
     });
+  });
+});
+
+describe('isNativeWayland', () => {
+  it('detects Wayland from the selected backend or session environment', () => {
+    expect(isNativeWayland('linux', {}, 'wayland')).toBe(true);
+    expect(isNativeWayland('linux', { XDG_SESSION_TYPE: 'wayland' }, '')).toBe(true);
+    expect(isNativeWayland('linux', { WAYLAND_DISPLAY: 'wayland-0' }, '')).toBe(true);
+  });
+
+  it('honors an X11 override and returns false on other platforms', () => {
+    expect(
+      isNativeWayland(
+        'linux',
+        { XDG_SESSION_TYPE: 'wayland', EYEREST_OZONE: 'x11' },
+        'x11',
+      ),
+    ).toBe(false);
+    expect(isNativeWayland('darwin', { WAYLAND_DISPLAY: 'wayland-0' }, '')).toBe(false);
   });
 });
