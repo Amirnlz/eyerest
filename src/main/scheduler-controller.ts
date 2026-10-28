@@ -3,6 +3,7 @@ import type { Listener, Snapshot } from '../core/scheduler';
 /** The part of `RestScheduler` the controller uses. Lets tests inject a fake. */
 export interface SchedulerPort {
   start(): void;
+  stop(): void;
   skip(): void;
   postpone(): void;
   getSnapshot(): Snapshot;
@@ -36,6 +37,19 @@ export class SchedulerController {
 
   getSnapshot(): Snapshot {
     return this.scheduler.getSnapshot();
+  }
+
+  /**
+   * Pauses reminders: the scheduler goes idle, and every adapter (overlay,
+   * dim layer) sees an idle snapshot and hides at once.
+   */
+  pause(): void {
+    this.scheduler.stop();
+  }
+
+  /** Resumes reminders with a fresh cycle: a full work interval from now. */
+  resume(): void {
+    this.scheduler.start();
   }
 
   skip(): void {

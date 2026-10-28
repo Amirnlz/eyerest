@@ -12,6 +12,10 @@ class FakeScheduler implements SchedulerPort {
     this.calls.push('start');
     this.emit(WORKING);
   }
+  stop() {
+    this.calls.push('stop');
+    this.emit(IDLE);
+  }
   skip() {
     this.calls.push('skip');
   }
@@ -83,6 +87,29 @@ describe('SchedulerController', () => {
     controller.postpone();
 
     expect(scheduler.calls).toEqual(['skip', 'postpone']);
+  });
+
+  it('pause stops the scheduler and forwards the idle snapshot', () => {
+    const { scheduler, sender, controller } = setup();
+    controller.start();
+    sender.send.mockClear();
+
+    controller.pause();
+
+    expect(scheduler.calls.slice(-1)).toEqual(['stop']);
+    expect(sender.send).toHaveBeenCalledWith(IDLE);
+  });
+
+  it('resume starts the scheduler again without subscribing twice', () => {
+    const { scheduler, sender, controller } = setup();
+    controller.start();
+    controller.pause();
+    sender.send.mockClear();
+
+    controller.resume();
+
+    expect(scheduler.calls).toEqual(['subscribe', 'start', 'stop', 'start']);
+    expect(sender.send).toHaveBeenCalledWith(WORKING);
   });
 
   it('dispose unsubscribes, disposes the scheduler and stops forwarding', () => {

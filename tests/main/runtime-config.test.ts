@@ -25,4 +25,23 @@ describe('resolveConfig', () => {
     expect(() => resolveConfig({ EYEREST_FAST: '1' })).not.toThrow();
     expect(FAST_MODE_CONFIG.warningMs).toBeLessThan(FAST_MODE_CONFIG.workIntervalMs ?? 0);
   });
+
+  describe('settings overrides', () => {
+    it('applies the settings file on top of the defaults', () => {
+      const config = resolveConfig({}, { workIntervalMs: 600_000, cyclesBeforeLongRest: 4 });
+      expect(config.workIntervalMs).toBe(600_000);
+      expect(config.cyclesBeforeLongRest).toBe(4);
+      expect(config.eyeRestMs).toBe(DEFAULT_CONFIG.eyeRestMs);
+    });
+
+    it('EYEREST_FAST wins over the settings file for the durations it sets', () => {
+      const config = resolveConfig({ EYEREST_FAST: '1' }, { workIntervalMs: 600_000, cyclesBeforeLongRest: 4 });
+      expect(config.workIntervalMs).toBe(20_000);
+      expect(config.cyclesBeforeLongRest).toBe(4);
+    });
+
+    it('still validates the merged result', () => {
+      expect(() => resolveConfig({}, { eyeRestMs: -1 })).toThrow();
+    });
+  });
 });

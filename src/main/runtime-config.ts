@@ -12,7 +12,17 @@ export const FAST_MODE_CONFIG: Partial<RestConfig> = Object.freeze({
   postponeMs: 10_000,
 });
 
-/** Builds the validated config from the process environment. */
-export function resolveConfig(env: Readonly<Record<string, string | undefined>>): RestConfig {
-  return createConfig(env['EYEREST_FAST'] === '1' ? FAST_MODE_CONFIG : {});
+/**
+ * Builds the validated config. Precedence, lowest to highest: defaults, the
+ * settings file, `EYEREST_FAST=1`. The env flag wins so manual and e2e runs
+ * stay short whatever the user's settings file says.
+ */
+export function resolveConfig(
+  env: Readonly<Record<string, string | undefined>>,
+  settingsOverrides: Partial<RestConfig> = {},
+): RestConfig {
+  return createConfig({
+    ...settingsOverrides,
+    ...(env['EYEREST_FAST'] === '1' ? FAST_MODE_CONFIG : {}),
+  });
 }

@@ -1,3 +1,4 @@
+import type { RestConfig } from '../core/config';
 import { RestScheduler, type SchedulerOptions } from '../core/scheduler';
 import type { IpcMainLike } from '../shared/ipc';
 import { registerIpcHandlers } from './ipc-handlers';
@@ -22,6 +23,8 @@ export interface MainRuntimeDeps {
    * the others.
    */
   readonly extraSenders?: readonly SnapshotSender[];
+  /** Validated overrides from the settings file. `EYEREST_FAST=1` still wins. */
+  readonly settingsOverrides?: Partial<RestConfig>;
   /** Test seam: inject a fake clock and ticker. */
   readonly schedulerOptions?: SchedulerOptions;
 }
@@ -39,7 +42,7 @@ export interface MainRuntime {
  * flow testable.
  */
 export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
-  const config = resolveConfig(deps.env);
+  const config = resolveConfig(deps.env, deps.settingsOverrides);
   const scheduler = new RestScheduler(config, deps.schedulerOptions);
   const sender = createCompositeSender([
     createBroadcastSender(deps.getTargets),

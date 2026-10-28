@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DimLayerManager } from './dim/dim-layer-manager';
 import {
@@ -16,6 +17,11 @@ import { OverlayWindowManager } from './overlay/overlay-window-manager';
 import { resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
 import { createMainRuntime, type MainRuntime } from './runtime';
+import { createNodeSettingsFs } from './settings/node-settings-fs';
+import { SETTINGS_FILE_NAME, loadSettings } from './settings/settings';
+import { acquireSingleInstance } from './single-instance';
+import { createElectronTrayPort } from './tray/electron-tray-adapter';
+import { TrayController } from './tray/tray-controller';
 
 // Must run before the app is ready: it chooses the display backend and GPU use.
 const startup = resolveStartupConfig(process.platform, process.env);
@@ -29,6 +35,10 @@ const debug = process.env['EYEREST_DEBUG'] === '1';
 let runtime: MainRuntime | null = null;
 let overlay: OverlayWindowManager | null = null;
 let dim: DimLayerManager | null = null;
+let tray: TrayController | null = null;
+
+// Single instance: a second launch quits at once and shows nothing.
+const primaryInstance = acquireSingleInstance(app);
 
 function resolveRendererTarget(): RendererTarget {
   const devServerUrl = process.env['ELECTRON_RENDERER_URL'];
@@ -40,6 +50,11 @@ function resolveRendererTarget(): RendererTarget {
 }
 
 void app.whenReady().then(() => {
+  if (!primaryInstance) return;
+
+  // Tray-only app: no Dock icon on macOS.
+  app.dock?.hide();
+
   const ozone = app.commandLine.getSwitchValue('ozone-platform');
   const layout = resolvePlacement(process.platform, process.env, ozone);
 
@@ -87,12 +102,33 @@ void app.whenReady().then(() => {
     { log: mediaLog },
   );
 
+  // Settings file in the user data dir. A missing file means defaults; a bad
+  // file falls back to defaults and is reported, never a crash.
+  const settingsPath = join(app.getPath('userData'), SETTINGS_FILE_NAME);
+  const settings = loadSettings(createNodeSettingsFs(), settingsPath);
+  if (settings.status === 'invalid') {
+    console.error(
+      `[settings] ${settingsPath} rejected, using defaults: ${settings.issues.join('; ')}`,
+    );
+  } else {
+    for (const issue of settings.issues) console.warn(`[settings] ${issue}`);
+    if (debug) console.info(`[settings] ${settings.status} ${settingsPath}`);
+  }
+
+  // Tray: Pause/Resume reminders and Quit, plus the next rest time.
+  tray = new TrayController(createElectronTrayPort(), {
+    pause: () => runtime?.controller.pause(),
+    resume: () => runtime?.controller.resume(),
+    quit: () => app.quit(),
+  });
+
   runtime = createMainRuntime({
     env: process.env,
+    settingsOverrides: settings.overrides,
     ipcMain,
     getTargets: () =>
       BrowserWindow.getAllWindows().map((window) => window.webContents),
-    extraSenders: [dim, overlay, media],
+    extraSenders: [dim, overlay, media, tray],
   });
 
   dim.start();
@@ -100,9 +136,11 @@ void app.whenReady().then(() => {
   runtime.start();
 });
 
-// No `window-all-closed` quit: the app has no regular window and lives on
-// without one. The tray menu with Quit arrives in Step 1.8. Until then, stop
-// the dev server with Ctrl+C.
+// The app has no regular window and lives in the tray. This listener replaces
+// Electron's default "quit when the last window closes"; Quit is in the tray menu.
+app.on('window-all-closed', () => {
+  // Intentionally empty: keep running in the tray.
+});
 
 app.on('before-quit', () => {
   runtime?.dispose();
@@ -111,4 +149,6 @@ app.on('before-quit', () => {
   overlay = null;
   dim?.dispose();
   dim = null;
+  tray?.dispose();
+  tray = null;
 });

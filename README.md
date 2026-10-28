@@ -36,6 +36,8 @@ src/main/       Electron main process: runtime composition, controller, IPC hand
 src/main/overlay/  top-right overlay window: bounds maths, manager, Electron adapters
 src/main/dim/      screen dim layer: one window per display, manager, Electron adapters
 src/main/media/    media pause at rest start: port, null controller, Linux MPRIS adapter (busctl)
+src/main/tray/     tray icon and menu (Pause/Resume, Quit): menu model, controller, Electron adapter
+src/main/settings/ settings file: parse, validate, load, atomic save
 src/preload/    contextBridge bridge (createBridge is Electron-free and tested)
 src/renderer/   view model, copy, overlay components, App, useSchedulerSnapshot
 tests/          core, main, preload, shared, renderer tests; tests/helpers has fakes
@@ -97,6 +99,18 @@ Linux display and GPU: the display backend is left to Electron (`EYEREST_OZONE=x
 Hardware acceleration is off on Linux (some GPU drivers crash the GPU process and leave windows blank);
 `EYEREST_GPU=1` turns it back on.
 Debug: `EYEREST_DEBUG=1` prints a line each time the overlay window is created, shown, hidden or changes mode.
+
+Tray and lifecycle: the app has no main window and lives in the system tray (menu: next rest time,
+Pause/Resume reminders, Quit). Pause stops the scheduler and hides the overlay and dim layer at once;
+Resume starts a fresh cycle. A second launch exits immediately. On Linux the tray needs a
+StatusNotifier/AppIndicator host (GNOME needs the AppIndicator extension), otherwise no icon is shown.
+
+Settings: optional JSON file `settings.json` in the Electron user data dir (Linux `~/.config/eyerest`,
+macOS `~/Library/Application Support/eyerest`, Windows `%APPDATA%\eyerest`). Keys are the config fields,
+all optional, durations in milliseconds: `workIntervalMs`, `warningMs`, `eyeRestMs`, `longRestMs`,
+`cyclesBeforeLongRest`, `postponeMs`. A missing file means defaults. An invalid file (bad JSON or values)
+is ignored as a whole, defaults apply, and the reason is printed to the console. Unknown keys are ignored
+with a warning. `EYEREST_FAST=1` overrides the durations from the file.
 
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
