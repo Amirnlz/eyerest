@@ -45,3 +45,22 @@ Source: `src/design/typography.ts`. CSS: `buildTypeCss()` (`--er-font-family-*`,
 Family: Manrope (variable, bundled, OFL) first, system sans stack as fallback. No remote fonts: the CSP
 is `default-src 'self'`. Font file wiring is a separate step because it adds a dependency.
 Sizes in rem. No tracked all-caps text.
+
+## Spacing, radius, z-index
+
+Source: `src/design/layout.ts`. CSS: `buildLayoutCss()`.
+
+- Space: 0, 1, 2, 3, 4, 5, 6, 8, 10, 12 (1 step = 0.25rem, 4px grid). `--er-space-<n>`.
+- Radius: `sm` 0.5rem, `md` 1rem, `lg` 1.5rem, `full` 9999px. `--er-radius-<name>`.
+- Concentric rule: outer = inner + padding. Declared nestings: `lg` = `md` + space-2 (panel around a
+  control), `md` = `sm` + space-2 (control around an icon chip). Tests enforce them.
+- z-index: `base` 0, `raised` 10, `overlay` 100. The dim layer is a separate window below the overlay.
+
+## Elevation
+
+Source: `src/design/elevation.ts`. CSS: `buildElevationCss()`, `--er-elevation-<name>`.
+
+Light source top-left. Each level is two layers: `shadow-light` up-left, `shadow-dark` down-right.
+Levels: `flat`, `raised-sm|md|lg`, `inset-sm|md` (pressed or recessed). Shadow colors come from the
+theme color tokens, so one definition serves light and dark. Forced-colors mode removes shadows:
+components keep `border: 1px solid transparent`.
