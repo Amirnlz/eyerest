@@ -64,3 +64,16 @@ Light source top-left. Each level is two layers: `shadow-light` up-left, `shadow
 Levels: `flat`, `raised-sm|md|lg`, `inset-sm|md` (pressed or recessed). Shadow colors come from the
 theme color tokens, so one definition serves light and dark. Forced-colors mode removes shadows:
 components keep `border: 1px solid transparent`.
+
+## Motion
+
+Source: `src/design/motion.ts`. CSS: `buildMotionCss()`. Values from the `better-ui` skill.
+
+- Durations: `fast` 100ms (hover), `quick` 150ms (press, exit), `base` 300ms (enter, icon swap).
+- Easings: `out` = `ease-out`, `standard` = `cubic-bezier(0.2, 0, 0, 1)`. No bounce or overshoot.
+- Effects: press scale 0.96; enter 0.75rem up with 0.25rem blur, staggered 100ms; exit -0.75rem fixed.
+- State changes use CSS transitions, never keyframes. Name the animated properties, never `all`.
+- Reduced motion: the effect tokens go neutral (scale 1, offsets 0, blur 0) under
+  `prefers-reduced-motion: reduce`. Durations stay, so the opacity fade still plays.
+- Theme-switch transition suppression (disable transitions for one frame during a theme flip) is a
+  runtime helper. It ships with theme switching in Phase 3, not as a token.

@@ -1,6 +1,7 @@
 import { buildColorCss } from './css';
 import { buildElevationCss } from './elevation-css';
 import { buildLayoutCss } from './layout-css';
+import { buildMotionCss } from './motion-css';
 import { buildTypeCss } from './type-css';
 
 /** Full generated stylesheet. Each token group appends its own block here. */
@@ -10,5 +11,6 @@ export function buildDesignCss(): string {
     buildTypeCss(),
     buildLayoutCss(),
     buildElevationCss(),
+    buildMotionCss(),
   ].join('\n');
 }
