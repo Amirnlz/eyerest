@@ -68,8 +68,8 @@ Known platform risks (we handle them in the step that owns them):
 | 1.5 | Screen dim layer | DONE |
 | 1.6 | Media control port and Linux adapter | PARTIAL DONE (browser pauses; VLC and Spotify do not; research pending) |
 | 1.7 | Media adapters for Windows and macOS | PAUSED (needs research; do not start before your research) |
-| 1.8 | App lifecycle: tray, single instance, settings file | TODO |
-| 1.9 | Packaging, CI matrix, E2E smoke | TODO |
+| 1.8 | App lifecycle: tray, single instance, settings file | DONE |
+| 1.9 | Packaging, CI matrix, E2E smoke | IN PROGRESS (needs a green CI run on all three OSes) |
 | 2.1 | Design direction and tokens | TODO |
 | 2.2 | Primitive components | TODO |
 | 2.3 | Overlay-specific components, motion, accessibility | TODO |

@@ -2,6 +2,7 @@
   "name": "eyerest",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://github.com/Amirnlz/eyerest",
   "description": "Cross-platform desktop reminder: 20-20-20 eye rests with overlay, skip and postpone.",
   "type": "module",
   "main": "./out/main/index.js",
@@ -19,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint && npm run test",
     "dev:renderer": "vite harness",
-    "e2e": "npm run build && playwright test"
+    "e2e": "npm run build && playwright test",
+    "package": "npm run build && electron-builder"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -39,6 +41,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "electron": "^45.0.0",
+    "electron-builder": "^26.0.0",
     "electron-vite": "^6.0.0",
     "eslint": "^9.39.5",
     "eslint-plugin-react": "^7.37.5",

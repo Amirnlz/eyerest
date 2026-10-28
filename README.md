@@ -81,6 +81,7 @@ npm run dev            # Electron app (real durations)
 npm run dev:fast       # Electron app, EYEREST_FAST=1 (macOS/Linux shell)
 npm run build          # production build into out/
 npm run e2e            # build + Playwright smoke test (launches the real app)
+npm run package        # build + installers for this OS into release/ (see docs/RUNNING.md)
 ```
 
 ## Contributing

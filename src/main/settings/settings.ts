@@ -50,7 +50,9 @@ export function parseSettings(text: string): SettingsLoad {
   try {
     parsed = JSON.parse(text);
   } catch (error) {
-    return invalid(`not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+    return invalid(
+      `not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     return invalid('must be a JSON object');
@@ -83,7 +85,8 @@ export function loadSettings(fs: SettingsFs, path: string): SettingsLoad {
   try {
     text = fs.readFile(path);
   } catch (error) {
-    return invalid(`could not read file: ${error instanceof Error ? error.message : String(error)}`);
+    return invalid(`could not read file:
+       ${error instanceof Error ? error.message : String(error)}`);
   }
   return text === null ? MISSING : parseSettings(text);
 }
@@ -93,7 +96,11 @@ export function loadSettings(fs: SettingsFs, path: string): SettingsLoad {
  * target, so a crash never leaves a half-written settings file.
  * Throws `ConfigError` (nothing written) when the values are invalid.
  */
-export function saveSettings(fs: SettingsFs, path: string, overrides: Partial<RestConfig>): void {
+export function saveSettings(
+  fs: SettingsFs,
+  path: string,
+  overrides: Partial<RestConfig>,
+): void {
   createConfig(overrides);
 
   const temp = `${path}.tmp`;
