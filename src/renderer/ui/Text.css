@@ -1,0 +1,56 @@
+/* Text primitive. One rule per type-scale role; every value comes from the type tokens. */
+
+.er-text {
+  margin: 0;
+  font-family: var(--er-font-family-sans);
+}
+
+.er-text--display {
+  font-size: var(--er-type-display-size);
+  font-weight: var(--er-type-display-weight);
+  line-height: var(--er-type-display-line-height);
+  letter-spacing: var(--er-type-display-letter-spacing);
+  font-variant-numeric: var(--er-type-display-numeric);
+}
+
+.er-text--title {
+  font-size: var(--er-type-title-size);
+  font-weight: var(--er-type-title-weight);
+  line-height: var(--er-type-title-line-height);
+  letter-spacing: var(--er-type-title-letter-spacing);
+  font-variant-numeric: var(--er-type-title-numeric);
+}
+
+.er-text--body {
+  font-size: var(--er-type-body-size);
+  font-weight: var(--er-type-body-weight);
+  line-height: var(--er-type-body-line-height);
+  letter-spacing: var(--er-type-body-letter-spacing);
+  font-variant-numeric: var(--er-type-body-numeric);
+}
+
+.er-text--label {
+  font-size: var(--er-type-label-size);
+  font-weight: var(--er-type-label-weight);
+  line-height: var(--er-type-label-line-height);
+  letter-spacing: var(--er-type-label-letter-spacing);
+  font-variant-numeric: var(--er-type-label-numeric);
+}
+
+.er-text--caption {
+  font-size: var(--er-type-caption-size);
+  font-weight: var(--er-type-caption-weight);
+  line-height: var(--er-type-caption-line-height);
+  letter-spacing: var(--er-type-caption-letter-spacing);
+  font-variant-numeric: var(--er-type-caption-numeric);
+}
+
+/* Tone */
+
+.er-text--primary {
+  color: var(--er-color-text-primary);
+}
+
+.er-text--secondary {
+  color: var(--er-color-text-secondary);
+}

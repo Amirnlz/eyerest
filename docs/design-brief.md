@@ -103,3 +103,10 @@ Location: `src/renderer/ui/`. Plain CSS per component, class prefix `er-`, token
   Press: inset shadow plus scale 0.96 (150ms, ease-out, never when disabled, `static` opts out).
   Hover only under `(hover: hover)`. Focus ring only on `:focus-visible`, outside the control with a gap.
   Forced-colors keeps a visible edge. Reduced motion drops the scale.
+
+- `Surface`: panel on the canvas. `elevation` (`flat`, `raised-sm|md|lg`, `inset-sm|md`), `padding`
+  (`none|sm|md|lg`), `radius` (`sm|md|lg`), `as` (`div|section|aside|article`). Inset levels use the
+  `surface-inset` color. A transparent border keeps an edge in forced-colors mode.
+- `Text`: one rule per type-scale role (`variant`: `display|title|body|label|caption`), `tone`
+  (`primary|secondary`), `as` for the element. Headings are chosen by the caller, never implied by
+  size. The CSS test asserts each role reads all five of its type tokens.

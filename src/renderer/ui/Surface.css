@@ -1,0 +1,77 @@
+/* Surface primitive. Tokens only. Depth comes from the elevation tokens. */
+
+.er-surface {
+  box-sizing: border-box;
+  border: var(--er-stroke-hairline) solid transparent;
+  color: var(--er-color-text-primary);
+  background-color: var(--er-color-surface);
+  box-shadow: var(--er-elevation-raised-md);
+}
+
+/* Elevation */
+
+.er-surface--flat {
+  box-shadow: var(--er-elevation-flat);
+}
+
+.er-surface--raised-sm {
+  box-shadow: var(--er-elevation-raised-sm);
+}
+
+.er-surface--raised-md {
+  box-shadow: var(--er-elevation-raised-md);
+}
+
+.er-surface--raised-lg {
+  box-shadow: var(--er-elevation-raised-lg);
+}
+
+.er-surface--inset-sm {
+  background-color: var(--er-color-surface-inset);
+  box-shadow: var(--er-elevation-inset-sm);
+}
+
+.er-surface--inset-md {
+  background-color: var(--er-color-surface-inset);
+  box-shadow: var(--er-elevation-inset-md);
+}
+
+/* Padding */
+
+.er-surface--pad-none {
+  padding: 0;
+}
+
+.er-surface--pad-sm {
+  padding: var(--er-space-3);
+}
+
+.er-surface--pad-md {
+  padding: var(--er-space-5);
+}
+
+.er-surface--pad-lg {
+  padding: var(--er-space-6);
+}
+
+/* Radius: nest a child at (outer radius - padding) when the inset is even. */
+
+.er-surface--radius-sm {
+  border-radius: var(--er-radius-sm);
+}
+
+.er-surface--radius-md {
+  border-radius: var(--er-radius-md);
+}
+
+.er-surface--radius-lg {
+  border-radius: var(--er-radius-lg);
+}
+
+/* Forced colors removes box-shadow, so the transparent border becomes the visible edge. */
+
+@media (forced-colors: active) {
+  .er-surface {
+    border-color: CanvasText;
+  }
+}
