@@ -44,6 +44,24 @@ export const concentricPairs: readonly ConcentricPair[] = [
   { outer: 'md', inner: 'sm', padding: 2 }, // control around an icon chip
 ];
 
+/**
+ * Line widths. These stay in px on purpose: a rem hairline blurs when the font size scales.
+ * Components reference them by variable, so no px literal appears in component CSS.
+ */
+export const stroke = {
+  hairline: '1px',
+  focus: '2px',
+  focusOffset: '3px',
+} as const;
+
+export type StrokeName = keyof typeof stroke;
+
+export const opacity = {
+  disabled: 0.5,
+} as const;
+
+export type OpacityName = keyof typeof opacity;
+
 /** Layers inside one window. The dim layer is a separate window below the overlay window. */
 export const zIndex = {
   base: 0,

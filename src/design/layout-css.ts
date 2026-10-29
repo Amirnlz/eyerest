@@ -1,5 +1,5 @@
 import { CSS_PREFIX } from './css';
-import { radius, radiusFull, space, zIndex } from './layout';
+import { opacity, radius, radiusFull, space, stroke, zIndex } from './layout';
 
 export function spaceVar(name: keyof typeof space): string {
   return `--${CSS_PREFIX}-space-${name}`;
@@ -13,6 +13,14 @@ export function zIndexVar(name: keyof typeof zIndex): string {
   return `--${CSS_PREFIX}-z-${name}`;
 }
 
+export function strokeVar(name: keyof typeof stroke): string {
+  return `--${CSS_PREFIX}-stroke-${name === 'focusOffset' ? 'focus-offset' : name}`;
+}
+
+export function opacityVar(name: keyof typeof opacity): string {
+  return `--${CSS_PREFIX}-opacity-${name}`;
+}
+
 export function buildLayoutCss(): string {
   const lines: string[] = [];
   for (const name of Object.keys(space) as unknown as (keyof typeof space)[]) {
@@ -22,6 +30,12 @@ export function buildLayoutCss(): string {
     lines.push(`  ${radiusVar(name)}: ${radius[name]}rem;`);
   }
   lines.push(`  ${radiusVar('full')}: ${radiusFull};`);
+  for (const name of Object.keys(stroke) as (keyof typeof stroke)[]) {
+    lines.push(`  ${strokeVar(name)}: ${stroke[name]};`);
+  }
+  for (const name of Object.keys(opacity) as (keyof typeof opacity)[]) {
+    lines.push(`  ${opacityVar(name)}: ${opacity[name]};`);
+  }
   for (const name of Object.keys(zIndex) as (keyof typeof zIndex)[]) {
     lines.push(`  ${zIndexVar(name)}: ${zIndex[name]};`);
   }

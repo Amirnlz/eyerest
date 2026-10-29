@@ -87,3 +87,19 @@ Source: `src/design/motion.ts`. CSS: `buildMotionCss()`. Values from the `better
   `themedBlocks()` (`src/design/theme-scope.ts`), never on a bare `:root`. A `var()` resolves where it
   is declared, so a bare `:root` declaration keeps light colors inside `[data-theme='dark']`.
 - No global background is set: the overlay window is transparent on Wayland (`surface` layout).
+
+## Strokes and opacity
+
+`--er-stroke-hairline` 1px, `--er-stroke-focus` 2px, `--er-stroke-focus-offset` 3px,
+`--er-opacity-disabled` 0.5. Strokes stay in px (a rem hairline blurs when text scales). Component CSS
+references them by variable: it contains no raw hex, rgb or px values (enforced by
+`tests/design/component-css.test.ts`, which scans every `src/renderer/ui/*.css`).
+
+## Primitives (Step 2.2)
+
+Location: `src/renderer/ui/`. Plain CSS per component, class prefix `er-`, tokens only.
+
+- `Button`: variants `primary` (accent fill), `secondary` (raised), `quiet` (flat); sizes `sm`, `md`.
+  Press: inset shadow plus scale 0.96 (150ms, ease-out, never when disabled, `static` opts out).
+  Hover only under `(hover: hover)`. Focus ring only on `:focus-visible`, outside the control with a gap.
+  Forced-colors keeps a visible edge. Reduced motion drops the scale.

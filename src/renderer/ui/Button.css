@@ -1,0 +1,112 @@
+/* Button primitive. Tokens only: every color, length, duration and shadow is a design variable. */
+
+.er-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--er-space-2);
+  box-sizing: border-box;
+  margin: 0;
+  border: var(--er-stroke-hairline) solid transparent;
+  border-radius: var(--er-radius-md);
+  color: var(--er-color-text-primary);
+  background-color: var(--er-color-surface);
+  box-shadow: var(--er-elevation-raised-sm);
+  font-family: var(--er-font-family-sans);
+  font-size: var(--er-type-label-size);
+  font-weight: var(--er-type-label-weight);
+  line-height: var(--er-type-label-line-height);
+  letter-spacing: var(--er-type-label-letter-spacing);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition-property: scale, box-shadow, background-color;
+  transition-duration: var(--er-duration-quick);
+  transition-timing-function: var(--er-ease-out);
+}
+
+/* Variants */
+
+.er-button--primary {
+  color: var(--er-color-on-accent);
+  background-color: var(--er-color-accent);
+}
+
+.er-button--quiet {
+  color: var(--er-color-text-secondary);
+  background-color: transparent;
+  box-shadow: var(--er-elevation-flat);
+}
+
+/* Sizes */
+
+.er-button--sm {
+  padding-block: var(--er-space-2);
+  padding-inline: var(--er-space-4);
+}
+
+.er-button--md {
+  padding-block: var(--er-space-3);
+  padding-inline: var(--er-space-6);
+}
+
+/* Hover only on hover-capable pointers, so touch never latches it. */
+
+@media (hover: hover) {
+  .er-button:not(:disabled):hover {
+    box-shadow: var(--er-elevation-raised-md);
+  }
+
+  .er-button--quiet:not(:disabled):hover {
+    color: var(--er-color-text-primary);
+    background-color: var(--er-color-surface-inset);
+    box-shadow: var(--er-elevation-flat);
+  }
+}
+
+/* Pressed: recess the surface; scale unless the button opts out with `static`. */
+
+.er-button:not(:disabled):active {
+  box-shadow: var(--er-elevation-inset-sm);
+}
+
+.er-button:not(.er-button--static):not(:disabled):active {
+  scale: var(--er-motion-press-scale);
+}
+
+.er-button--quiet:not(:disabled):active {
+  background-color: var(--er-color-surface-inset);
+}
+
+/* Focus ring sits outside the control with a gap, so it reads on the surface. */
+
+.er-button:focus-visible {
+  outline: var(--er-stroke-focus) solid var(--er-color-focus-ring);
+  outline-offset: var(--er-stroke-focus-offset);
+}
+
+.er-button:disabled {
+  cursor: not-allowed;
+  opacity: var(--er-opacity-disabled);
+  box-shadow: var(--er-elevation-flat);
+}
+
+/* Reduced motion: keep the shadow and color change, drop the scale. */
+
+@media (prefers-reduced-motion: reduce) {
+  .er-button {
+    transition-property: box-shadow, background-color;
+  }
+}
+
+/* Forced colors removes box-shadow, so the transparent border becomes the visible edge. */
+
+@media (forced-colors: active) {
+  .er-button {
+    border-color: ButtonText;
+  }
+
+  .er-button:disabled {
+    border-color: GrayText;
+  }
+}

@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { buildDesignCss } from '../../src/design/build';
 import {
   buildLayoutCss,
+  opacityVar,
   radiusVar,
   spaceVar,
+  strokeVar,
   zIndexVar,
 } from '../../src/design/layout-css';
-import { radius, space, zIndex } from '../../src/design/layout';
+import { opacity, radius, space, stroke, zIndex } from '../../src/design/layout';
 
 const css = buildLayoutCss();
 
@@ -24,6 +26,19 @@ describe('buildLayoutCss', () => {
       expect(css).toContain(`${zIndexVar(k as keyof typeof zIndex)}: ${v};`);
     }
     expect(css).toContain('--er-radius-full: 9999px;');
+  });
+
+  it('declares stroke and opacity tokens with exact values', () => {
+    expect(css).toContain('--er-stroke-hairline: 1px;');
+    expect(css).toContain('--er-stroke-focus: 2px;');
+    expect(css).toContain('--er-stroke-focus-offset: 3px;');
+    expect(css).toContain('--er-opacity-disabled: 0.5;');
+    for (const name of Object.keys(stroke) as (keyof typeof stroke)[]) {
+      expect(css.split(`${strokeVar(name)}:`)).toHaveLength(2);
+    }
+    for (const name of Object.keys(opacity) as (keyof typeof opacity)[]) {
+      expect(css.split(`${opacityVar(name)}:`)).toHaveLength(2);
+    }
   });
 });
 
