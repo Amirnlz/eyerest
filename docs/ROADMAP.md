@@ -72,7 +72,7 @@ Known platform risks (we handle them in the step that owns them):
 | 1.9 | Packaging, CI matrix, E2E smoke | DONE |
 | 2.1 | Design direction and tokens | DONE (colors, type, layout, elevation, motion, CSS wiring, Manrope font file) |
 | 2.2 | Primitive components | DONE (Button with icon, Surface, Text, Countdown, ProgressRing, Icon, Photo) |
-| 2.3 | Overlay-specific components, motion, accessibility | IN PROGRESS (2.3a components, 2.3b entrance motion and 2.3c theme mechanism done; theme setting, accessibility pending; exit motion deferred, see docs/design-system.md V15) |
+| 2.3 | Overlay-specific components, motion, accessibility | DONE for 2.3a to 2.3d (components, entrance motion, theme mechanism, accessibility). Pending: theme setting 2.3c-2; exit motion deferred, see docs/design-system.md V15 |
 | 2.4 | Component gallery and visual regression baseline | TODO |
 | 3.1 | Apply design system to overlay UI | TODO |
 | 3.2 | Apply design system to dim layer, tray, app icon | TODO |

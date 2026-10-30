@@ -22,4 +22,15 @@ export const copy = {
     skip: 'Skip',
     postpone: 'Postpone',
   },
+  /** Spoken to screen readers at milestones only, never every second. */
+  announcements: {
+    warning: (duration: string) => `Eye rest starts in ${duration}.`,
+    restStart: (title: string, duration: string) => `${title} for ${duration}.`,
+    restEnding: (duration: string) => `${duration} left.`,
+  },
+  /** Unit words for spoken durations. The plural is an "s" suffix, which is English only. */
+  units: {
+    second: 'second',
+    minute: 'minute',
+  },
 } as const;

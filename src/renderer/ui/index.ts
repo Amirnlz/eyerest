@@ -6,6 +6,7 @@ export {
   type ButtonSize,
   type ButtonVariant,
 } from './Button';
+export { VisuallyHidden, type VisuallyHiddenProps } from './VisuallyHidden';
 export {
   Photo,
   photoClassName,

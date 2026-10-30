@@ -1,0 +1,14 @@
+/* VisuallyHidden primitive. Tokens only: the 1px box is the hairline stroke. */
+
+.er-visually-hidden {
+  position: absolute;
+  box-sizing: border-box;
+  inline-size: var(--er-stroke-hairline);
+  block-size: var(--er-stroke-hairline);
+  margin: calc(var(--er-stroke-hairline) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

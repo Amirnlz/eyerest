@@ -46,7 +46,7 @@ Every rule below follows from this split.
 | 2.3a | `OverlayPanel`, `RestPanel`, `WarningNotice` built from `Surface`, `Text`, `Countdown`, `Button` and `Icon`; `surface` prop removed | Done |
 | 2.3b | Overlay entrance motion (M7). Exit (M8) deferred, V15 | Done |
 | 2.3c | Theme mechanism: preference, `data-theme`, OS listener, suppression (M10). The user-facing setting (store, IPC, tray entry) is a separate step | Done |
-| 2.3d | Accessibility | Planned |
+| 2.3d | Milestone announcements (A2), `VisuallyHidden`, focus policy (A6) | Done |
 | 2.4 | Gallery page, visual regression baselines | Planned |
 | 3.x | Apply the system to the real overlay, dim layer, tray, app icon | Planned |
 
@@ -306,10 +306,11 @@ parts we need.
 | ID | Rule | Enforcement |
 | -- | ---- | ----------- |
 | A1 | Keyboard: every action works with Tab, Enter and Space. Focus is always visible (C14). | test per component |
-| A2 | Countdown text uses `role="timer"`. Do not announce every second. Announce at milestones only. | `Countdown` implements the role and no live region. Milestone announcements: 2.3d |
+| A2 | Countdown text uses `role="timer"`. Do not announce every second. Announce at milestones only. | implemented: `Countdown` has the role and no live region; `announcements.ts` and a polite `status` region speak entry and long-rest milestones (60 s, 10 s); tests: `announcements.test.ts`, `accessibility.test.tsx`, `e2e/a11y.e2e.ts` |
 | A3 | Respect `prefers-reduced-motion` and `forced-colors`. | tests (C12, M6) |
 | A4 | Target size: aim for 44px on primary actions. WCAG 2.2 AA allows 24px minimum. | review, see V7 |
 | A5 | Icon-only buttons need an accessible name (`aria-label`). | test per component |
+| A6 | The overlay never moves focus when it appears. It opens with `showInactive()` so the user's app keeps the keyboard, and an autofocused Skip would turn a stray Space or Enter into a skipped rest. Controls stay reachable with Tab once the user focuses the window. | test: `accessibility.test.tsx`; e2e: window not focused |
 
 ### 6.8 Testing
 
@@ -567,7 +568,7 @@ Each item is one step. Do them in order.
 | 2.3b | Entrance motion (M7) with CSS keyframes; exit (M8) moves to V15 | Done. Chunk, CSS contract and e2e computed-style tests; reduced motion verified through the tokens |
 | 2.3c | Theme mechanism in the renderer (`system`, `light`, `dark`; `data-theme`; OS-change listener; suppression helper M10). The setting itself (persistence in main, IPC, UI entry) is split out as 2.3c-2 | Done. Logic, DOM adapter and e2e tests |
 | 2.3c-2 | Theme setting: store in main, typed IPC channel with payload validation, preload method, entry point (tray, step 3.2) | Not started. Cross-process: needs its own justification and tests |
-| 2.3d | Accessibility pass: timer announcements (A2), focus handling when the rest begins | Tests per rule |
+| 2.3d | Accessibility pass: milestone announcements (A2). "Focus when the rest begins" is rejected: focus stays where it is (A6) | Done. Logic, component and e2e tests |
 | 2.4 | Gallery page in the harness (every primitive, every state, both themes), Playwright visual baselines on Linux | Baselines committed, gallery linked from `RUNNING.md` |
 | 3.1 | Replace Phase 1 inline styles and raw colors (V2, V3) with primitives. Make the positioned overlay window transparent (V4) after checking Windows and Linux X11. | No raw color or px outside `src/design`, rounded panel corners show no window color |
 | 3.2 | Dim layer, tray and app icon from tokens | `scrim` token is the only dim color |
