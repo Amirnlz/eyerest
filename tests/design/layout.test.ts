@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { radius, space, zIndex } from '../../src/design/layout';
+import { optical, radius, space, zIndex } from '../../src/design/layout';
 
 describe('space', () => {
   it('ascends strictly', () => {
@@ -35,5 +35,12 @@ describe('zIndex', () => {
   it('orders base < raised < overlay', () => {
     expect(zIndex.base).toBeLessThan(zIndex.raised);
     expect(zIndex.raised).toBeLessThan(zIndex.overlay);
+  });
+});
+
+describe('optical', () => {
+  it('nudge is 2px at the default font size and smaller than the smallest padding step', () => {
+    expect(optical.nudge * 16).toBe(2);
+    expect(optical.nudge).toBeLessThan(space[2]);
   });
 });

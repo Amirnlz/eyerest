@@ -1,5 +1,13 @@
 import { CSS_PREFIX } from './css';
-import { opacity, radius, radiusFull, space, stroke, zIndex } from './layout';
+import {
+  opacity,
+  optical,
+  radius,
+  radiusFull,
+  space,
+  stroke,
+  zIndex,
+} from './layout';
 
 export function spaceVar(name: keyof typeof space): string {
   return `--${CSS_PREFIX}-space-${name}`;
@@ -21,6 +29,10 @@ export function opacityVar(name: keyof typeof opacity): string {
   return `--${CSS_PREFIX}-opacity-${name}`;
 }
 
+export function opticalVar(name: keyof typeof optical): string {
+  return `--${CSS_PREFIX}-optical-${name}`;
+}
+
 export function buildLayoutCss(): string {
   const lines: string[] = [];
   for (const name of Object.keys(space) as unknown as (keyof typeof space)[]) {
@@ -32,6 +44,9 @@ export function buildLayoutCss(): string {
   lines.push(`  ${radiusVar('full')}: ${radiusFull};`);
   for (const name of Object.keys(stroke) as (keyof typeof stroke)[]) {
     lines.push(`  ${strokeVar(name)}: ${stroke[name]};`);
+  }
+  for (const name of Object.keys(optical) as (keyof typeof optical)[]) {
+    lines.push(`  ${opticalVar(name)}: ${optical[name]}rem;`);
   }
   for (const name of Object.keys(opacity) as (keyof typeof opacity)[]) {
     lines.push(`  ${opacityVar(name)}: ${opacity[name]};`);

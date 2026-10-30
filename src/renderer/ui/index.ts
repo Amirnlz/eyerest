@@ -1,10 +1,16 @@
 export {
   Button,
   buttonClassName,
+  type ButtonIconPosition,
   type ButtonProps,
   type ButtonSize,
   type ButtonVariant,
 } from './Button';
+export {
+  Photo,
+  photoClassName,
+  type PhotoProps,
+} from './Photo';
 export {
   Surface,
   surfaceClassName,

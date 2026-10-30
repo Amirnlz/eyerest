@@ -21,6 +21,12 @@ describe('buttonClassName', () => {
     },
   );
 
+  it('adds an icon-side class only when an icon position is given', () => {
+    expect(buttonClassName('primary', 'md', false)).not.toContain('icon');
+    expect(buttonClassName('primary', 'md', false, 'start')).toContain('er-button--icon-start');
+    expect(buttonClassName('primary', 'md', false, 'end')).toContain('er-button--icon-end');
+  });
+
   it('adds the static class only when opted out', () => {
     expect(buttonClassName('primary', 'md', true)).toContain('er-button--static');
     expect(buttonClassName('primary', 'md', false)).not.toContain('er-button--static');
@@ -101,6 +107,45 @@ describe('Button', () => {
   });
 });
 
+describe('Button icon', () => {
+  it('renders no icon and no icon class by default', () => {
+    render(<Button>Skip</Button>);
+    const button = screen.getByRole('button');
+    expect(button.querySelector('svg')).toBeNull();
+    expect(button.className).not.toContain('icon');
+  });
+
+  it('puts the icon before the label by default, hidden from assistive tech', () => {
+    render(<Button icon="skip">Skip</Button>);
+    const button = screen.getByRole('button', { name: 'Skip' });
+    expect(button).toHaveClass('er-button--icon-start');
+    expect(button.firstElementChild?.tagName.toLowerCase()).toBe('svg');
+    expect(button.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+    expect(button.lastChild?.textContent).toBe('Skip');
+  });
+
+  it('puts the icon after the label with iconPosition="end"', () => {
+    render(<Button icon="postpone" iconPosition="end">Postpone</Button>);
+    const button = screen.getByRole('button', { name: 'Postpone' });
+    expect(button).toHaveClass('er-button--icon-end');
+    expect(button.lastElementChild?.tagName.toLowerCase()).toBe('svg');
+    expect(button.firstChild?.textContent).toBe('Postpone');
+  });
+
+  it('renders exactly one icon', () => {
+    render(<Button icon="eye" iconPosition="end">Look away</Button>);
+    expect(screen.getByRole('button').querySelectorAll('svg')).toHaveLength(1);
+  });
+
+  it('stays operable by keyboard with an icon', async () => {
+    const onClick = vi.fn();
+    render(<Button icon="skip" onClick={onClick}>Skip</Button>);
+    await userEvent.tab();
+    await userEvent.keyboard('{Enter}');
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('Button.css contract (better-ui)', () => {
   const css = readFileSync(join(__dirname, '../../../src/renderer/ui/Button.css'), 'utf8');
 
@@ -144,5 +189,24 @@ describe('Button.css contract (better-ui)', () => {
     expect(css).toContain(
       'border-radius: var(--er-surface-inner-radius, var(--er-radius-md));',
     );
+  });
+
+  it('gives the icon side 2px less padding through the optical token, on logical sides', () => {
+    expect(css).toMatch(
+      /\.er-button--icon-start\s*\{\s*padding-inline-start:\s*calc\(var\(--er-button-pad-inline\) - var\(--er-optical-nudge\)\);/,
+    );
+    expect(css).toMatch(
+      /\.er-button--icon-end\s*\{\s*padding-inline-end:\s*calc\(var\(--er-button-pad-inline\) - var\(--er-optical-nudge\)\);/,
+    );
+    expect(css).not.toMatch(/padding-(left|right)/);
+  });
+
+  it('declares each size padding once as a component variable the icon rules subtract from', () => {
+    expect(css).toMatch(/\.er-button--sm\s*\{[^}]*--er-button-pad-inline:\s*var\(--er-space-4\);/);
+    expect(css).toMatch(/\.er-button--md\s*\{[^}]*--er-button-pad-inline:\s*var\(--er-space-6\);/);
+  });
+
+  it('declares the icon rules after the size rules so the nudge wins at equal specificity', () => {
+    expect(css.indexOf('.er-button--icon-start {')).toBeGreaterThan(css.indexOf('.er-button--md {'));
   });
 });

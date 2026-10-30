@@ -45,6 +45,16 @@ export const stroke = {
 
 export type StrokeName = keyof typeof stroke;
 
+/**
+ * Optical alignment (better-ui): geometric centering can look off, so a nudge is applied by eye.
+ * `nudge` is the padding a button gives up on its icon side. A starting point, not a law.
+ */
+export const optical = {
+  nudge: 0.125,
+} as const;
+
+export type OpticalName = keyof typeof optical;
+
 export const opacity = {
   disabled: 0.5,
 } as const;

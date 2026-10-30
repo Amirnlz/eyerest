@@ -53,6 +53,8 @@ export const colorTokenNames = [
   'shadow-dark',
   // Dim layer shown behind the overlay during a rest
   'scrim',
+  // 1px outline on content images: pure black (light) or pure white (dark) at 10%, never tinted
+  'image-outline',
 ] as const;
 
 export type ColorTokenName = (typeof colorTokenNames)[number];
@@ -76,6 +78,7 @@ export const themes: Readonly<Record<ThemeName, ThemeColors>> = {
     'shadow-light': alpha('#FFFFFFE6'),
     'shadow-dark': alpha('#00000026'),
     scrim: alpha('#00000066'),
+    'image-outline': alpha('#0000001A'),
   },
   dark: {
     canvas: ref('neutral-850'),
@@ -90,6 +93,7 @@ export const themes: Readonly<Record<ThemeName, ThemeColors>> = {
     'shadow-light': alpha('#FFFFFF14'),
     'shadow-dark': alpha('#000000A6'),
     scrim: alpha('#00000066'),
+    'image-outline': alpha('#FFFFFF1A'),
   },
 };
 

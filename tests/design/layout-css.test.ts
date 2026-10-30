@@ -3,6 +3,7 @@ import { buildDesignCss } from '../../src/design/build';
 import {
   buildLayoutCss,
   opacityVar,
+  opticalVar,
   radiusVar,
   spaceVar,
   strokeVar,
@@ -26,6 +27,11 @@ describe('buildLayoutCss', () => {
       expect(css).toContain(`${zIndexVar(k as keyof typeof zIndex)}: ${v};`);
     }
     expect(css).toContain('--er-radius-full: 9999px;');
+  });
+
+  it('declares the optical nudge once, in rem', () => {
+    expect(css).toContain('--er-optical-nudge: 0.125rem;');
+    expect(css.split(`${opticalVar('nudge')}:`)).toHaveLength(2);
   });
 
   it('declares stroke and opacity tokens with exact values', () => {

@@ -55,6 +55,11 @@ describe('neumorphism contract', () => {
     );
   });
 
+  it('image-outline is pure black in light and pure white in dark, both at 10% alpha', () => {
+    expect(resolveToken(themes.light['image-outline'])).toBe('#0000001A');
+    expect(resolveToken(themes.dark['image-outline'])).toBe('#FFFFFF1A');
+  });
+
   it.each(themeNames)('%s: shadow-dark is translucent', (theme) => {
     expect(isHex8(resolveToken(themes[theme]['shadow-dark']))).toBe(true);
   });

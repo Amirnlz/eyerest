@@ -1,0 +1,15 @@
+/* Photo primitive. The outline color is the image-outline token: pure black or white at 10%. */
+
+.er-photo {
+  display: block;
+  max-inline-size: 100%;
+  /* Inset by its own width, so the line sits on the image edge and never grows the box. */
+  outline: var(--er-stroke-hairline) solid var(--er-color-image-outline);
+  outline-offset: calc(var(--er-stroke-hairline) * -1);
+}
+
+/* Transparent artwork has no edge to define. */
+
+.er-photo--artwork {
+  outline-style: none;
+}

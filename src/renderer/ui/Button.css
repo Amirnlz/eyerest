@@ -39,16 +39,32 @@
   box-shadow: var(--er-elevation-flat);
 }
 
-/* Sizes */
+/* Sizes. The inline padding is a component variable so the icon rules can adjust one side. */
 
 .er-button--sm {
+  --er-button-pad-inline: var(--er-space-4);
   padding-block: var(--er-space-2);
-  padding-inline: var(--er-space-4);
+  padding-inline: var(--er-button-pad-inline);
 }
 
 .er-button--md {
+  --er-button-pad-inline: var(--er-space-6);
   padding-block: var(--er-space-3);
-  padding-inline: var(--er-space-6);
+  padding-inline: var(--er-button-pad-inline);
+}
+
+/*
+ * Optical alignment (better-ui): an icon carries visual weight and its box has empty margin, so
+ * the side holding the icon looks heavier. Give that side a little less padding. Logical
+ * properties keep it correct in right-to-left layouts.
+ */
+
+.er-button--icon-start {
+  padding-inline-start: calc(var(--er-button-pad-inline) - var(--er-optical-nudge));
+}
+
+.er-button--icon-end {
+  padding-inline-end: calc(var(--er-button-pad-inline) - var(--er-optical-nudge));
 }
 
 /* Hover only on hover-capable pointers, so touch never latches it. */

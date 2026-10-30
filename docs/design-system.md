@@ -112,6 +112,7 @@ Semantic tokens (`--er-color-<name>`):
 | `shadow-light` | white, 90% | white, 8% | Neumorphic highlight (translucent) |
 | `shadow-dark` | black, 15% | black, 65% | Neumorphic shade (translucent) |
 | `scrim` | black, 40% | black, 40% | Dim layer behind the overlay |
+| `image-outline` | black, 10% | white, 10% | 1px inset outline on content images (S4). Pure black or white, never tinted |
 
 Why the dark canvas is `neutral-850` and not black: a dark shadow is invisible on black. The
 neumorphic pair needs a canvas lighter than the shade.
@@ -263,8 +264,8 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 | S1 | Concentric radius: outer radius = inner radius + padding + border width. It applies to a child that fills its parent's content box with a visible, even inset, up to 24px (1.5rem). A child sitting among other content (a button under a paragraph) is not concentric with the panel. Past 24px of padding, or with asymmetric padding, treat the layers as separate surfaces and keep each radius token. | test: Surface and Button CSS contracts; computed values checked in Chromium (section 8) |
 | S2 | Tight surfaces publish the inner radius. `Surface` with `padding` `xs` or `sm` sets `--er-surface-inner-radius = max(0, outer radius - padding - hairline)`. `Button` reads it with the `radius-md` token as fallback. `padding` `none`, `md` and `lg` reset it. For controls that must nest tightly, wrap them in a `Surface` with `padding="xs"` (a well). | test: `surface.test.tsx` |
 | S3 | Replace a border that only creates depth with a layered translucent shadow. Keep borders on dividers, inputs and selected states. | review |
-| S4 | Content images get a 1px outline, inset by 1px, in pure black or white at 10% alpha. Never a tinted neutral or the accent. Skip transparent artwork. | not implemented, see V11 |
-| S5 | Optical alignment: give a button 2px less padding on its icon side, and nudge asymmetric glyphs in the SVG, not in CSS. | not implemented, `Icon` exists now; Button padding in 2.2e |
+| S4 | Content images get a 1px outline, inset by 1px, in pure black or white at 10% alpha. Never a tinted neutral or the accent. Skip transparent artwork. | implemented: `Photo` and the `image-outline` token; tests in `photo.test.tsx`, `tokens.test.ts` |
+| S5 | Optical alignment: give a button 2px less padding on its icon side, and nudge asymmetric glyphs in the SVG, not in CSS. | implemented for `Button` with `icon` (`--er-optical-nudge`, logical sides); glyph nudges stay in the SVG paths; tests in `button.test.tsx` |
 
 ### 6.5 Motion (better-ui)
 
@@ -558,7 +559,7 @@ Each item is one step. Do them in order.
 | 2.1b-2 | Add `Manrope-Variable.woff2` and `OFL.txt` to `src/renderer/assets/fonts/` (steps in that folder's README). No code change. | `document.fonts.check("1rem 'Manrope Variable'")` is true in the running app, and `tests/renderer/font-assets.test.ts` passes |
 | 2.2c | `Countdown` (display role, `role="timer"`, tabular numerals) and `ProgressRing` (SVG, `--er-motion` transition on stroke offset, clamps 0 to 100 percent, linear ticking per second) | Done. Component tests, CSS contract tests, ring clamp tests |
 | 2.2d | `Icon` and a small set (skip, postpone, eye, moon, sun). Hand-drawn SVG paths, `currentColor`, non-scaling stroke. No icon dependency. | Done. I1 to I6 tests, accessible names |
-| 2.2e | Add optical-alignment padding to `Button` with an icon (S5), a `--er-image-outline` color token (S4) | Tests on both |
+| 2.2e | Optical-alignment padding on `Button` with an icon (S5), `--er-color-image-outline` token and `Photo` (S4) | Done. Token, CSS contract and component tests |
 | 2.3a | Overlay components built from primitives, copy stays in `copy.ts` | Overlay tests unchanged in behavior, no inline styles |
 | 2.3b | Entrance and exit motion (M7, M8) with CSS | Reduced-motion tests |
 | 2.3c | Theme switching: setting (system, light, dark), `data-theme`, suppression helper (M10) | Logic and UI tests, OS-change listener test |
@@ -606,7 +607,6 @@ visual claim is from code only.
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
 | V10 | LOW | API | `src/renderer/ui/Text.tsx:21` | Props come from `<p>`. With `as="label"`, TypeScript rejects `htmlFor`. `Surface` has no `ref`. | Add a polymorphic prop type when a label or ref is first needed. |
-| V11 | LOW | S4 | none yet | The image-outline recipe needs `oklch(0 0 0 / 0.1)`, but C4 bans color functions in component CSS. The two rules conflict. | Add a `--er-color-image-outline` token (pure black and white at 10%) in step 2.2e. |
 | V12 | LOW | Process | `src/design/contrast.test.ts`, `css.test.ts`, `tokens.test.ts` | Byte-identical copies of the files in `tests/design/`. `vitest.config.ts` includes only `tests/**`, so these never run. | Delete the three files. |
 | V13 | LOW | F4 | `src/renderer/assets/fonts/` | The loader is wired, but `Manrope-Variable.woff2` is not in the repository yet, so the app renders the system fallback. | Step 2.1b-2: add the file and `OFL.txt`. |
 | V14 | LOW | Process | `docs/ROADMAP.md` | The status board said 2.1 was in progress and 2.2 was TODO. | Updated in this step. Keep it current at each step. |
@@ -616,6 +616,7 @@ visual claim is from code only.
 | ID | Was | Fixed by |
 | -- | --- | -------- |
 | V1 | A `Button` in a padded `Surface` was not concentric. | S1 clarified (applies to children that fill the content box). `Surface` `xs` and `sm` publish `--er-surface-inner-radius`, `Button` reads it. Verified in Chromium. |
+| V11 | S4 needed `oklch()`, which C4 bans in component CSS. | `--er-color-image-outline` token (black or white at 10%) consumed by `Photo.css`. |
 | V9 | The token pairs ignored the 1px border. | The pairs were deleted. The CSS `calc()` subtracts `--er-stroke-hairline`, so the border is exact. |
 
 ### 14.2 Intentional deviations from `better-ui`

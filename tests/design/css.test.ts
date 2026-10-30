@@ -24,6 +24,11 @@ describe('buildColorCss', () => {
     }
   });
 
+  it('emits the image outline as black at 10% for light and white at 10% for dark', () => {
+    expect(css).toContain('--er-color-image-outline: #0000001A;');
+    expect(css).toContain('--er-color-image-outline: #FFFFFF1A;');
+  });
+
   it('uses light as default and honors an explicit data-theme over the OS preference', () => {
     expect(css).toMatch(/^:root,\n\[data-theme='light'\] \{/);
     expect(css).toContain("[data-theme='dark'] {");
