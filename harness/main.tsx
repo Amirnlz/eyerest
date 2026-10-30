@@ -8,6 +8,15 @@ import 'virtual:eyerest-design.css';
 import type { Snapshot } from '../src/core/scheduler';
 import { Overlay, toOverlayViewModel } from '../src/renderer';
 import { loadBundledFonts } from '../src/renderer/fonts-bootstrap';
+import {
+  createDomThemeController,
+  isThemePreference,
+  themePreferences,
+  type ThemePreference,
+} from '../src/renderer/theme';
+
+const theme = createDomThemeController(window);
+theme.start();
 
 type Scenario = 'idle' | 'working' | 'warning' | 'eye-rest' | 'long-rest';
 
@@ -50,6 +59,7 @@ function Harness() {
   const [scenario, setScenario] = useState<Scenario>('eye-rest');
   const [seconds, setSeconds] = useState(20);
   const [log, setLog] = useState<string[]>([]);
+  const [preference, setPreference] = useState<ThemePreference>(theme.preference());
 
   const current = scenarios.find((s) => s.id === scenario);
   const max = current?.max ?? 0;
@@ -80,6 +90,25 @@ function Harness() {
           </button>
         ))}
       </fieldset>
+
+      <label>
+        Theme
+        <select
+          value={preference}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (!isThemePreference(next)) return;
+            theme.setPreference(next);
+            setPreference(next);
+          }}
+        >
+          {themePreferences.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <label>
         Seconds remaining: {seconds}

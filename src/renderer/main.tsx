@@ -4,8 +4,11 @@ import 'virtual:eyerest-design.css';
 import { isOverlayLayout } from '../shared/overlay-layout';
 import { App } from './App';
 import { loadBundledFonts } from './fonts-bootstrap';
+import { createDomThemeController } from './theme';
 
 void loadBundledFonts();
+// Follows the OS theme. A user setting needs a store in the main process (roadmap candidate).
+createDomThemeController(window).start();
 
 const api = window.eyerest;
 if (!api) throw new Error('window.eyerest is missing: the preload script did not run');

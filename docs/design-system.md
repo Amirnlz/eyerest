@@ -45,7 +45,8 @@ Every rule below follows from this split.
 | 2.2d | `Icon`, icon registry (eye, sun, moon, skip, postpone) | Done |
 | 2.3a | `OverlayPanel`, `RestPanel`, `WarningNotice` built from `Surface`, `Text`, `Countdown`, `Button` and `Icon`; `surface` prop removed | Done |
 | 2.3b | Overlay entrance motion (M7). Exit (M8) deferred, V15 | Done |
-| 2.3c-d | Theme switching, accessibility | Planned |
+| 2.3c | Theme mechanism: preference, `data-theme`, OS listener, suppression (M10). The user-facing setting (store, IPC, tray entry) is a separate step | Done |
+| 2.3d | Accessibility | Planned |
 | 2.4 | Gallery page, visual regression baselines | Planned |
 | 3.x | Apply the system to the real overlay, dim layer, tray, app icon | Planned |
 
@@ -282,7 +283,7 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 | M7 | Entrance: split into semantic chunks (title, description, actions). Stagger 100ms. Each chunk: opacity, 4px blur, 12px translateY, 300ms, ease-out. Never stagger routine interactions. | implemented for the overlay panel (`OverlayPanel.css`); tests: `components.test.tsx`, `e2e/motion.e2e.ts` |
 | M8 | Exit: opacity, 4px blur, a fixed -12px translateY, 150ms, ease-out. Never the container height. Slide fully out only where the destination carries meaning. | deferred, see V15: the overlay window is hidden by the main process at once, so a renderer exit would never be seen |
 | M9 | Icon swap on an infrequent state change: scale 0.25 to 1, opacity 0 to 1, blur 4px to 0, 300ms, `--er-ease-standard`, both icons mounted in one grid cell. No bounce. Tab and hover-revealed icons swap instantly. | not implemented. `Icon` is static; the swap wrapper lands with its first consumer (2.3a) |
-| M10 | Suppress transitions for one frame on a theme switch. See the recipe in section 9. | not implemented, see V5 |
+| M10 | Suppress transitions for one frame on a theme switch. See the recipe in section 9. | implemented: `src/renderer/theme/transition-suppression.ts`; tests: `transition-suppression.test.ts`, `dom.test.ts`, `e2e/theme.e2e.ts` |
 | M11 | Hover-capable pointers only for hover styling. Set `-webkit-tap-highlight-color: transparent` on controls that draw their own pressed state. | test (hover); review (tap) |
 | M12 | Scrollable overlays get `overscroll-behavior: contain`. | n/a until something scrolls |
 
@@ -564,7 +565,8 @@ Each item is one step. Do them in order.
 | 2.2e | Optical-alignment padding on `Button` with an icon (S5), `--er-color-image-outline` token and `Photo` (S4) | Done. Token, CSS contract and component tests |
 | 2.3a | Overlay components built from primitives, copy stays in `copy.ts` | Done. Overlay tests unchanged in behavior, no inline styles in `components/`. `ProgressRing` is not used: the view model has no total duration, so a percent cannot be computed (roadmap candidate: `totalSeconds` in the snapshot) |
 | 2.3b | Entrance motion (M7) with CSS keyframes; exit (M8) moves to V15 | Done. Chunk, CSS contract and e2e computed-style tests; reduced motion verified through the tokens |
-| 2.3c | Theme switching: setting (system, light, dark), `data-theme`, suppression helper (M10) | Logic and UI tests, OS-change listener test |
+| 2.3c | Theme mechanism in the renderer (`system`, `light`, `dark`; `data-theme`; OS-change listener; suppression helper M10). The setting itself (persistence in main, IPC, UI entry) is split out as 2.3c-2 | Done. Logic, DOM adapter and e2e tests |
+| 2.3c-2 | Theme setting: store in main, typed IPC channel with payload validation, preload method, entry point (tray, step 3.2) | Not started. Cross-process: needs its own justification and tests |
 | 2.3d | Accessibility pass: timer announcements (A2), focus handling when the rest begins | Tests per rule |
 | 2.4 | Gallery page in the harness (every primitive, every state, both themes), Playwright visual baselines on Linux | Baselines committed, gallery linked from `RUNNING.md` |
 | 3.1 | Replace Phase 1 inline styles and raw colors (V2, V3) with primitives. Make the positioned overlay window transparent (V4) after checking Windows and Linux X11. | No raw color or px outside `src/design`, rounded panel corners show no window color |
@@ -604,7 +606,6 @@ visual claim is from code only.
 | V2 | MEDIUM | F1, T1 | `src/main/dim/dim-page.ts:8`, `src/renderer/App.tsx:43` | The dim color is `rgba(32, 32, 32, 0.6)`, a tinted near-black at 60%. The `scrim` token is black at 40%. Two sources of truth that disagree. | Step 3.2: derive both from the `scrim` token through `resolveToken`. |
 | V3 | MEDIUM | T2, C4 | `src/renderer/App.tsx:29-31` | Raw hex (`#ffffff`, `#000000`, `#888888`), a 1px border and `rgba()` in inline styles on the surface-layout wrapper and the integrated dim. Phase 1 leftovers. `components/*` are clean since 2.3a. The CSS scanner covers `ui/` and `components/` stylesheets, not TS style objects. | Step 3.1: replace the wrapper with a CSS class, drop the white box (the `Surface` is the panel). Extend the scanner to TS and TSX style objects. |
 | V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts` | Partly fixed: the window color now follows the theme, so dark theme no longer flashes white. Still open: the positioned window is opaque, so a rounded panel will show window-colored corners. | Step 3.1: transparent window, after checking Windows and Linux X11. |
-| V5 | MEDIUM | M10 | `src/renderer/ui/Button.css:23` | `Button` transitions `background-color` and `box-shadow`. With no theme-switch suppression, an OS theme change animates every control at once and smears. | Step 2.3c: build the recipe in section 9. |
 | V6 | MEDIUM | X1, X4 | `tests/renderer/ui/*.test.tsx` | jsdom cannot compute CSS. The roadmap asks for "focus ring is visible". The tests only check that the CSS text contains the rule. No test proves it renders. | Step 2.4: gallery plus Playwright computed-style and screenshot tests. |
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
@@ -620,6 +621,7 @@ visual claim is from code only.
 | V11 | S4 needed `oklch()`, which C4 bans in component CSS. | `--er-color-image-outline` token (black or white at 10%) consumed by `Photo.css`. |
 | V12 | Duplicate test files in `src/design/`. | Deleted. |
 | V13 | The Manrope file was missing. | `Manrope-Variable.woff2` and `OFL.txt` added to `src/renderer/assets/fonts/`. |
+| V5 | `Button` transitions smeared on a theme change. | `createTransitionSuppressor` wraps every theme change and OS flip. |
 | V9 | The token pairs ignored the 1px border. | The pairs were deleted. The CSS `calc()` subtracts `--er-stroke-hairline`, so the border is exact. |
 
 ### 14.2 Intentional deviations from `better-ui`
