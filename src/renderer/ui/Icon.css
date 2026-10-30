@@ -1,0 +1,34 @@
+/* Icon primitive. Everything is painted with currentColor, so color and state come from the parent. */
+
+.er-icon {
+  display: inline-block;
+  flex: none;
+  color: inherit;
+}
+
+.er-icon--sm {
+  inline-size: 1em;
+  block-size: 1em;
+}
+
+.er-icon--md {
+  inline-size: 1.25em;
+  block-size: 1.25em;
+}
+
+.er-icon--lg {
+  inline-size: var(--er-space-6);
+  block-size: var(--er-space-6);
+}
+
+/* Keep the stroke width in screen pixels whatever the icon size. */
+
+.er-icon :is(path, circle) {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Direction-bound icons flip in right-to-left layouts. One mechanism only: this rule. */
+
+[dir='rtl'] .er-icon--mirror {
+  scale: -1 1;
+}

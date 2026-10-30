@@ -41,8 +41,8 @@ Every rule below follows from this split.
 | 2.2b | `Surface`, `Text` | Done |
 | 2.1f | Open decisions: font loader, concentric radius, themed window background | Done, except the font file itself (section 13) |
 | 2.1b-2 | Manrope woff2 file added to `src/renderer/assets/fonts/` | Waiting for the file |
-| 2.2c | `Countdown`, `ProgressRing` | Next |
-| 2.2d | `Icon` | Planned |
+| 2.2c | `Countdown`, `ProgressRing`, `tick` and `linear` motion tokens | Done |
+| 2.2d | `Icon`, icon registry (eye, sun, moon, skip, postpone) | Done |
 | 2.3 | Overlay components, motion, theme switching, accessibility | Planned |
 | 2.4 | Gallery page, visual regression baselines | Planned |
 | 3.x | Apply the system to the real overlay, dim layer, tray, app icon | Planned |
@@ -181,8 +181,10 @@ up-left, `shadow-dark` down-right. Inset levels put both layers inside the surfa
 | `--er-duration-fast` | 100ms | Hover, row highlight |
 | `--er-duration-quick` | 150ms | Press, exit |
 | `--er-duration-base` | 300ms | Enter, icon swap |
+| `--er-duration-tick` | 1000ms | One scheduler tick. Progress sweeps only |
 | `--er-ease-out` | `ease-out` | Everything except the icon swap |
 | `--er-ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | Icon cross-fade only |
+| `--er-ease-linear` | `linear` | Progress sweeps only |
 | `--er-motion-press-scale` | 0.96 | Pressed scale |
 | `--er-motion-enter-offset` | 0.75rem | Enter moves up into place |
 | `--er-motion-exit-offset` | -0.75rem | Exit moves up and out, fixed distance |
@@ -262,7 +264,7 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 | S2 | Tight surfaces publish the inner radius. `Surface` with `padding` `xs` or `sm` sets `--er-surface-inner-radius = max(0, outer radius - padding - hairline)`. `Button` reads it with the `radius-md` token as fallback. `padding` `none`, `md` and `lg` reset it. For controls that must nest tightly, wrap them in a `Surface` with `padding="xs"` (a well). | test: `surface.test.tsx` |
 | S3 | Replace a border that only creates depth with a layered translucent shadow. Keep borders on dividers, inputs and selected states. | review |
 | S4 | Content images get a 1px outline, inset by 1px, in pure black or white at 10% alpha. Never a tinted neutral or the accent. Skip transparent artwork. | not implemented, see V11 |
-| S5 | Optical alignment: give a button 2px less padding on its icon side, and nudge asymmetric glyphs in the SVG, not in CSS. | not implemented until `Icon` exists |
+| S5 | Optical alignment: give a button 2px less padding on its icon side, and nudge asymmetric glyphs in the SVG, not in CSS. | not implemented, `Icon` exists now; Button padding in 2.2e |
 
 ### 6.5 Motion (better-ui)
 
@@ -276,7 +278,7 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 | M6 | Movement, scale and blur run only without reduced motion. Under reduced motion, keep an opacity cross-fade. The effect tokens do this globally. Where CSS names `scale` in `transition-property`, drop it inside `@media (prefers-reduced-motion: reduce)`. | test per component |
 | M7 | Entrance: split into semantic chunks (title, description, actions). Stagger 100ms. Each chunk: opacity, 4px blur, 12px translateY, 300ms, ease-out. Never stagger routine interactions. | not implemented, 2.3 |
 | M8 | Exit: opacity, 4px blur, a fixed -12px translateY, 150ms, ease-out. Never the container height. Slide fully out only where the destination carries meaning. | not implemented, 2.3 |
-| M9 | Icon swap on an infrequent state change: scale 0.25 to 1, opacity 0 to 1, blur 4px to 0, 300ms, `--er-ease-standard`, both icons mounted in one grid cell. No bounce. Tab and hover-revealed icons swap instantly. | not implemented, 2.2d |
+| M9 | Icon swap on an infrequent state change: scale 0.25 to 1, opacity 0 to 1, blur 4px to 0, 300ms, `--er-ease-standard`, both icons mounted in one grid cell. No bounce. Tab and hover-revealed icons swap instantly. | not implemented. `Icon` is static; the swap wrapper lands with its first consumer (2.3a) |
 | M10 | Suppress transitions for one frame on a theme switch. See the recipe in section 9. | not implemented, see V5 |
 | M11 | Hover-capable pointers only for hover styling. Set `-webkit-tap-highlight-color: transparent` on controls that draw their own pressed state. | test (hover); review (tap) |
 | M12 | Scrollable overlays get `overscroll-behavior: contain`. | n/a until something scrolls |
@@ -285,12 +287,12 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 
 | ID | Rule | Enforcement |
 | -- | ---- | ----------- |
-| I1 | Icons are SVG with `currentColor`. State comes from CSS color and opacity, never a second asset. | not implemented |
-| I2 | Rendered stroke follows adjacent text weight: 1.5px at 400, 2px at 500 to 600, 2.5px at 700. Use `vector-effect: non-scaling-stroke` so scaling does not change it. | not implemented |
-| I3 | Outline is the default. Fill marks the active or selected state. | not implemented |
-| I4 | One icon set per surface. Size inline icons at 1em to 1.25em. | not implemented |
+| I1 | Icons are SVG with `currentColor`. State comes from CSS color and opacity, never a second asset. | implemented: `Icon`, test checks no color literals |
+| I2 | Rendered stroke follows adjacent text weight: 1.5px at 400, 2px at 500 to 600, 2.5px at 700. Use `vector-effect: non-scaling-stroke` so scaling does not change it. | implemented: `weight` prop, `non-scaling-stroke`, CSS test |
+| I3 | Outline is the default. Fill marks the active or selected state. | implemented: `variant`, fill on fillable shapes only |
+| I4 | One icon set per surface. Size inline icons at 1em to 1.25em. | implemented: one registry, `sm` 1em, `md` 1.25em |
 | I5 | Design at render size (often 16px). It must stay recognizable there. | review |
-| I6 | In RTL, mirror only direction-bound icons (arrows, chevrons, send). Never mirror logos, checkmarks, clocks or playback icons. One mirroring mechanism per element. | not implemented |
+| I6 | In RTL, mirror only direction-bound icons (arrows, chevrons, send). Never mirror logos, checkmarks, clocks or playback icons. One mirroring mechanism per element. | implemented: `mirrorInRtl` in the registry, one `scale` rule, test |
 
 ### 6.7 Accessibility
 
@@ -300,7 +302,7 @@ parts we need.
 | ID | Rule | Enforcement |
 | -- | ---- | ----------- |
 | A1 | Keyboard: every action works with Tab, Enter and Space. Focus is always visible (C14). | test per component |
-| A2 | Countdown text uses `role="timer"`. Do not announce every second. Announce at milestones only. | review |
+| A2 | Countdown text uses `role="timer"`. Do not announce every second. Announce at milestones only. | `Countdown` implements the role and no live region. Milestone announcements: 2.3d |
 | A3 | Respect `prefers-reduced-motion` and `forced-colors`. | tests (C12, M6) |
 | A4 | Target size: aim for 44px on primary actions. WCAG 2.2 AA allows 24px minimum. | review, see V7 |
 | A5 | Icon-only buttons need an accessible name (`aria-label`). | test per component |
@@ -554,8 +556,8 @@ Each item is one step. Do them in order.
 | Step | Scope | Done when |
 | ---- | ----- | --------- |
 | 2.1b-2 | Add `Manrope-Variable.woff2` and `OFL.txt` to `src/renderer/assets/fonts/` (steps in that folder's README). No code change. | `document.fonts.check("1rem 'Manrope Variable'")` is true in the running app, and `tests/renderer/font-assets.test.ts` passes |
-| 2.2c | `Countdown` (display role, `role="timer"`, tabular numerals) and `ProgressRing` (SVG, `--er-motion` transition on stroke offset, clamps 0 to 100 percent, linear ticking per second) | Component tests, CSS contract tests, ring clamp tests |
-| 2.2d | `Icon` and a small set (skip, postpone, eye, moon, sun). Hand-drawn SVG paths, `currentColor`, non-scaling stroke. No icon dependency. | I1 to I6 tests, accessible names |
+| 2.2c | `Countdown` (display role, `role="timer"`, tabular numerals) and `ProgressRing` (SVG, `--er-motion` transition on stroke offset, clamps 0 to 100 percent, linear ticking per second) | Done. Component tests, CSS contract tests, ring clamp tests |
+| 2.2d | `Icon` and a small set (skip, postpone, eye, moon, sun). Hand-drawn SVG paths, `currentColor`, non-scaling stroke. No icon dependency. | Done. I1 to I6 tests, accessible names |
 | 2.2e | Add optical-alignment padding to `Button` with an icon (S5), a `--er-image-outline` color token (S4) | Tests on both |
 | 2.3a | Overlay components built from primitives, copy stays in `copy.ts` | Overlay tests unchanged in behavior, no inline styles |
 | 2.3b | Entrance and exit motion (M7, M8) with CSS | Reduced-motion tests |
@@ -634,6 +636,8 @@ are deliberate. They must stay consistent, and any new code follows them.
 These were never run in an application, so treat them as unproven.
 
 - Real appearance of any component. The gallery (2.4) is the first place this becomes verifiable.
+  `Countdown`, `ProgressRing` and `Icon` were checked once in headless Chromium (computed styles and a
+  screenshot, both themes, RTL mirror). That check is not repeatable in CI.
 - Forced-colors and reduced-motion behavior in a browser.
 - The virtual CSS module under `npm run build` on Windows and macOS.
 - Dark-theme legibility over the real dim layer.

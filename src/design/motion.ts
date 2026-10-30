@@ -13,6 +13,7 @@ export const durations = {
   fast: 100, // hover, row highlight
   quick: 150, // press, exit
   base: 300, // enter, icon swap
+  tick: 1000, // one scheduler tick: progress sweeps match it so they read as continuous
 } as const;
 
 export type DurationName = keyof typeof durations;
@@ -20,6 +21,7 @@ export type DurationName = keyof typeof durations;
 export const easings = {
   out: 'ease-out',
   standard: 'cubic-bezier(0.2, 0, 0, 1)',
+  linear: 'linear', // progress sweeps only, never interactive state
 } as const;
 
 export type EasingName = keyof typeof easings;

@@ -1,0 +1,7 @@
+/* Countdown primitive. Typography comes from the Text display role. */
+
+.er-countdown {
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+}

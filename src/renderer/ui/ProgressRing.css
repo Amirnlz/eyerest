@@ -1,0 +1,71 @@
+/* ProgressRing primitive. Sizes are multiples of a space token; colors come from color tokens. */
+
+.er-ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.er-ring--sm {
+  inline-size: calc(var(--er-space-12) * 2);
+  block-size: calc(var(--er-space-12) * 2);
+}
+
+.er-ring--md {
+  inline-size: calc(var(--er-space-12) * 3);
+  block-size: calc(var(--er-space-12) * 3);
+}
+
+.er-ring--lg {
+  inline-size: calc(var(--er-space-12) * 4);
+  block-size: calc(var(--er-space-12) * 4);
+}
+
+/* Start the arc at 12 o'clock. */
+
+.er-ring__svg {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  transform: rotate(-90deg);
+}
+
+.er-ring__track {
+  stroke: var(--er-color-surface-inset);
+}
+
+.er-ring__progress {
+  stroke: var(--er-color-accent);
+  stroke-linecap: round;
+  /* One sweep per scheduler tick, linear, so the arc moves continuously instead of in steps. */
+  transition-property: stroke-dashoffset;
+  transition-duration: var(--er-duration-tick);
+  transition-timing-function: var(--er-ease-linear);
+}
+
+.er-ring__content {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+/* Reduced motion: the arc still updates each second, without the sweep. */
+
+@media (prefers-reduced-motion: reduce) {
+  .er-ring__progress {
+    transition-property: none;
+  }
+}
+
+/* Forced colors replaces author colors, so name system colors for the two strokes. */
+
+@media (forced-colors: active) {
+  .er-ring__track {
+    stroke: GrayText;
+  }
+
+  .er-ring__progress {
+    stroke: Highlight;
+  }
+}
