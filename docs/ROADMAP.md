@@ -70,9 +70,9 @@ Known platform risks (we handle them in the step that owns them):
 | 1.7 | Media adapters for Windows and macOS | PAUSED (needs research; do not start before your research) |
 | 1.8 | App lifecycle: tray, single instance, settings file | DONE |
 | 1.9 | Packaging, CI matrix, E2E smoke | DONE |
-| 2.1 | Design direction and tokens | DONE (colors, type, layout, elevation, motion, CSS wiring; font files pending, see docs/design-system.md) |
+| 2.1 | Design direction and tokens | DONE (colors, type, layout, elevation, motion, CSS wiring, Manrope font file) |
 | 2.2 | Primitive components | DONE (Button with icon, Surface, Text, Countdown, ProgressRing, Icon, Photo) |
-| 2.3 | Overlay-specific components, motion, accessibility | TODO |
+| 2.3 | Overlay-specific components, motion, accessibility | IN PROGRESS (2.3a components done; motion, theme switching, accessibility pending) |
 | 2.4 | Component gallery and visual regression baseline | TODO |
 | 3.1 | Apply design system to overlay UI | TODO |
 | 3.2 | Apply design system to dim layer, tray, app icon | TODO |

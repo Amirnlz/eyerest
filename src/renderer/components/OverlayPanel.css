@@ -1,0 +1,39 @@
+/* Overlay panel layout. Tokens only. Look and depth come from the Surface, Text and Button primitives. */
+
+/* A grid stretches the Surface to the window (or the wrapper the surface layout provides). */
+
+.er-overlay-panel {
+  display: grid;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.er-overlay-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-3);
+  block-size: 100%;
+}
+
+.er-overlay-panel__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-1);
+}
+
+/* Countdown on the start side, actions on the end side. Wraps instead of overflowing, as in the 10:00 long rest. */
+
+.er-overlay-panel__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--er-space-2) var(--er-space-4);
+  margin-block-start: auto;
+}
+
+.er-overlay-panel__actions {
+  display: flex;
+  gap: var(--er-space-2);
+}

@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { buildDesignCss } from '../../src/design/build';
 import {
@@ -11,15 +11,18 @@ import {
   usedVars,
 } from '../helpers/css-scan';
 
-const UI_DIR = join(__dirname, '../../src/renderer/ui');
-const files = readdirSync(UI_DIR).filter((f) => f.endsWith('.css'));
+/** Every stylesheet that ships with a renderer component: primitives and overlay components. */
+const STYLE_DIRS = ['ui', 'components'].map((d) => join(__dirname, '../../src/renderer', d));
+const files = STYLE_DIRS.flatMap((dir) =>
+  readdirSync(dir)
+    .filter((f) => f.endsWith('.css'))
+    .map((f) => join(dir, f)),
+);
 const tokens = declaredVars(buildDesignCss());
 
 /** Component-scoped variables: `Surface.css` may declare `--er-surface-*`, and others may read them. */
 const componentVars = new Set(
-  files.flatMap((f) => [
-    ...declaredVars(readFileSync(join(UI_DIR, f), 'utf8')),
-  ]),
+  files.flatMap((f) => [...declaredVars(readFileSync(f, 'utf8'))]),
 );
 
 describe('scanners', () => {
@@ -38,12 +41,13 @@ describe('scanners', () => {
 });
 
 describe('component CSS rules', () => {
-  it('finds the component stylesheets', () => {
+  it('finds the component stylesheets, overlay components included', () => {
     expect(files.length).toBeGreaterThan(0);
+    expect(files.map((f) => basename(f))).toContain('OverlayPanel.css');
   });
 
-  describe.each(files)('%s', (file) => {
-    const css = readFileSync(join(UI_DIR, file), 'utf8');
+  describe.each(files.map((f) => [basename(f), f] as const))('%s', (name, path) => {
+    const css = readFileSync(path, 'utf8');
 
     it('has no raw color literals', () => {
       expect(rawColorLiterals(css)).toEqual([]);
@@ -64,7 +68,7 @@ describe('component CSS rules', () => {
     });
 
     it('declares only custom properties scoped to its own component', () => {
-      const prefix = `--er-${file.replace(/\.css$/, '').toLowerCase()}-`;
+      const prefix = `--er-${name.replace(/\.css$/, '').toLowerCase()}-`;
       const foreign = [...declaredVars(css)].filter(
         (name) => !name.startsWith(prefix),
       );

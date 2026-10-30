@@ -56,7 +56,6 @@ export function App({ api, layout = 'positioned', integratedDim = false }: AppPr
       viewModel={viewModel}
       onSkip={() => api.skip()}
       onPostpone={() => api.postpone()}
-      surface={layout === 'surface'}
     />
   );
 

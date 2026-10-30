@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -117,5 +119,78 @@ describe('RestPanel', () => {
       />,
     );
     expect(screen.getByRole('timer')).toHaveTextContent('19');
+  });
+});
+
+describe('overlay components are built from design-system primitives', () => {
+  it('WarningNotice: a Surface region, a title-role h2, a Countdown, no inline styles', () => {
+    const { container } = render(<WarningNotice viewModel={warningVm} />);
+    const region = screen.getByRole('region', { name: warningVm.title });
+    expect(region).toHaveClass('er-surface');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveClass('er-text--title');
+    expect(screen.getByRole('timer')).toHaveClass('er-countdown');
+    expect(container.querySelector('[style]')).toBeNull();
+  });
+
+  it('RestPanel: Button primitives with icons, decorative, no inline styles', () => {
+    const { container } = render(
+      <RestPanel viewModel={restVm} onSkip={vi.fn()} onPostpone={vi.fn()} />,
+    );
+    const skip = screen.getByRole('button', { name: 'Skip' });
+    const postpone = screen.getByRole('button', { name: 'Postpone' });
+    expect(skip).toHaveClass('er-button', 'er-button--quiet', 'er-button--sm', 'er-button--icon-start');
+    expect(postpone).toHaveClass('er-button', 'er-button--secondary', 'er-button--sm');
+    expect(skip.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(postpone.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('[style]')).toBeNull();
+  });
+
+  it('keeps the countdown before the actions in the footer, so reading order is time then choices', () => {
+    render(<RestPanel viewModel={restVm} onSkip={vi.fn()} onPostpone={vi.fn()} />);
+    const timer = screen.getByRole('timer');
+    const skip = screen.getByRole('button', { name: 'Skip' });
+    expect(timer.compareDocumentPosition(skip) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows the long rest countdown as m:ss through Countdown', () => {
+    render(
+      <RestPanel
+        viewModel={{ ...restVm, kind: 'long', seconds: 600, countdown: '10:00' }}
+        onSkip={vi.fn()}
+        onPostpone={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('timer')).toHaveTextContent('10:00');
+  });
+
+  it('keeps wording out of the components: no inline style and no raw button in their source', () => {
+    const dir = join(__dirname, '../../src/renderer/components');
+    const sources = readdirSync(dir).filter((f) => f.endsWith('.tsx'));
+    expect(sources).toEqual(
+      expect.arrayContaining(['Overlay.tsx', 'OverlayPanel.tsx', 'RestPanel.tsx', 'WarningNotice.tsx']),
+    );
+    for (const file of sources) {
+      const source = readFileSync(join(dir, file), 'utf8');
+      expect(source, file).not.toMatch(/\bstyle=/);
+      expect(source, file).not.toMatch(/<button\b/);
+    }
+  });
+});
+
+describe('OverlayPanel.css contract', () => {
+  const css = readFileSync(
+    join(__dirname, '../../src/renderer/components/OverlayPanel.css'),
+    'utf8',
+  );
+
+  it('fills its container and lets the footer wrap instead of overflowing', () => {
+    expect(css).toMatch(/\.er-overlay-panel\s*\{[^}]*block-size:\s*100%/);
+    expect(css).toMatch(/\.er-overlay-panel__footer\s*\{[^}]*flex-wrap:\s*wrap/);
+  });
+
+  it('spaces everything with space tokens', () => {
+    const gaps = css.match(/gap:[^;]*;/g) ?? [];
+    expect(gaps.length).toBeGreaterThan(0);
+    for (const gap of gaps) expect(gap).toMatch(/var\(--er-space-\d+\)/);
   });
 });

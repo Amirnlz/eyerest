@@ -1,33 +1,31 @@
-import { useId } from 'react';
 import type { RestViewModel } from '../view-model';
+import { Button } from '../ui';
+import { OverlayPanel } from './OverlayPanel';
 
 export interface RestPanelProps {
   readonly viewModel: RestViewModel;
   readonly onSkip: () => void;
   readonly onPostpone: () => void;
-  readonly surface?: boolean;
 }
 
-/** Shown during a rest: text, countdown, and the Skip and Postpone actions. */
-export function RestPanel({ viewModel, onSkip, onPostpone, surface = false }: RestPanelProps) {
-  const titleId = useId();
-
+/**
+ * Shown during a rest: text, countdown, and the Skip and Postpone actions.
+ * Skip is `quiet` and Postpone `secondary`: neither is the one main action, and the calmer
+ * Skip does not invite itself.
+ */
+export function RestPanel({ viewModel, onSkip, onPostpone }: RestPanelProps) {
   return (
-    <section
-      aria-labelledby={titleId}
-      style={surface ? { boxSizing: 'border-box', height: '100%', padding: 8 } : undefined}
+    <OverlayPanel
+      title={viewModel.title}
+      message={viewModel.message}
+      seconds={viewModel.seconds}
     >
-      <h2 id={titleId}>{viewModel.title}</h2>
-      <p>{viewModel.message}</p>
-      <p role="timer">{viewModel.countdown}</p>
-      <div>
-        <button type="button" onClick={onSkip}>
-          {viewModel.skipLabel}
-        </button>
-        <button type="button" onClick={onPostpone}>
-          {viewModel.postponeLabel}
-        </button>
-      </div>
-    </section>
+      <Button variant="quiet" size="sm" icon="skip" onClick={onSkip}>
+        {viewModel.skipLabel}
+      </Button>
+      <Button variant="secondary" size="sm" icon="postpone" onClick={onPostpone}>
+        {viewModel.postponeLabel}
+      </Button>
+    </OverlayPanel>
   );
 }

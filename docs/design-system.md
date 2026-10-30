@@ -39,11 +39,12 @@ Every rule below follows from this split.
 | 2.1e | Virtual CSS module, renderer and harness wiring, theme scoping fix | Done |
 | 2.2a | `Button`, stroke and opacity tokens, component CSS lint | Done |
 | 2.2b | `Surface`, `Text` | Done |
-| 2.1f | Open decisions: font loader, concentric radius, themed window background | Done, except the font file itself (section 13) |
-| 2.1b-2 | Manrope woff2 file added to `src/renderer/assets/fonts/` | Waiting for the file |
+| 2.1f | Open decisions: font loader, concentric radius, themed window background | Done (section 13) |
+| 2.1b-2 | Manrope woff2 file added to `src/renderer/assets/fonts/` | Done |
 | 2.2c | `Countdown`, `ProgressRing`, `tick` and `linear` motion tokens | Done |
 | 2.2d | `Icon`, icon registry (eye, sun, moon, skip, postpone) | Done |
-| 2.3 | Overlay components, motion, theme switching, accessibility | Planned |
+| 2.3a | `OverlayPanel`, `RestPanel`, `WarningNotice` built from `Surface`, `Text`, `Countdown`, `Button` and `Icon`; `surface` prop removed | Done |
+| 2.3b-d | Overlay motion, theme switching, accessibility | Planned |
 | 2.4 | Gallery page, visual regression baselines | Planned |
 | 3.x | Apply the system to the real overlay, dim layer, tray, app icon | Planned |
 
@@ -560,7 +561,7 @@ Each item is one step. Do them in order.
 | 2.2c | `Countdown` (display role, `role="timer"`, tabular numerals) and `ProgressRing` (SVG, `--er-motion` transition on stroke offset, clamps 0 to 100 percent, linear ticking per second) | Done. Component tests, CSS contract tests, ring clamp tests |
 | 2.2d | `Icon` and a small set (skip, postpone, eye, moon, sun). Hand-drawn SVG paths, `currentColor`, non-scaling stroke. No icon dependency. | Done. I1 to I6 tests, accessible names |
 | 2.2e | Optical-alignment padding on `Button` with an icon (S5), `--er-color-image-outline` token and `Photo` (S4) | Done. Token, CSS contract and component tests |
-| 2.3a | Overlay components built from primitives, copy stays in `copy.ts` | Overlay tests unchanged in behavior, no inline styles |
+| 2.3a | Overlay components built from primitives, copy stays in `copy.ts` | Done. Overlay tests unchanged in behavior, no inline styles in `components/`. `ProgressRing` is not used: the view model has no total duration, so a percent cannot be computed (roadmap candidate: `totalSeconds` in the snapshot) |
 | 2.3b | Entrance and exit motion (M7, M8) with CSS | Reduced-motion tests |
 | 2.3c | Theme switching: setting (system, light, dark), `data-theme`, suppression helper (M10) | Logic and UI tests, OS-change listener test |
 | 2.3d | Accessibility pass: timer announcements (A2), focus handling when the rest begins | Tests per rule |
@@ -600,15 +601,13 @@ visual claim is from code only.
 | ID | Severity | Rule | Location | Problem | Fix |
 | -- | -------- | ---- | -------- | ------- | --- |
 | V2 | MEDIUM | F1, T1 | `src/main/dim/dim-page.ts:8`, `src/renderer/App.tsx:43` | The dim color is `rgba(32, 32, 32, 0.6)`, a tinted near-black at 60%. The `scrim` token is black at 40%. Two sources of truth that disagree. | Step 3.2: derive both from the `scrim` token through `resolveToken`. |
-| V3 | MEDIUM | T2, C4 | `src/renderer/App.tsx:29-31`, `components/WarningNotice.tsx:16`, `components/RestPanel.tsx:18` | Raw hex (`#ffffff`, `#000000`, `#888888`), a 1px border and `padding: 8` in inline styles. Phase 1 leftovers. The CSS scanner reads only `src/renderer/ui/*.css`, so nothing catches them. | Step 3.1: use `Surface` and `Text`. Extend the scanner to TS and TSX style objects. |
+| V3 | MEDIUM | T2, C4 | `src/renderer/App.tsx:29-31` | Raw hex (`#ffffff`, `#000000`, `#888888`), a 1px border and `rgba()` in inline styles on the surface-layout wrapper and the integrated dim. Phase 1 leftovers. `components/*` are clean since 2.3a. The CSS scanner covers `ui/` and `components/` stylesheets, not TS style objects. | Step 3.1: replace the wrapper with a CSS class, drop the white box (the `Surface` is the panel). Extend the scanner to TS and TSX style objects. |
 | V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts` | Partly fixed: the window color now follows the theme, so dark theme no longer flashes white. Still open: the positioned window is opaque, so a rounded panel will show window-colored corners. | Step 3.1: transparent window, after checking Windows and Linux X11. |
 | V5 | MEDIUM | M10 | `src/renderer/ui/Button.css:23` | `Button` transitions `background-color` and `box-shadow`. With no theme-switch suppression, an OS theme change animates every control at once and smears. | Step 2.3c: build the recipe in section 9. |
 | V6 | MEDIUM | X1, X4 | `tests/renderer/ui/*.test.tsx` | jsdom cannot compute CSS. The roadmap asks for "focus ring is visible". The tests only check that the CSS text contains the rule. No test proves it renders. | Step 2.4: gallery plus Playwright computed-style and screenshot tests. |
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
 | V10 | LOW | API | `src/renderer/ui/Text.tsx:21` | Props come from `<p>`. With `as="label"`, TypeScript rejects `htmlFor`. `Surface` has no `ref`. | Add a polymorphic prop type when a label or ref is first needed. |
-| V12 | LOW | Process | `src/design/contrast.test.ts`, `css.test.ts`, `tokens.test.ts` | Byte-identical copies of the files in `tests/design/`. `vitest.config.ts` includes only `tests/**`, so these never run. | Delete the three files. |
-| V13 | LOW | F4 | `src/renderer/assets/fonts/` | The loader is wired, but `Manrope-Variable.woff2` is not in the repository yet, so the app renders the system fallback. | Step 2.1b-2: add the file and `OFL.txt`. |
 | V14 | LOW | Process | `docs/ROADMAP.md` | The status board said 2.1 was in progress and 2.2 was TODO. | Updated in this step. Keep it current at each step. |
 
 ### 14.1a Resolved
@@ -617,6 +616,8 @@ visual claim is from code only.
 | -- | --- | -------- |
 | V1 | A `Button` in a padded `Surface` was not concentric. | S1 clarified (applies to children that fill the content box). `Surface` `xs` and `sm` publish `--er-surface-inner-radius`, `Button` reads it. Verified in Chromium. |
 | V11 | S4 needed `oklch()`, which C4 bans in component CSS. | `--er-color-image-outline` token (black or white at 10%) consumed by `Photo.css`. |
+| V12 | Duplicate test files in `src/design/`. | Deleted. |
+| V13 | The Manrope file was missing. | `Manrope-Variable.woff2` and `OFL.txt` added to `src/renderer/assets/fonts/`. |
 | V9 | The token pairs ignored the 1px border. | The pairs were deleted. The CSS `calc()` subtracts `--er-stroke-hairline`, so the border is exact. |
 
 ### 14.2 Intentional deviations from `better-ui`
