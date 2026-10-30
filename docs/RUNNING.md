@@ -38,7 +38,7 @@ npm run e2e          # builds, then launches the real app with Playwright (fast 
 
 The component gallery checks run in plain Chromium against the harness (no Electron). They read
 computed styles: focus ring, press scale, concentric radii, optical padding, image outlines, forced
-colors, reduced motion and whether the overlay fits its 360 by 220 window, in both themes:
+colors, reduced motion and whether the overlay fits its 360 by 240 window, in both themes:
 
 ```bash
 npx playwright install chromium   # once

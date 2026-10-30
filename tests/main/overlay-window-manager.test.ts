@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { OverlayWindowManager, isOverlayPhase } from '../../src/main/overlay/overlay-window-manager';
+import { OVERLAY_SIZE } from '../../src/shared/overlay-layout';
 import { IDLE, WORKING, resting, warning } from '../helpers/fake-api';
 import { FakeDisplays, FakeWindowFactory } from '../helpers/fake-overlay';
 
 const HD = { x: 0, y: 0, width: 1920, height: 1080 };
-const HD_BOUNDS = { x: 1920 - 16 - 360, y: 16, width: 360, height: 220 };
+const HD_BOUNDS = { x: 1920 - 16 - 360, y: 16, width: 360, height: OVERLAY_SIZE.height };
 
 function setup(workArea = HD) {
   const factory = new FakeWindowFactory();
@@ -151,7 +152,7 @@ describe('OverlayWindowManager', () => {
         x: 2560 - 16 - 360,
         y: 16,
         width: 360,
-        height: 220,
+        height: OVERLAY_SIZE.height,
       });
     });
 
@@ -167,7 +168,7 @@ describe('OverlayWindowManager', () => {
         x: 1366 - 16 - 360,
         y: 40 + 16,
         width: 360,
-        height: 220,
+        height: OVERLAY_SIZE.height,
       });
     });
 

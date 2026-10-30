@@ -137,11 +137,9 @@ function Surfaces() {
     <Section id="surfaces" title="Surface">
       <div className="gallery__row">
         {elevations.map((elevation) => (
-          <div data-testid={`surface-${elevation}`} key={elevation}>
-            <Surface elevation={elevation}>
-              <Text variant="label">{elevation}</Text>
-            </Surface>
-          </div>
+          <Surface data-testid={`surface-${elevation}`} key={elevation} elevation={elevation}>
+            <Text variant="label">{elevation}</Text>
+          </Surface>
         ))}
       </div>
     </Section>

@@ -1,9 +1,11 @@
 /**
  * Overlay panel geometry shared by the main process (window bounds) and the
  * renderer (CSS position when the window is a full work-area surface).
- * Values are in device-independent pixels.
+ * Values are in device-independent pixels. The height holds the tallest panel (the long rest,
+ * whose `10:00` countdown wraps the actions onto a second line); `e2e/gallery/overlay.gallery.ts`
+ * fails when content outgrows it.
  */
-export const OVERLAY_SIZE = Object.freeze({ width: 360, height: 220 });
+export const OVERLAY_SIZE = Object.freeze({ width: 360, height: 240 });
 export const OVERLAY_MARGIN = 16;
 
 /**

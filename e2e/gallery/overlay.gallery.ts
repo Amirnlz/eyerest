@@ -3,7 +3,7 @@ import { OVERLAY_SIZE } from '../../src/shared/overlay-layout';
 import { openGallery, themeNames } from './gallery-helpers';
 
 /**
- * The overlay at the real window size (360 by 220). If its content does not fit, the window would
+ * The overlay at the real window size (360 by 240). If its content does not fit, the window would
  * clip it, so the fix is a larger OVERLAY_SIZE or tighter content, never a hidden overflow.
  */
 

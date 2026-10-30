@@ -1,5 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
-import { Icon, type IconName } from './Icon';
+import { Icon } from './Icon';
+import type { IconName } from './icons';
 import './Button.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet';

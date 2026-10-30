@@ -160,10 +160,11 @@ describe('Surface.css contract', () => {
         const m = new RegExp(
           `\\.er-surface--pad-${padding}\\s*\\{([^}]*)\\}`,
         ).exec(css);
-        const body = m?.[1] ?? '';
-        expect(body).toContain('--er-surface-inner-radius: max(');
+        // Whitespace does not matter to CSS, so a formatter may wrap the calc() across lines.
+        const body = (m?.[1] ?? '').replace(/\s+/g, '');
+        expect(body).toContain('--er-surface-inner-radius:max(');
         expect(body).toContain(
-          `calc(var(--er-surface-radius) - var(--er-space-${step}) - var(--er-stroke-hairline))`,
+          `calc(var(--er-surface-radius)-var(--er-space-${step})-var(--er-stroke-hairline))`,
         );
       },
     );

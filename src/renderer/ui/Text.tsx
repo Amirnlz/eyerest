@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react';
+import type { ComponentPropsWithoutRef, ElementType } from 'react';
 import type { TypeRoleName } from '../../design/typography';
 import './Text.css';
 
@@ -48,6 +48,8 @@ export function Text({
   as,
   ...props
 }: TextProps) {
-  const Element = as ?? defaultElement[variant];
+  // `ElementType`, not the `TextElement` union: a union that includes `label` makes TypeScript
+  // demand label-only props from props typed for `<p>` (V10).
+  const Element: ElementType = as ?? defaultElement[variant];
   return <Element {...props} className={textClassName(variant, tone)} />;
 }

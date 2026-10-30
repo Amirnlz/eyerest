@@ -98,7 +98,7 @@ describe('App', () => {
 
       act(() => api.push(resting(20)));
 
-      const panel = screen.getByRole('region').parentElement;
+      const panel = screen.getByRole('region').closest('.er-overlay-panel')?.parentElement;
       expect(panel).toHaveStyle({
         position: 'fixed',
         top: `${OVERLAY_MARGIN}px`,
@@ -150,7 +150,9 @@ describe('App', () => {
 
       act(() => api.push(resting(20)));
 
-      expect(container.firstElementChild?.tagName).toBe('SECTION');
+      // The first element is the overlay panel itself, not a positioning wrapper around it.
+      expect(container.firstElementChild).toHaveClass('er-overlay-panel');
+      expect(container.firstElementChild).not.toHaveAttribute('style');
     });
   });
 });
