@@ -73,7 +73,7 @@ Known platform risks (we handle them in the step that owns them):
 | 2.1 | Design direction and tokens | DONE (colors, type, layout, elevation, motion, CSS wiring, Manrope font file) |
 | 2.2 | Primitive components | DONE (Button with icon, Surface, Text, Countdown, ProgressRing, Icon, Photo) |
 | 2.3 | Overlay-specific components, motion, accessibility | DONE for 2.3a to 2.3d (components, entrance motion, theme mechanism, accessibility). Pending: theme setting 2.3c-2; exit motion deferred, see docs/design-system.md V15 |
-| 2.4 | Component gallery and visual regression baseline | TODO |
+| 2.4 | Component gallery and visual regression baseline | IN PROGRESS (2.4a gallery and computed-style checks done; 2.4b screenshot baselines need generating on Linux) |
 | 3.1 | Apply design system to overlay UI | TODO |
 | 3.2 | Apply design system to dim layer, tray, app icon | TODO |
 | 3.3 | Polish pass and visual regression update | TODO |

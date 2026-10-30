@@ -55,6 +55,16 @@ jobs:
         if: runner.os != 'Linux'
         run: npx playwright test
 
+      # Gallery checks read computed styles in plain Chromium. One OS is enough: they test CSS,
+      # not the platform.
+      - name: Install Chromium for the gallery (Linux)
+        if: runner.os == 'Linux'
+        run: npx playwright install --with-deps chromium
+
+      - name: Gallery checks (Linux)
+        if: runner.os == 'Linux'
+        run: npm run e2e:gallery
+
       - name: Package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -9,6 +9,7 @@ npm install
 npm run dev          # Electron app with real durations
 npm run dev:fast     # EYEREST_FAST=1: 20 s work, 5 s warning, 5 s rest, 10 s long rest, 10 s postpone
 npm run dev:renderer # browser harness for the overlay states (no Electron)
+                     # component gallery: http://localhost:5173/gallery.html?theme=light|dark|system
 ```
 
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
@@ -33,6 +34,15 @@ npm run lint
 npm test             # logic tests (Node) and UI tests (jsdom)
 npm run check        # typecheck + lint + tests
 npm run e2e          # builds, then launches the real app with Playwright (fast mode)
+```
+
+The component gallery checks run in plain Chromium against the harness (no Electron). They read
+computed styles: focus ring, press scale, concentric radii, optical padding, image outlines, forced
+colors, reduced motion and whether the overlay fits its 360 by 220 window, in both themes:
+
+```bash
+npx playwright install chromium   # once
+npm run e2e:gallery
 ```
 
 E2E opens real windows. On a Linux machine without a display, run it under xvfb:

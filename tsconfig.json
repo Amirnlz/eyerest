@@ -28,6 +28,7 @@
     "e2e",
     "vitest.config.ts",
     "electron.vite.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "playwright.gallery.config.ts"
   ]
 }

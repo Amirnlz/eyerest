@@ -1,0 +1,41 @@
+/* Gallery page layout. Dev only, not shipped. Colors, lengths and fonts come from design tokens. */
+
+body {
+  margin: 0;
+  color: var(--er-color-text-primary);
+  background-color: var(--er-color-canvas);
+  font-family: var(--er-font-family-sans);
+}
+
+.gallery {
+  display: grid;
+  gap: var(--er-space-10);
+  padding: var(--er-space-8);
+}
+
+.gallery__section {
+  display: grid;
+  gap: var(--er-space-4);
+}
+
+.gallery__title {
+  margin: 0;
+  font-size: var(--er-type-title-size);
+  font-weight: var(--er-type-title-weight);
+}
+
+.gallery__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--er-space-4);
+}
+
+.gallery__group {
+  display: grid;
+  gap: var(--er-space-2);
+}
+
+.gallery__frame {
+  position: relative;
+}

@@ -21,6 +21,7 @@
     "check": "npm run typecheck && npm run lint && npm run test",
     "dev:renderer": "vite harness",
     "e2e": "npm run build && playwright test",
+    "e2e:gallery": "playwright test -c playwright.gallery.config.ts",
     "package": "npm run build && electron-builder"
   },
   "dependencies": {
