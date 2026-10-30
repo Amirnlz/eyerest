@@ -37,3 +37,35 @@
   display: flex;
   gap: var(--er-space-2);
 }
+
+/*
+ * Entrance (M7). One-shot keyframes: the panel appears once per rest or warning, never for
+ * routine interaction. The hidden state lives in the `from` keyframe, so a chunk whose animation
+ * never runs stays visible. The movement and blur tokens are zero under reduced motion, which
+ * leaves an opacity fade. There is no exit animation: the window is hidden by the main process
+ * at once, and Skip and Postpone should feel immediate (M8 is deferred, see design-system.md).
+ */
+
+.er-overlay-panel__chunk {
+  animation: er-overlay-panel-enter var(--er-duration-base) var(--er-ease-out) both;
+}
+
+.er-overlay-panel__chunk--0 {
+  animation-delay: 0ms;
+}
+
+.er-overlay-panel__chunk--1 {
+  animation-delay: var(--er-motion-stagger);
+}
+
+.er-overlay-panel__chunk--2 {
+  animation-delay: calc(var(--er-motion-stagger) * 2);
+}
+
+@keyframes er-overlay-panel-enter {
+  from {
+    opacity: 0;
+    translate: 0 var(--er-motion-enter-offset);
+    filter: blur(var(--er-motion-blur));
+  }
+}

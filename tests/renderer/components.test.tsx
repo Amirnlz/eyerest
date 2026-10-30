@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { chunkClassName } from '../../src/renderer/components/OverlayPanel';
 import { RestPanel } from '../../src/renderer/components/RestPanel';
 import { WarningNotice } from '../../src/renderer/components/WarningNotice';
 import type { RestViewModel, WarningViewModel } from '../../src/renderer/view-model';
@@ -192,5 +193,78 @@ describe('OverlayPanel.css contract', () => {
     const gaps = css.match(/gap:[^;]*;/g) ?? [];
     expect(gaps.length).toBeGreaterThan(0);
     for (const gap of gaps) expect(gap).toMatch(/var\(--er-space-\d+\)/);
+  });
+});
+
+describe('OverlayPanel entrance chunks (M7)', () => {
+  it('maps a chunk index to its class', () => {
+    expect(chunkClassName(0)).toBe('er-overlay-panel__chunk er-overlay-panel__chunk--0');
+    expect(chunkClassName(2)).toBe('er-overlay-panel__chunk er-overlay-panel__chunk--2');
+  });
+
+  it('splits into title, message and footer chunks, in that order', () => {
+    render(<RestPanel viewModel={restVm} onSkip={vi.fn()} onPostpone={vi.fn()} />);
+    const title = screen.getByRole('heading').closest('.er-overlay-panel__chunk');
+    const message = screen.getByText(restVm.message).closest('.er-overlay-panel__chunk');
+    const footer = screen.getByRole('timer').closest('.er-overlay-panel__chunk');
+    expect(title).toHaveClass('er-overlay-panel__chunk--0');
+    expect(message).toHaveClass('er-overlay-panel__chunk--1');
+    expect(footer).toHaveClass('er-overlay-panel__chunk--2');
+  });
+
+  it('puts the actions in the last chunk, so the choices arrive after the time', () => {
+    render(<RestPanel viewModel={restVm} onSkip={vi.fn()} onPostpone={vi.fn()} />);
+    const footer = screen.getByRole('timer').closest('.er-overlay-panel__chunk--2');
+    expect(footer).toContainElement(screen.getByRole('button', { name: 'Skip' }));
+    expect(footer).toContainElement(screen.getByRole('button', { name: 'Postpone' }));
+  });
+
+  it('chunks the warning the same way, without actions', () => {
+    const { container } = render(<WarningNotice viewModel={warningVm} />);
+    expect(container.querySelectorAll('.er-overlay-panel__chunk')).toHaveLength(3);
+  });
+
+  it('keeps every control reachable and enabled while the entrance runs', async () => {
+    const user = userEvent.setup();
+    const onSkip = vi.fn();
+    render(<RestPanel viewModel={restVm} onSkip={onSkip} onPostpone={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Skip' }));
+    expect(onSkip).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('OverlayPanel.css entrance contract (better-ui)', () => {
+  const css = readFileSync(
+    join(__dirname, '../../src/renderer/components/OverlayPanel.css'),
+    'utf8',
+  );
+
+  it('animates a chunk over the base duration with ease-out and fill both', () => {
+    expect(css).toMatch(
+      /\.er-overlay-panel__chunk\s*\{[^}]*animation:\s*er-overlay-panel-enter var\(--er-duration-base\) var\(--er-ease-out\) both;/,
+    );
+  });
+
+  it('enters with opacity, a 12px rise and 4px blur from tokens, hidden state in the from keyframe', () => {
+    const keyframes = /@keyframes er-overlay-panel-enter\s*\{\s*from\s*\{([^}]*)\}/.exec(css);
+    expect(keyframes?.[1]).toContain('opacity: 0;');
+    expect(keyframes?.[1]).toContain('translate: 0 var(--er-motion-enter-offset);');
+    expect(keyframes?.[1]).toContain('filter: blur(var(--er-motion-blur));');
+  });
+
+  it('never hides a chunk in a base rule, so a chunk without animation stays visible', () => {
+    const base = css.replace(/@keyframes[\s\S]*?\n\}\n/, '');
+    expect(base).not.toMatch(/opacity:\s*0/);
+  });
+
+  it('staggers chunks 0, 1 and 2 by whole stagger tokens', () => {
+    expect(css).toMatch(/--0\s*\{\s*animation-delay:\s*0ms;/);
+    expect(css).toMatch(/--1\s*\{\s*animation-delay:\s*var\(--er-motion-stagger\);/);
+    expect(css).toMatch(/--2\s*\{\s*animation-delay:\s*calc\(var\(--er-motion-stagger\) \* 2\);/);
+  });
+
+  it('does not animate on hover or toggled state, and has no exit animation', () => {
+    expect(css).not.toMatch(/:hover[^{]*\{[^}]*animation/);
+    expect(css).not.toMatch(/@keyframes[^{]*exit/i);
   });
 });

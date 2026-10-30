@@ -12,6 +12,16 @@ export interface OverlayPanelProps {
 }
 
 /**
+ * Entrance chunks (better-ui, M7): title, message, then countdown with actions, each staggered by
+ * one `--er-motion-stagger` step. The chunk index maps to a CSS class, so no inline style is needed.
+ */
+export type ChunkIndex = 0 | 1 | 2;
+
+export function chunkClassName(index: ChunkIndex): string {
+  return `er-overlay-panel__chunk er-overlay-panel__chunk--${index}`;
+}
+
+/**
  * Shared layout of the overlay panel: a labelled region with title, message, countdown and an
  * optional action group. Built from design-system primitives only. All text arrives as props, so
  * wording stays in `copy.ts`.
@@ -24,12 +34,16 @@ export function OverlayPanel({ title, message, seconds, children }: OverlayPanel
       <Surface as="section" aria-labelledby={titleId}>
         <div className="er-overlay-panel__body">
           <div className="er-overlay-panel__text">
-            <Text as="h2" id={titleId} variant="title">
-              {title}
-            </Text>
-            <Text tone="secondary">{message}</Text>
+            <div className={chunkClassName(0)}>
+              <Text as="h2" id={titleId} variant="title">
+                {title}
+              </Text>
+            </div>
+            <div className={chunkClassName(1)}>
+              <Text tone="secondary">{message}</Text>
+            </div>
           </div>
-          <div className="er-overlay-panel__footer">
+          <div className={`er-overlay-panel__footer ${chunkClassName(2)}`}>
             <Countdown seconds={seconds} />
             {children === undefined ? null : (
               <div className="er-overlay-panel__actions">{children}</div>

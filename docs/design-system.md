@@ -44,7 +44,8 @@ Every rule below follows from this split.
 | 2.2c | `Countdown`, `ProgressRing`, `tick` and `linear` motion tokens | Done |
 | 2.2d | `Icon`, icon registry (eye, sun, moon, skip, postpone) | Done |
 | 2.3a | `OverlayPanel`, `RestPanel`, `WarningNotice` built from `Surface`, `Text`, `Countdown`, `Button` and `Icon`; `surface` prop removed | Done |
-| 2.3b-d | Overlay motion, theme switching, accessibility | Planned |
+| 2.3b | Overlay entrance motion (M7). Exit (M8) deferred, V15 | Done |
+| 2.3c-d | Theme switching, accessibility | Planned |
 | 2.4 | Gallery page, visual regression baselines | Planned |
 | 3.x | Apply the system to the real overlay, dim layer, tray, app icon | Planned |
 
@@ -278,8 +279,8 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 | M4 | Every animated change also has a static cue (color, icon, label). Motion is never the only signal. | review |
 | M5 | Name the transitioned properties. Never `all`. Add `will-change` only after seeing a first-frame stutter, and name the property. | test for `all` |
 | M6 | Movement, scale and blur run only without reduced motion. Under reduced motion, keep an opacity cross-fade. The effect tokens do this globally. Where CSS names `scale` in `transition-property`, drop it inside `@media (prefers-reduced-motion: reduce)`. | test per component |
-| M7 | Entrance: split into semantic chunks (title, description, actions). Stagger 100ms. Each chunk: opacity, 4px blur, 12px translateY, 300ms, ease-out. Never stagger routine interactions. | not implemented, 2.3 |
-| M8 | Exit: opacity, 4px blur, a fixed -12px translateY, 150ms, ease-out. Never the container height. Slide fully out only where the destination carries meaning. | not implemented, 2.3 |
+| M7 | Entrance: split into semantic chunks (title, description, actions). Stagger 100ms. Each chunk: opacity, 4px blur, 12px translateY, 300ms, ease-out. Never stagger routine interactions. | implemented for the overlay panel (`OverlayPanel.css`); tests: `components.test.tsx`, `e2e/motion.e2e.ts` |
+| M8 | Exit: opacity, 4px blur, a fixed -12px translateY, 150ms, ease-out. Never the container height. Slide fully out only where the destination carries meaning. | deferred, see V15: the overlay window is hidden by the main process at once, so a renderer exit would never be seen |
 | M9 | Icon swap on an infrequent state change: scale 0.25 to 1, opacity 0 to 1, blur 4px to 0, 300ms, `--er-ease-standard`, both icons mounted in one grid cell. No bounce. Tab and hover-revealed icons swap instantly. | not implemented. `Icon` is static; the swap wrapper lands with its first consumer (2.3a) |
 | M10 | Suppress transitions for one frame on a theme switch. See the recipe in section 9. | not implemented, see V5 |
 | M11 | Hover-capable pointers only for hover styling. Set `-webkit-tap-highlight-color: transparent` on controls that draw their own pressed state. | test (hover); review (tap) |
@@ -562,7 +563,7 @@ Each item is one step. Do them in order.
 | 2.2d | `Icon` and a small set (skip, postpone, eye, moon, sun). Hand-drawn SVG paths, `currentColor`, non-scaling stroke. No icon dependency. | Done. I1 to I6 tests, accessible names |
 | 2.2e | Optical-alignment padding on `Button` with an icon (S5), `--er-color-image-outline` token and `Photo` (S4) | Done. Token, CSS contract and component tests |
 | 2.3a | Overlay components built from primitives, copy stays in `copy.ts` | Done. Overlay tests unchanged in behavior, no inline styles in `components/`. `ProgressRing` is not used: the view model has no total duration, so a percent cannot be computed (roadmap candidate: `totalSeconds` in the snapshot) |
-| 2.3b | Entrance and exit motion (M7, M8) with CSS | Reduced-motion tests |
+| 2.3b | Entrance motion (M7) with CSS keyframes; exit (M8) moves to V15 | Done. Chunk, CSS contract and e2e computed-style tests; reduced motion verified through the tokens |
 | 2.3c | Theme switching: setting (system, light, dark), `data-theme`, suppression helper (M10) | Logic and UI tests, OS-change listener test |
 | 2.3d | Accessibility pass: timer announcements (A2), focus handling when the rest begins | Tests per rule |
 | 2.4 | Gallery page in the harness (every primitive, every state, both themes), Playwright visual baselines on Linux | Baselines committed, gallery linked from `RUNNING.md` |
@@ -608,6 +609,7 @@ visual claim is from code only.
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
 | V10 | LOW | API | `src/renderer/ui/Text.tsx:21` | Props come from `<p>`. With `as="label"`, TypeScript rejects `htmlFor`. `Surface` has no `ref`. | Add a polymorphic prop type when a label or ref is first needed. |
+| V15 | LOW | M8 | `src/main/overlay/overlay-window-manager.ts:141` | No exit animation. `hide()` runs on the same snapshot that leaves the rest phase, so a renderer exit would be cut off. For Skip and Postpone, instant removal is right ("motion adds no information", and the e2e asserts everything goes away at once). Only the natural end of a rest could use a 150ms exit. | Candidate step: main defers `hide()` by `--er-duration-quick` on a natural end only, the renderer holds the last view model and plays the exit. Cross-process change: needs its own justification and tests. |
 | V14 | LOW | Process | `docs/ROADMAP.md` | The status board said 2.1 was in progress and 2.2 was TODO. | Updated in this step. Keep it current at each step. |
 
 ### 14.1a Resolved
