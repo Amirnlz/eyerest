@@ -18,7 +18,11 @@ export interface AppProps {
   readonly integratedDim?: boolean;
 }
 
-/** Temporary Phase 1 look for the panel in the surface layout. Phase 2 replaces it. */
+/**
+ * Geometry only, from the shared layout contract. The panel's look (surface color, shadow, text
+ * color) comes from the `Surface` inside, so this box paints nothing: a white box here would
+ * frame a dark panel in the dark theme.
+ */
 const surfacePanelStyle: CSSProperties = {
   position: 'fixed',
   top: OVERLAY_MARGIN,
@@ -26,9 +30,6 @@ const surfacePanelStyle: CSSProperties = {
   width: OVERLAY_SIZE.width,
   height: OVERLAY_SIZE.height,
   boxSizing: 'border-box',
-  background: '#ffffff',
-  color: '#000000',
-  border: '1px solid #888888',
   zIndex: 1,
 };
 

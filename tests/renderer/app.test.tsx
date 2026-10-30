@@ -104,7 +104,21 @@ describe('App', () => {
         top: `${OVERLAY_MARGIN}px`,
         right: `${OVERLAY_MARGIN}px`,
         width: `${OVERLAY_SIZE.width}px`,
+        height: `${OVERLAY_SIZE.height}px`,
       });
+    });
+
+    it('paints nothing around the panel: no background, color or border on the placement box', () => {
+      const api = createFakeApi();
+      render(<App api={api} layout="surface" />);
+
+      act(() => api.push(resting(20)));
+
+      const box = screen.getByRole('region').closest('.er-overlay-panel')?.parentElement;
+      expect(box?.style.background).toBe('');
+      expect(box?.style.backgroundColor).toBe('');
+      expect(box?.style.color).toBe('');
+      expect(box?.style.border).toBe('');
     });
 
     it('shows the warning panel without buttons', () => {

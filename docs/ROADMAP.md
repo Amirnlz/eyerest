@@ -71,9 +71,9 @@ Known platform risks (we handle them in the step that owns them):
 | 1.8 | App lifecycle: tray, single instance, settings file | DONE |
 | 1.9 | Packaging, CI matrix, E2E smoke | DONE |
 | 2.1 | Design direction and tokens | DONE (colors, type, layout, elevation, motion, CSS wiring, Manrope font file) |
-| 2.2 | Primitive components | DONE (Button with icon, Surface, Text, Countdown, ProgressRing, Icon, Photo) |
-| 2.3 | Overlay-specific components, motion, accessibility | DONE for 2.3a to 2.3d (components, entrance motion, theme mechanism, accessibility). Pending: theme setting 2.3c-2; exit motion deferred, see docs/design-system.md V15 |
-| 2.4 | Component gallery and visual regression baseline | IN PROGRESS (2.4a gallery and computed-style checks done; 2.4b screenshot baselines need generating on Linux) |
+| 2.2 | Primitive components | DONE (Button with icon, Surface, Text, Countdown, ProgressRing, Icon, Photo, VisuallyHidden) |
+| 2.3 | Overlay-specific components, motion, accessibility | DONE (components, entrance motion, theme mechanism, accessibility). Exit motion: `design-system.md` V15. Shortcuts: 4.12. Theme setting: 4.13 |
+| 2.4 | Component gallery and visual regression baseline | DONE (gallery and computed-style checks; screenshot baselines dropped by decision). Waiting for your Phase 2 sign-off |
 | 3.1 | Apply design system to overlay UI | TODO |
 | 3.2 | Apply design system to dim layer, tray, app icon | TODO |
 | 3.3 | Polish pass and visual regression update | TODO |
@@ -319,11 +319,19 @@ Scope:
 - Playwright screenshot baselines for each component and state.
 - `docs/design-system.md`: tokens, components, usage rules, do and don't.
 
-Tests: visual regression baselines committed; CI compares them (Linux baseline only, to avoid cross-OS font drift).
+Tests: computed-style gallery checks in CI (Linux). Screenshot baselines were dropped by decision.
 
 Done when: gallery and docs are complete and baselines pass.
 
 Phase 2 exit review: you sign off the design system.
+
+Phase 2 as built, against the plan above:
+
+- Composed components are `OverlayPanel`, `RestPanel` and `WarningNotice` (not `WarningToast`, `RestCard`, `RestActions`).
+- Motion: entrance only. Exit moved to a candidate step because the main process hides the window at once (`design-system.md` V15).
+- Accessibility: one polite live region, announcing phase entry and long-rest milestones, never per tick. Keyboard shortcuts for Skip and Postpone moved to 4.12. High contrast is handled by `forced-colors` rules in each component and checked in the gallery.
+- Screenshot baselines (Step 2.4) are dropped by decision: no screenshots of the app are stored until the software is finished. The gallery runs computed-style checks instead (`npm run e2e:gallery`, in CI on Linux).
+- Theme: the switching mechanism exists. The user-facing setting is 4.13.
 
 Send this: `Start Step 2.4`
 
@@ -337,7 +345,7 @@ Goal: the shipped app uses the design system everywhere. No behavior changes.
 
 Scope: replace the Phase 1 unstyled components in `Overlay` with the Phase 2 components. Remove the old ones. Behavior is unchanged.
 
-Tests: all Phase 1 UI tests still pass unchanged (this proves no behavior drift); new visual baselines for the real overlay in each state.
+Tests: all Phase 1 UI tests still pass unchanged (this proves no behavior drift); gallery computed-style checks cover the real overlay in each state (no screenshot baselines, by decision).
 
 Send this: `Start Step 3.1`
 
@@ -353,7 +361,7 @@ Send this: `Start Step 3.2`
 
 Scope: spacing and timing review on real hardware, multi-monitor and HiDPI checks, dark and light desktop themes, fix defects found.
 
-Tests: update baselines; add regression tests for each defect fixed.
+Tests: add regression tests for each defect fixed. Screenshot baselines are not used, by decision.
 
 Phase 3 exit review: full spec run-through on all three OSes with the final look.
 
@@ -378,7 +386,8 @@ We pick and order these when Phase 3 closes. Each becomes its own step with the 
 | 4.9 | Stats | Rests taken, skipped, postponed per day, local only. |
 | 4.10 | Localization | English and Persian, including right-to-left layout. |
 | 4.11 | Auto-update and code signing | Needed for smooth installs on Windows and macOS. |
-| 4.12 | Global shortcuts | Skip or postpone without the mouse. |
+| 4.12 | Global shortcuts | Skip or postpone without the mouse. Originally listed under Step 2.3. Moved here: they are behavior, and they conflict with the focus policy (the overlay never takes focus, `docs/design-system.md` A6), so they must be OS-level shortcuts with a chosen key combination per platform. |
+| 4.13 | Theme setting | System, light or dark, stored in main, validated IPC channel, entry in the tray menu. The renderer mechanism exists (Step 2.3c). |
 
 Send this to begin Phase 4: `Plan Phase 4` with the features you want and their priority.
 

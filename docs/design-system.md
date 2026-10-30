@@ -45,10 +45,10 @@ Every rule below follows from this split.
 | 2.2d | `Icon`, icon registry (eye, sun, moon, skip, postpone) | Done |
 | 2.3a | `OverlayPanel`, `RestPanel`, `WarningNotice` built from `Surface`, `Text`, `Countdown`, `Button` and `Icon`; `surface` prop removed | Done |
 | 2.3b | Overlay entrance motion (M7). Exit (M8) deferred, V15 | Done |
-| 2.3c | Theme mechanism: preference, `data-theme`, OS listener, suppression (M10). The user-facing setting (store, IPC, tray entry) is a separate step | Done |
+| 2.3c | Theme mechanism: preference, `data-theme`, OS listener, suppression (M10). The user-facing setting (store, IPC, tray entry) moves to ROADMAP candidate 4.13 | Done |
 | 2.3d | Milestone announcements (A2), `VisuallyHidden`, focus policy (A6) | Done |
 | 2.4a | Gallery page (`harness/gallery.html`) and computed-style checks in Chromium (`npm run e2e:gallery`) | Done |
-| 2.4b | Visual regression baselines (Linux only) | Needs baselines generated on Linux |
+| 2.4b | Screenshot baselines of the gallery (`toHaveScreenshot`), Linux only | Dropped by decision (see section 2). Reopen after the software is finished |
 | 3.x | Apply the system to the real overlay, dim layer, tray, app icon | Planned |
 
 ## 3. Architecture
@@ -66,8 +66,11 @@ src/design/build.ts         buildDesignCss(): the full stylesheet
 src/design/vite-plugin.ts   serves it as the module 'virtual:eyerest-design.css'
         |
         v
-src/renderer/main.tsx and harness/main.tsx   import 'virtual:eyerest-design.css'
+src/renderer/main.tsx, harness/main.tsx and harness/gallery.tsx   import 'virtual:eyerest-design.css'
 src/renderer/ui/*.tsx + *.css                primitives that use only var(--er-*)
+src/renderer/components/*                    overlay panels composed from the primitives
+src/renderer/theme/*                         theme preference, data-theme, OS listener, transition suppression
+src/renderer/announcements.ts + hooks/       milestone announcements for the live region
 ```
 
 Properties of this design:
@@ -345,7 +348,7 @@ Follow this order. Do not skip the tests.
    `@media (hover: hover)`, pressed, `:focus-visible`, disabled, reduced motion, forced colors.
 5. Write the tests (section 8).
 6. Run `npm run check`. `tests/design/component-css.test.ts` scans your CSS file automatically.
-7. Add the component to the gallery page once 2.4 exists.
+7. Add the component to `harness/gallery.tsx` with a `data-testid` per state, and a computed-style check in `e2e/gallery/` for anything jsdom cannot prove.
 
 Skeleton:
 
@@ -568,11 +571,11 @@ Each item is one step. Do them in order.
 | 2.3a | Overlay components built from primitives, copy stays in `copy.ts` | Done. Overlay tests unchanged in behavior, no inline styles in `components/`. `ProgressRing` is not used: the view model has no total duration, so a percent cannot be computed (roadmap candidate: `totalSeconds` in the snapshot) |
 | 2.3b | Entrance motion (M7) with CSS keyframes; exit (M8) moves to V15 | Done. Chunk, CSS contract and e2e computed-style tests; reduced motion verified through the tokens |
 | 2.3c | Theme mechanism in the renderer (`system`, `light`, `dark`; `data-theme`; OS-change listener; suppression helper M10). The setting itself (persistence in main, IPC, UI entry) is split out as 2.3c-2 | Done. Logic, DOM adapter and e2e tests |
-| 2.3c-2 | Theme setting: store in main, typed IPC channel with payload validation, preload method, entry point (tray, step 3.2) | Not started. Cross-process: needs its own justification and tests |
+| 2.3c-2 | Theme setting (store in main, validated IPC channel, entry point) | Moved to ROADMAP candidate 4.13. Phase 2 is the design system, and a setting is a feature |
 | 2.3d | Accessibility pass: milestone announcements (A2). "Focus when the rest begins" is rejected: focus stays where it is (A6) | Done. Logic, component and e2e tests |
 | 2.4a | Gallery page in the harness (every primitive, every state, both themes) and computed-style checks in plain Chromium | Done. `e2e/gallery/*.gallery.ts`, linked from `RUNNING.md`, runs in CI on Linux |
-| 2.4b | Screenshot baselines of the gallery (`toHaveScreenshot`), Linux only | Baselines committed. Generate them on Linux or in CI with `--update-snapshots`, then commit |
-| 3.1 | Replace Phase 1 inline styles and raw colors (V2, V3) with primitives. Make the positioned overlay window transparent (V4) after checking Windows and Linux X11. | No raw color or px outside `src/design`, rounded panel corners show no window color |
+| 2.4b | Screenshot baselines of the gallery (`toHaveScreenshot`), Linux only | Dropped by decision: no screenshots of the app in the repository until the software is finished. Reopen at the end |
+| 3.1 | Replace the remaining Phase 1 inline styles and raw colors (V2, V3) with primitives. Make the positioned overlay window transparent (V4) after checking Windows and Linux X11. | No raw color or px outside `src/design`, rounded panel corners show no window color |
 | 3.2 | Dim layer, tray and app icon from tokens | `scrim` token is the only dim color |
 | 3.3 | Polish pass, run the `better-ui` Before-you-finish table across the codebase | Violations register empty |
 
@@ -607,7 +610,7 @@ visual claim is from code only.
 | ID | Severity | Rule | Location | Problem | Fix |
 | -- | -------- | ---- | -------- | ------- | --- |
 | V2 | MEDIUM | F1, T1 | `src/main/dim/dim-page.ts:8`, `src/renderer/App.tsx:43` | The dim color is `rgba(32, 32, 32, 0.6)`, a tinted near-black at 60%. The `scrim` token is black at 40%. Two sources of truth that disagree. | Step 3.2: derive both from the `scrim` token through `resolveToken`. |
-| V3 | MEDIUM | T2, C4 | `src/renderer/App.tsx:29-31` | Raw hex (`#ffffff`, `#000000`, `#888888`), a 1px border and `rgba()` in inline styles on the surface-layout wrapper and the integrated dim. Phase 1 leftovers. `components/*` are clean since 2.3a. The CSS scanner covers `ui/` and `components/` stylesheets, not TS style objects. | Step 3.1: replace the wrapper with a CSS class, drop the white box (the `Surface` is the panel). Extend the scanner to TS and TSX style objects. |
+| V3 | LOW | T2, C4 | `src/renderer/App.tsx` | The integrated dim box still has an `rgba()` inline style (same cause as V2). The white placement box is gone: the wrapper now paints nothing. The CSS scanner covers `ui/` and `components/` stylesheets, not TS style objects. | Step 3.2 with V2. |
 | V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts` | Partly fixed: the window color now follows the theme, so dark theme no longer flashes white. Still open: the positioned window is opaque, so a rounded panel will show window-colored corners. | Step 3.1: transparent window, after checking Windows and Linux X11. |
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
@@ -644,10 +647,10 @@ are deliberate. They must stay consistent, and any new code follows them.
 
 These were never run in an application, so treat them as unproven.
 
-- Real appearance of any component. The gallery (2.4) is the first place this becomes verifiable.
-  `Countdown`, `ProgressRing` and `Icon` were checked once in headless Chromium (computed styles and a
-  screenshot, both themes, RTL mirror). That check is not repeatable in CI.
-- Forced-colors and reduced-motion behavior in a browser.
+- Real appearance of any component, as a picture. The gallery (2.4a) proves computed styles in
+  Chromium (`npm run e2e:gallery`, in CI), but nothing compares pixels, by decision. Judge looks by
+  eye in `npm run dev:renderer` and `/gallery.html`.
+- RTL mirroring of the icons in a browser (unit-tested only).
 - The virtual CSS module under `npm run build` on Windows and macOS.
 - Dark-theme legibility over the real dim layer.
 - Font loading in the packaged app: the `?url` asset path under `file://` and the CSP. Check with
@@ -674,4 +677,5 @@ Do not:
 - Add a hue, a tinted neutral or a remote asset.
 - Skip the contrast pair for a new color combination.
 
-Commands: `npm run check`, `npm run lint`, `npm test`, `npm run dev:renderer`, `npm run e2e`.
+Commands: `npm run check`, `npm run lint`, `npm test`, `npm run dev:renderer`, `npm run e2e`,
+`npm run e2e:gallery`.
