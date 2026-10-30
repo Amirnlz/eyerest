@@ -3,7 +3,7 @@ import type { ElevationName } from '../../design/elevation';
 import './Surface.css';
 
 export type SurfaceElevation = ElevationName | 'flat';
-export type SurfacePadding = 'none' | 'sm' | 'md' | 'lg';
+export type SurfacePadding = 'none' | 'xs' | 'sm' | 'md' | 'lg';
 export type SurfaceRadius = 'sm' | 'md' | 'lg';
 export type SurfaceElement = 'div' | 'section' | 'aside' | 'article';
 

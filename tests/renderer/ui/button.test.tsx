@@ -139,4 +139,10 @@ describe('Button.css contract (better-ui)', () => {
     expect(css).toMatch(/\.er-button:disabled\s*\{[^}]*opacity:\s*var\(--er-opacity-disabled\)/);
     expect(css).toMatch(/\.er-button:disabled\s*\{[^}]*cursor:\s*not-allowed/);
   });
+
+  it('is concentric inside a tight Surface and falls back to the md radius elsewhere', () => {
+    expect(css).toContain(
+      'border-radius: var(--er-surface-inner-radius, var(--er-radius-md));',
+    );
+  });
 });

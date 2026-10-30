@@ -36,36 +36,65 @@
   box-shadow: var(--er-elevation-inset-md);
 }
 
-/* Padding */
+/*
+ * Padding.
+ * `xs` and `sm` are tight: the surface hugs its children (a well around controls), so the inset
+ * reads as even. They publish --er-surface-inner-radius = outer radius - padding - border, and
+ * children such as Button use it to stay concentric (better-ui: outer = inner + padding + border).
+ * `none`, `md` and `lg` are content panels. Their children are not edge-concentric, so they reset
+ * the variable and children fall back to their own radius token.
+ */
 
 .er-surface--pad-none {
   padding: 0;
+  --er-surface-inner-radius: initial;
+}
+
+.er-surface--pad-xs {
+  padding: var(--er-space-2);
+  --er-surface-inner-radius: max(
+    0rem,
+    calc(
+      var(--er-surface-radius) - var(--er-space-2) - var(--er-stroke-hairline)
+    )
+  );
 }
 
 .er-surface--pad-sm {
   padding: var(--er-space-3);
+  --er-surface-inner-radius: max(
+    0rem,
+    calc(
+      var(--er-surface-radius) - var(--er-space-3) - var(--er-stroke-hairline)
+    )
+  );
 }
 
 .er-surface--pad-md {
   padding: var(--er-space-5);
+  --er-surface-inner-radius: initial;
 }
 
 .er-surface--pad-lg {
   padding: var(--er-space-6);
+  --er-surface-inner-radius: initial;
 }
 
-/* Radius: nest a child at (outer radius - padding) when the inset is even. */
+/* Radius */
 
 .er-surface--radius-sm {
   border-radius: var(--er-radius-sm);
+  --er-surface-radius: var(--er-radius-sm);
 }
 
 .er-surface--radius-md {
   border-radius: var(--er-radius-md);
+  --er-surface-radius: var(--er-radius-md);
 }
 
 .er-surface--radius-lg {
   border-radius: var(--er-radius-lg);
+  --er-surface-radius: var(--er-radius-lg);
 }
 
 /* Forced colors removes box-shadow, so the transparent border becomes the visible edge. */

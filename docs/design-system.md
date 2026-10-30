@@ -39,7 +39,8 @@ Every rule below follows from this split.
 | 2.1e | Virtual CSS module, renderer and harness wiring, theme scoping fix | Done |
 | 2.2a | `Button`, stroke and opacity tokens, component CSS lint | Done |
 | 2.2b | `Surface`, `Text` | Done |
-| 2.1b-2 | Manrope font files wired in | Open, needs a decision (section 13) |
+| 2.1f | Open decisions: font loader, concentric radius, themed window background | Done, except the font file itself (section 13) |
+| 2.1b-2 | Manrope woff2 file added to `src/renderer/assets/fonts/` | Waiting for the file |
 | 2.2c | `Countdown`, `ProgressRing` | Next |
 | 2.2d | `Icon` | Planned |
 | 2.3 | Overlay components, motion, theme switching, accessibility | Planned |
@@ -241,7 +242,7 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 | C1 | One folder: `src/renderer/ui/`. One `.tsx` and one `.css` per primitive. | review |
 | C2 | Class prefix `er-`, BEM-like modifiers: `er-button--primary`. | review |
 | C3 | Class names are built by an exported pure function (`buttonClassName`). Tests call it. | review |
-| C4 | Component CSS has no raw color, no raw px, no custom property declarations. | test: `component-css.test.ts` |
+| C4 | Component CSS has no raw color and no raw px. It may declare custom properties only with its own component prefix (`Surface.css` declares `--er-surface-*`), never one that shadows a token. Other components may read them. | test: `component-css.test.ts` |
 | C5 | Every `var(--er-*)` used must exist in the generated sheet. | test |
 | C6 | No `className` prop. Variants are typed props. This keeps the look closed and consistent. | types |
 | C7 | Use native elements (`button`, `section`) so keyboard, focus and roles come free. | review |
@@ -257,8 +258,8 @@ Each rule has an ID, the rule, and how it is enforced. Enforcement `test` means 
 
 | ID | Rule | Enforcement |
 | -- | ---- | ----------- |
-| S1 | Concentric radius: outer radius = inner radius + padding + border width, for an even visible inset up to 24px (1.5rem). Past 24px of padding, or with asymmetric padding, treat the layers as separate surfaces and keep each radius token. | test for token pairs only; see V1 and V10 |
-| S2 | Use the sanctioned nesting: panel (`lg`) holds a well (`md`) with `space-2` padding, which holds controls (`sm`). The declared pairs are `lg = md + space-2` and `md = sm + space-2`. | test: `concentricPairs` |
+| S1 | Concentric radius: outer radius = inner radius + padding + border width. It applies to a child that fills its parent's content box with a visible, even inset, up to 24px (1.5rem). A child sitting among other content (a button under a paragraph) is not concentric with the panel. Past 24px of padding, or with asymmetric padding, treat the layers as separate surfaces and keep each radius token. | test: Surface and Button CSS contracts; computed values checked in Chromium (section 8) |
+| S2 | Tight surfaces publish the inner radius. `Surface` with `padding` `xs` or `sm` sets `--er-surface-inner-radius = max(0, outer radius - padding - hairline)`. `Button` reads it with the `radius-md` token as fallback. `padding` `none`, `md` and `lg` reset it. For controls that must nest tightly, wrap them in a `Surface` with `padding="xs"` (a well). | test: `surface.test.tsx` |
 | S3 | Replace a border that only creates depth with a layered translucent shadow. Keep borders on dividers, inputs and selected states. | review |
 | S4 | Content images get a 1px outline, inset by 1px, in pure black or white at 10% alpha. Never a tinted neutral or the accent. Skip transparent artwork. | not implemented, see V11 |
 | S5 | Optical alignment: give a button 2px less padding on its icon side, and nudge asymmetric glyphs in the SVG, not in CSS. | not implemented until `Icon` exists |
@@ -397,7 +398,21 @@ For a component, write these. Copy from `tests/renderer/ui/button.test.tsx`.
 
 For tokens, test: schema (no missing or extra key in either theme), generator (each variable
 declared once, exact values and units), contrast (every pair), and any invariant of the group
-(sizes ascend, concentric pairs add up, reduced values are neutral).
+(sizes ascend, reduced values are neutral).
+
+Concentric radius cannot be proven in jsdom. The values were checked once in Chromium by rendering
+each combination and reading `getComputedStyle(button).borderTopLeftRadius`. With a 16px root:
+
+| Parent | Child | Result |
+| ------ | ----- | ------ |
+| radius `md`, padding `xs` | Button | 7px (16 - 8 - 1) |
+| radius `lg`, padding `sm` | Button | 11px (24 - 12 - 1) |
+| radius `sm`, padding `xs` | Button | 0px (clamped) |
+| radius `lg`, padding `md` | Button | 16px (reset, falls back to `radius-md`) |
+| `lg`/`md` panel, then `md`/`xs` well | Button | 7px |
+| `lg`/`xs` well, then `lg`/`md` panel | Button | 16px (inner panel resets) |
+
+The gallery (2.4) should render these cases and a Playwright test should assert the same numbers.
 
 Scanners live in `tests/helpers/css-scan.ts`: `rawColorLiterals`, `rawPixelLengths`,
 `usedVars`, `declaredVars`, `hoverOutsideHoverMedia`. Reuse them. Add a scanner there when a new
@@ -538,7 +553,7 @@ Each item is one step. Do them in order.
 
 | Step | Scope | Done when |
 | ---- | ----- | --------- |
-| 2.1b-2 | Wire the Manrope font files (decision in section 13) | The app renders Manrope offline, tests assert the font-face and CSP compatibility |
+| 2.1b-2 | Add `Manrope-Variable.woff2` and `OFL.txt` to `src/renderer/assets/fonts/` (steps in that folder's README). No code change. | `document.fonts.check("1rem 'Manrope Variable'")` is true in the running app, and `tests/renderer/font-assets.test.ts` passes |
 | 2.2c | `Countdown` (display role, `role="timer"`, tabular numerals) and `ProgressRing` (SVG, `--er-motion` transition on stroke offset, clamps 0 to 100 percent, linear ticking per second) | Component tests, CSS contract tests, ring clamp tests |
 | 2.2d | `Icon` and a small set (skip, postpone, eye, moon, sun). Hand-drawn SVG paths, `currentColor`, non-scaling stroke. No icon dependency. | I1 to I6 tests, accessible names |
 | 2.2e | Add optical-alignment padding to `Button` with an icon (S5), a `--er-image-outline` color token (S4) | Tests on both |
@@ -547,22 +562,28 @@ Each item is one step. Do them in order.
 | 2.3c | Theme switching: setting (system, light, dark), `data-theme`, suppression helper (M10) | Logic and UI tests, OS-change listener test |
 | 2.3d | Accessibility pass: timer announcements (A2), focus handling when the rest begins | Tests per rule |
 | 2.4 | Gallery page in the harness (every primitive, every state, both themes), Playwright visual baselines on Linux | Baselines committed, gallery linked from `RUNNING.md` |
-| 3.1 | Replace Phase 1 inline styles and raw colors (V2, V3, V4) with primitives | No raw color or px outside `src/design` |
+| 3.1 | Replace Phase 1 inline styles and raw colors (V2, V3) with primitives. Make the positioned overlay window transparent (V4) after checking Windows and Linux X11. | No raw color or px outside `src/design`, rounded panel corners show no window color |
 | 3.2 | Dim layer, tray and app icon from tokens | `scrim` token is the only dim color |
 | 3.3 | Polish pass, run the `better-ui` Before-you-finish table across the codebase | Violations register empty |
 
 Anything outside this list is a Phase 4 candidate. Record it in `docs/ROADMAP.md`.
 
-## 13. Open decisions
+## 13. Decisions log
 
-1. Manrope delivery. Option A: `@fontsource-variable/manrope` (OFL, maintained, latin subset about
-   30 to 40 KB woff2), one dependency. Option B: commit one woff2 file under
-   `src/renderer/assets/` and write the `@font-face` by hand, no dependency. Recommendation:
-   option B for a desktop app that must work offline and keep dependencies minimal.
-2. Concentric nesting inside panels (V1). Recommendation: the sanctioned pattern in S2, a
-   `Surface` with an inset well holding the buttons.
-3. Positioned-layout window background (V4). Recommendation: make it transparent like the
-   surface layout, after checking Windows and Linux X11 behavior.
+| Decision | Outcome | Where |
+| -------- | ------- | ----- |
+| Manrope delivery | Committed woff2 file and a small loader, no dependency. The loader (`src/renderer/fonts.ts`) registers each file listed in `src/design/fonts.ts` through the `FontFace` API. Vite finds files with `import.meta.glob`, so a missing file never breaks the build. The file itself is still to be added (2.1b-2). | `src/renderer/fonts*.ts`, `src/renderer/assets/fonts/README.md` |
+| Concentric nesting | Tight surfaces publish an inner radius that controls read. See S1 and S2. | `Surface.css`, `Button.css` |
+| Positioned window background | Opaque, but taken from the theme `canvas` token and kept in sync with the OS theme. Transparency moves to step 3.1. | `src/main/overlay/window-background.ts` |
+
+Why the font is a file and not `@fontsource-variable/manrope`: the app must work offline and a
+desktop bundle gains nothing from a package manager for one font. Why a `FontFace` loader and not a
+CSS `@font-face`: the generated stylesheet is a virtual module, where relative `url()` paths do not
+resolve, and a loader tolerates a missing file.
+
+Why the window is not transparent yet: the panel is still the unstyled Phase 1 markup, which is
+unreadable over a transparent background, and transparent frameless windows behave differently on
+Windows, Linux X11 without a compositor, and macOS. Step 3.1 changes it together with the panel.
 
 ## 14. Violations register
 
@@ -575,20 +596,25 @@ visual claim is from code only.
 
 | ID | Severity | Rule | Location | Problem | Fix |
 | -- | -------- | ---- | -------- | ------- | --- |
-| V1 | MEDIUM | S1 | `src/renderer/ui/Surface.css:49,67`, `Button.css:11` | The default `Surface` has radius `lg` (1.5rem) and padding `md` (1.25rem). A `Button` inside with radius `md` (1rem) would need an outer radius of 2.25rem to be concentric. The declared pairs only cover a `space-2` inset. | Use the S2 pattern (panel, well, control), or add a documented exception. Decide in section 13. |
 | V2 | MEDIUM | F1, T1 | `src/main/dim/dim-page.ts:8`, `src/renderer/App.tsx:43` | The dim color is `rgba(32, 32, 32, 0.6)`, a tinted near-black at 60%. The `scrim` token is black at 40%. Two sources of truth that disagree. | Step 3.2: derive both from the `scrim` token through `resolveToken`. |
 | V3 | MEDIUM | T2, C4 | `src/renderer/App.tsx:29-31`, `components/WarningNotice.tsx:16`, `components/RestPanel.tsx:18` | Raw hex (`#ffffff`, `#000000`, `#888888`), a 1px border and `padding: 8` in inline styles. Phase 1 leftovers. The CSS scanner reads only `src/renderer/ui/*.css`, so nothing catches them. | Step 3.1: use `Surface` and `Text`. Extend the scanner to TS and TSX style objects. |
-| V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts:42` | The positioned overlay window has a fixed `#ffffff` background and is not transparent. A rounded neumorphic panel will show white corners, and in dark theme a white flash. | Step 3.1: transparent window, or a background taken from the theme. Check Windows and X11. |
+| V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts` | Partly fixed: the window color now follows the theme, so dark theme no longer flashes white. Still open: the positioned window is opaque, so a rounded panel will show window-colored corners. | Step 3.1: transparent window, after checking Windows and Linux X11. |
 | V5 | MEDIUM | M10 | `src/renderer/ui/Button.css:23` | `Button` transitions `background-color` and `box-shadow`. With no theme-switch suppression, an OS theme change animates every control at once and smears. | Step 2.3c: build the recipe in section 9. |
 | V6 | MEDIUM | X1, X4 | `tests/renderer/ui/*.test.tsx` | jsdom cannot compute CSS. The roadmap asks for "focus ring is visible". The tests only check that the CSS text contains the rule. No test proves it renders. | Step 2.4: gallery plus Playwright computed-style and screenshot tests. |
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
-| V9 | LOW | S1 | `src/design/layout.ts` (`concentricPairs`), `Surface.css:5` | The rule is outer = inner + padding + border width. The pairs ignore the 1px border, which the surface really has. Off by 1px. | Include `stroke.hairline` in the formula and the test, or make wells borderless. |
 | V10 | LOW | API | `src/renderer/ui/Text.tsx:21` | Props come from `<p>`. With `as="label"`, TypeScript rejects `htmlFor`. `Surface` has no `ref`. | Add a polymorphic prop type when a label or ref is first needed. |
 | V11 | LOW | S4 | none yet | The image-outline recipe needs `oklch(0 0 0 / 0.1)`, but C4 bans color functions in component CSS. The two rules conflict. | Add a `--er-color-image-outline` token (pure black and white at 10%) in step 2.2e. |
 | V12 | LOW | Process | `src/design/contrast.test.ts`, `css.test.ts`, `tokens.test.ts` | Byte-identical copies of the files in `tests/design/`. `vitest.config.ts` includes only `tests/**`, so these never run. | Delete the three files. |
-| V13 | LOW | F4 | `src/design/typography.ts` | The font stack lists Manrope first, but no font file ships. The app renders the system fallback, so every type measurement is from a different face. | Section 13, decision 1. |
+| V13 | LOW | F4 | `src/renderer/assets/fonts/` | The loader is wired, but `Manrope-Variable.woff2` is not in the repository yet, so the app renders the system fallback. | Step 2.1b-2: add the file and `OFL.txt`. |
 | V14 | LOW | Process | `docs/ROADMAP.md` | The status board said 2.1 was in progress and 2.2 was TODO. | Updated in this step. Keep it current at each step. |
+
+### 14.1a Resolved
+
+| ID | Was | Fixed by |
+| -- | --- | -------- |
+| V1 | A `Button` in a padded `Surface` was not concentric. | S1 clarified (applies to children that fill the content box). `Surface` `xs` and `sm` publish `--er-surface-inner-radius`, `Button` reads it. Verified in Chromium. |
+| V9 | The token pairs ignored the 1px border. | The pairs were deleted. The CSS `calc()` subtracts `--er-stroke-hairline`, so the border is exact. |
 
 ### 14.2 Intentional deviations from `better-ui`
 
@@ -611,6 +637,9 @@ These were never run in an application, so treat them as unproven.
 - Forced-colors and reduced-motion behavior in a browser.
 - The virtual CSS module under `npm run build` on Windows and macOS.
 - Dark-theme legibility over the real dim layer.
+- Font loading in the packaged app: the `?url` asset path under `file://` and the CSP. Check with
+  `document.fonts.check` after adding the file (section 12, step 2.1b-2).
+- The themed overlay window background on each OS, and the `nativeTheme` update handler.
 
 ## 15. Quick reference
 

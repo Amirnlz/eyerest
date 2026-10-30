@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import 'virtual:eyerest-design.css';
 import type { Snapshot } from '../src/core/scheduler';
 import { Overlay, toOverlayViewModel } from '../src/renderer';
+import { loadBundledFonts } from '../src/renderer/fonts-bootstrap';
 
 type Scenario = 'idle' | 'working' | 'warning' | 'eye-rest' | 'long-rest';
 
@@ -111,6 +112,8 @@ function Harness() {
     </main>
   );
 }
+
+void loadBundledFonts();
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Missing #root element');

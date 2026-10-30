@@ -12,7 +12,7 @@ import type {
 } from '../../../src/renderer/ui';
 
 const elevations: readonly SurfaceElevation[] = ['flat', ...elevationNames];
-const paddings: readonly SurfacePadding[] = ['none', 'sm', 'md', 'lg'];
+const paddings: readonly SurfacePadding[] = ['none', 'xs', 'sm', 'md', 'lg'];
 const radii: readonly SurfaceRadius[] = ['sm', 'md', 'lg'];
 
 describe('surfaceClassName', () => {
@@ -148,5 +148,43 @@ describe('Surface.css contract', () => {
   it('defaults text to the primary text color on the surface color', () => {
     expect(css).toContain('color: var(--er-color-text-primary);');
     expect(css).toContain('background-color: var(--er-color-surface);');
+  });
+
+  describe('concentric radius', () => {
+    it.each([
+      ['xs', 2],
+      ['sm', 3],
+    ])(
+      'pad-%s publishes outer radius - space-%i - hairline',
+      (padding, step) => {
+        const m = new RegExp(
+          `\\.er-surface--pad-${padding}\\s*\\{([^}]*)\\}`,
+        ).exec(css);
+        const body = m?.[1] ?? '';
+        expect(body).toContain('--er-surface-inner-radius: max(');
+        expect(body).toContain(
+          `calc(var(--er-surface-radius) - var(--er-space-${step}) - var(--er-stroke-hairline))`,
+        );
+      },
+    );
+
+    it.each(['none', 'md', 'lg'])(
+      'pad-%s resets the inner radius',
+      (padding) => {
+        const m = new RegExp(
+          `\\.er-surface--pad-${padding}\\s*\\{([^}]*)\\}`,
+        ).exec(css);
+        expect(m?.[1]).toContain('--er-surface-inner-radius: initial;');
+      },
+    );
+
+    it.each(radii)('radius-%s records its radius for descendants', (radius) => {
+      const m = new RegExp(
+        `\\.er-surface--radius-${radius}\\s*\\{([^}]*)\\}`,
+      ).exec(css);
+      expect(m?.[1]).toContain(
+        `--er-surface-radius: var(--er-radius-${radius});`,
+      );
+    });
   });
 });

@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  concentricPairs,
-  radius,
-  space,
-  zIndex,
-} from '../../src/design/layout';
+import { radius, space, zIndex } from '../../src/design/layout';
 
 describe('space', () => {
   it('ascends strictly', () => {
@@ -33,22 +28,6 @@ describe('radius', () => {
   it('ascends strictly', () => {
     expect(radius.sm).toBeLessThan(radius.md);
     expect(radius.md).toBeLessThan(radius.lg);
-  });
-
-  it.each(concentricPairs)(
-    '$outer = $inner + space-$padding (concentric rule)',
-    (pair) => {
-      expect(radius[pair.outer]).toBeCloseTo(
-        radius[pair.inner] + space[pair.padding],
-        10,
-      );
-    },
-  );
-
-  it('keeps every declared concentric padding at or below the 1.5rem cutoff', () => {
-    for (const pair of concentricPairs) {
-      expect(space[pair.padding]).toBeLessThanOrEqual(1.5);
-    }
   });
 });
 

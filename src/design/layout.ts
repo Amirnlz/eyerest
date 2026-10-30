@@ -1,8 +1,9 @@
 /**
  * Spacing, radius and z-index tokens (Step 2.1c). Theme independent. All lengths in rem.
  *
- * Radius rule (better-ui): outer radius = inner radius + padding (+ border width), for a visible,
- * even inset up to 24px (1.5rem) of padding. `concentricPairs` encodes every nesting we allow.
+ * Radius rule (better-ui): outer radius = inner radius + padding + border width, for a child that
+ * fills its parent's content box with a visible, even inset up to 24px (1.5rem). `Surface.css`
+ * implements it at runtime with calc(), so the border width is always exact.
  */
 
 /** 4px grid expressed in rem. Keys are step numbers (1 step = 0.25rem). */
@@ -31,18 +32,6 @@ export type RadiusName = keyof typeof radius;
 
 /** Pill and circle shapes. A length, not a rem step, so it never overflows a scale comparison. */
 export const radiusFull = '9999px';
-
-export type ConcentricPair = {
-  readonly outer: RadiusName;
-  readonly inner: RadiusName;
-  readonly padding: SpaceName;
-};
-
-/** Allowed nestings: outer radius must equal inner radius plus the padding between them. */
-export const concentricPairs: readonly ConcentricPair[] = [
-  { outer: 'lg', inner: 'md', padding: 2 }, // panel around a control
-  { outer: 'md', inner: 'sm', padding: 2 }, // control around an icon chip
-];
 
 /**
  * Line widths. These stay in px on purpose: a rem hairline blurs when the font size scales.
