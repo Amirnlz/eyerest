@@ -74,8 +74,8 @@ Known platform risks (we handle them in the step that owns them):
 | 2.2 | Primitive components | DONE (Button with icon, Surface, Text, Countdown, ProgressRing, Icon, Photo, VisuallyHidden) |
 | 2.3 | Overlay-specific components, motion, accessibility | DONE (components, entrance motion, theme mechanism, accessibility). Exit motion: `design-system.md` V15. Shortcuts: 4.12. Theme setting: 4.13 |
 | 2.4 | Component gallery and visual regression baseline | DONE (gallery and computed-style checks; screenshot baselines dropped by decision). Waiting for your Phase 2 sign-off |
-| 3.1 | Apply design system to overlay UI | IN REVIEW |
-| 3.2 | Apply design system to dim layer, tray, app icon | TODO |
+| 3.1 | Apply design system to overlay UI | DONE |
+| 3.2 | Apply design system to dim layer, tray, app icon | PARTIAL: 3.2a dim layer in review, 3.2b icons TODO |
 | 3.3 | Polish pass and visual regression update | TODO |
 | 4.x | Feature backlog (chosen together) | TODO |
 
@@ -352,6 +352,8 @@ Tests: all Phase 1 UI tests still pass unchanged (this proves no behavior drift)
 Send this: `Start Step 3.1`
 
 ### Step 3.2: Apply to dim layer, tray, app icon
+
+Split into 3.2a (dim color from tokens, V2 and V3) and 3.2b (icons and installer artwork), because one step is one small tested change.
 
 Scope: dim color and opacity from tokens; tray icon set (template image on macOS, light and dark variants on Windows and Linux); app icon for installers; installer artwork where the builder supports it.
 

@@ -152,9 +152,10 @@ describe('App', () => {
       expect(screen.queryByTestId('integrated-dim')).not.toBeInTheDocument();
 
       act(() => api.push(resting(20)));
-      expect(screen.getByTestId('integrated-dim')).toHaveStyle({
-        background: 'rgba(32, 32, 32, 0.6)',
-      });
+      const dim = screen.getByTestId('integrated-dim');
+      expect(dim).toHaveClass('er-integrated-dim');
+      expect(dim).not.toHaveAttribute('style');
+      expect(dim).toHaveAttribute('aria-hidden', 'true');
       expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument();
     });
 

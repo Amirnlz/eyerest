@@ -1,0 +1,7 @@
+/* Rest scrim for the integrated native-Wayland window. The one dim color is the `scrim` token. */
+
+.er-integrated-dim {
+  position: fixed;
+  inset: 0;
+  background-color: var(--er-color-scrim);
+}

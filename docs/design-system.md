@@ -576,7 +576,8 @@ Each item is one step. Do them in order.
 | 2.4a | Gallery page in the harness (every primitive, every state, both themes) and computed-style checks in plain Chromium | Done. `e2e/gallery/*.gallery.ts`, linked from `RUNNING.md`, runs in CI on Linux |
 | 2.4b | Screenshot baselines of the gallery (`toHaveScreenshot`), Linux only | Dropped by decision: no screenshots of the app in the repository until the software is finished. Reopen at the end |
 | 3.1 | Overlay panels already use the primitives (2.3a). Make the positioned overlay window transparent (V4). The raw dim color (V2, V3) moves with the dim layer to 3.2. | Rounded panel corners show no window color. Page painted by no stylesheet. Windows and Linux X11 checked by the owner |
-| 3.2 | Dim layer, tray and app icon from tokens | `scrim` token is the only dim color |
+| 3.2a | Dim layer from the `scrim` token (V2, V3) | `scrim` token is the only dim color. No raw color in renderer TS or TSX |
+| 3.2b | Tray icon set, app icon, installer artwork | Every icon file exists and the builder config references it |
 | 3.3 | Polish pass, run the `better-ui` Before-you-finish table across the codebase | Violations register empty |
 
 Anything outside this list is a Phase 4 candidate. Record it in `docs/ROADMAP.md`.
@@ -610,9 +611,6 @@ visual claim is from code only.
 
 | ID | Severity | Rule | Location | Problem | Fix |
 | -- | -------- | ---- | -------- | ------- | --- |
-| V2 | MEDIUM | F1, T1 | `src/main/dim/dim-page.ts:8`, `src/renderer/App.tsx:43` | The dim color is `rgba(32, 32, 32, 0.6)`, a tinted near-black at 60%. The `scrim` token is black at 40%. Two sources of truth that disagree. | Step 3.2: derive both from the `scrim` token through `resolveToken`. |
-| V3 | LOW | T2, C4 | `src/renderer/App.tsx` | The integrated dim box still has an `rgba()` inline style (same cause as V2). The white placement box is gone: the wrapper now paints nothing. The CSS scanner covers `ui/` and `components/` stylesheets, not TS style objects. | Step 3.2 with V2. |
-| V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts` | Partly fixed: the window color now follows the theme, so dark theme no longer flashes white. Still open: the positioned window is opaque, so a rounded panel will show window-colored corners. | Fixed in step 3.1 (transparent window). Pending the owner's check on Windows and Linux X11. |
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
 | V10 | LOW | API | `src/renderer/ui/Text.tsx:21` | Props come from `<p>`. With `as="label"`, TypeScript rejects `htmlFor`. `Surface` has no `ref`. | Add a polymorphic prop type when a label or ref is first needed. |
@@ -624,6 +622,8 @@ visual claim is from code only.
 | ID | Was | Fixed by |
 | -- | --- | -------- |
 | V1 | A `Button` in a padded `Surface` was not concentric. | S1 clarified (applies to children that fill the content box). `Surface` `xs` and `sm` publish `--er-surface-inner-radius`, `Button` reads it. Verified in Chromium. |
+| V2, V3 | Dim color `rgba(32, 32, 32, 0.6)` and an inline `rgba()` in `App.tsx`, disagreeing with the `scrim` token. | Step 3.2a: `DIM_COLOR` is `resolveToken(themes.light.scrim)`, the integrated scrim is `.er-integrated-dim` reading `--er-color-scrim`. Visible change: the dim is now black at 40%. |
+| V4 | Positioned overlay window was opaque, so rounded corners showed window color. | Step 3.1: transparent window. Owner check on Windows and Linux X11 pending. |
 | V11 | S4 needed `oklch()`, which C4 bans in component CSS. | `--er-color-image-outline` token (black or white at 10%) consumed by `Photo.css`. |
 | V12 | Duplicate test files in `src/design/`. | Deleted. |
 | V13 | The Manrope file was missing. | `Manrope-Variable.woff2` and `OFL.txt` added to `src/renderer/assets/fonts/`. |

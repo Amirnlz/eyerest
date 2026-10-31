@@ -1,11 +1,18 @@
 /**
  * The page every dim window shows. A static data URL: no scripts, no remote
- * content, no preload. The window is transparent; the page paints the gray.
+ * content, no preload. The window is transparent; the page paints the scrim color.
  * Only opacity is animated, and only for fade-in. Hiding is immediate so Skip
  * and Postpone restore the screen at once.
  */
 
-export const DIM_COLOR = 'rgba(32, 32, 32, 0.6)';
+import { resolveToken, themes } from '../../design/tokens';
+
+/**
+ * The only dim color: the `scrim` token. The dim page has no theme, so the token must be the
+ * same in both themes (tests/main/dim-page.test.ts enforces it). The integrated Wayland scrim in
+ * the renderer reads the same token as `--er-color-scrim`.
+ */
+export const DIM_COLOR = resolveToken(themes.light.scrim);
 export const DIM_FADE_IN_MS = 200;
 /** Class toggled on `<body>` by the adapter to start the fade-in. */
 export const DIM_VISIBLE_CLASS = 'on';

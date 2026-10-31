@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { OVERLAY_MARGIN, OVERLAY_SIZE, type OverlayLayout } from '../shared/overlay-layout';
 import type { EyerestApi } from '../shared/ipc';
 import { Overlay } from './components/Overlay';
+import './components/IntegratedDim.css';
 import { useSchedulerSnapshot } from './hooks/use-scheduler-snapshot';
 import { toOverlayViewModel } from './view-model';
 
@@ -38,12 +39,6 @@ const integratedSurfaceStyle: CSSProperties = {
   inset: 0,
 };
 
-const integratedDimStyle: CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(32, 32, 32, 0.6)',
-};
-
 /** Connects the overlay to the main process through the preload bridge. */
 export function App({ api, layout = 'positioned', integratedDim = false }: AppProps) {
   const snapshot = useSchedulerSnapshot(api);
@@ -68,8 +63,8 @@ export function App({ api, layout = 'positioned', integratedDim = false }: AppPr
         {viewModel.mode === 'rest' ? (
           <div
             aria-hidden="true"
+            className="er-integrated-dim"
             data-testid="integrated-dim"
-            style={integratedDimStyle}
           />
         ) : null}
         <div style={surfacePanelStyle}>{overlay}</div>
