@@ -1,3 +1,4 @@
+import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
 
 /**
@@ -13,6 +14,8 @@ export type IpcKind = 'invoke' | 'send' | 'push';
 
 export const IPC = {
   getSnapshot: { channel: 'eyerest:get-snapshot', kind: 'invoke' },
+  getSettings: { channel: 'eyerest:get-settings', kind: 'invoke' },
+  saveSettings: { channel: 'eyerest:save-settings', kind: 'invoke' },
   skip: { channel: 'eyerest:skip', kind: 'send' },
   postpone: { channel: 'eyerest:postpone', kind: 'send' },
   snapshot: { channel: 'eyerest:snapshot', kind: 'push' },
@@ -28,12 +31,27 @@ export function channelsOfKind(kind: IpcKind): string[] {
 }
 
 /**
+ * Answer to `saveSettings`. `error` is a message safe to show the user; main
+ * logs the technical detail. On success `settings` is what is now persisted.
+ */
+export type SaveSettingsResult =
+  | { readonly ok: true; readonly settings: RestConfig }
+  | { readonly ok: false; readonly error: string };
+
+/**
  * The only surface the renderer gets from the main process.
  * Exposed on `window.eyerest` by the preload script.
  */
 export interface EyerestApi {
   /** Current scheduler snapshot. */
   getSnapshot(): Promise<Snapshot>;
+  /** The configured settings: defaults with the user's saved changes. */
+  getSettings(): Promise<RestConfig>;
+  /**
+   * Validates, saves and applies settings. Main re-validates every field, so a
+   * rejected save resolves with `ok: false` instead of throwing.
+   */
+  saveSettings(settings: RestConfig): Promise<SaveSettingsResult>;
   /** Subscribes to snapshot pushes. Returns an unsubscribe function. */
   onSnapshot(listener: (snapshot: Snapshot) => void): () => void;
   /** User pressed Skip. */
@@ -44,7 +62,7 @@ export interface EyerestApi {
 
 /** Minimal shape of Electron's `ipcMain` that we depend on (lets us fake it in tests). */
 export interface IpcMainLike {
-  handle(channel: string, listener: () => unknown): void;
+  handle(channel: string, listener: (event: unknown, ...args: unknown[]) => unknown): void;
   on(channel: string, listener: () => void): void;
   removeHandler(channel: string): void;
   removeListener(channel: string, listener: () => void): void;

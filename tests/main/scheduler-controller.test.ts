@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_CONFIG, type RestConfig } from '../../src/core/config';
 import type { Listener, Snapshot } from '../../src/core/scheduler';
 import { SchedulerController, type SchedulerPort } from '../../src/main/scheduler-controller';
 import { IDLE, WORKING, resting } from '../helpers/fake-api';
 
 class FakeScheduler implements SchedulerPort {
   readonly calls: string[] = [];
+  readonly configs: RestConfig[] = [];
   private readonly listeners = new Set<Listener>();
   snapshot: Snapshot = IDLE;
 
@@ -21,6 +23,10 @@ class FakeScheduler implements SchedulerPort {
   }
   postpone() {
     this.calls.push('postpone');
+  }
+  reconfigure(config: RestConfig) {
+    this.calls.push('reconfigure');
+    this.configs.push(config);
   }
   getSnapshot() {
     return this.snapshot;
@@ -87,6 +93,16 @@ describe('SchedulerController', () => {
     controller.postpone();
 
     expect(scheduler.calls).toEqual(['skip', 'postpone']);
+  });
+
+  it('reconfigure hands the config to the scheduler and nothing else', () => {
+    const { scheduler, controller } = setup();
+    const config = { ...DEFAULT_CONFIG, workIntervalMs: 600_000 };
+
+    controller.reconfigure(config);
+
+    expect(scheduler.calls).toEqual(['reconfigure']);
+    expect(scheduler.configs).toEqual([config]);
   });
 
   it('pause stops the scheduler and forwards the idle snapshot', () => {

@@ -18,7 +18,7 @@ import { isNativeWayland, resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
 import { createMainRuntime, type MainRuntime } from './runtime';
 import { createNodeSettingsFs } from './settings/node-settings-fs';
-import { SETTINGS_FILE_NAME, loadSettings } from './settings/settings';
+import { SETTINGS_FILE_NAME, loadSettings, saveSettings } from './settings/settings';
 import { acquireSingleInstance } from './single-instance';
 import { createElectronTrayPort } from './tray/electron-tray-adapter';
 import { TrayController } from './tray/tray-controller';
@@ -111,7 +111,8 @@ void app.whenReady().then(() => {
   // Settings file in the user data dir. A missing file means defaults; a bad
   // file falls back to defaults and is reported, never a crash.
   const settingsPath = join(app.getPath('userData'), SETTINGS_FILE_NAME);
-  const settings = loadSettings(createNodeSettingsFs(), settingsPath);
+  const settingsFs = createNodeSettingsFs();
+  const settings = loadSettings(settingsFs, settingsPath);
   if (settings.status === 'invalid') {
     console.error(
       `[settings] ${settingsPath} rejected, using defaults: ${settings.issues.join('; ')}`,
@@ -140,6 +141,9 @@ void app.whenReady().then(() => {
   runtime = createMainRuntime({
     env: process.env,
     settingsOverrides: settings.overrides,
+    settingsStorage: {
+      save: (overrides) => saveSettings(settingsFs, settingsPath, overrides),
+    },
     ipcMain,
     getTargets: () =>
       BrowserWindow.getAllWindows().map((window) => window.webContents),

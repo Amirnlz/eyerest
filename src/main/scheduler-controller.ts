@@ -1,3 +1,4 @@
+import type { RestConfig } from '../core/config';
 import type { Listener, Snapshot } from '../core/scheduler';
 
 /** The part of `RestScheduler` the controller uses. Lets tests inject a fake. */
@@ -6,6 +7,7 @@ export interface SchedulerPort {
   stop(): void;
   skip(): void;
   postpone(): void;
+  reconfigure(config: RestConfig): void;
   getSnapshot(): Snapshot;
   subscribe(listener: Listener): () => void;
   dispose(): void;
@@ -58,6 +60,14 @@ export class SchedulerController {
 
   postpone(): void {
     this.scheduler.postpone();
+  }
+
+  /**
+   * Applies a new config. A running cycle restarts with a full work interval
+   * (see `RestScheduler.reconfigure`); a paused scheduler stays paused.
+   */
+  reconfigure(config: RestConfig): void {
+    this.scheduler.reconfigure(config);
   }
 
   dispose(): void {

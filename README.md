@@ -37,7 +37,7 @@ src/main/overlay/  top-right overlay window: bounds maths, manager, Electron ada
 src/main/dim/      screen dim layer: one window per display, manager, Electron adapters
 src/main/media/    media pause at rest start: port, null controller, Linux MPRIS adapter (busctl)
 src/main/tray/     tray icon and menu (Pause/Resume, Quit): menu model, controller, Electron adapter
-src/main/settings/ settings file: parse, validate, load, atomic save
+src/main/settings/ settings file: parse, validate, load, atomic save; IPC payload validator; SettingsService
 src/preload/    contextBridge bridge (createBridge is Electron-free and tested)
 src/renderer/   view model, copy, overlay components, App, useSchedulerSnapshot
 tests/          core, main, preload, shared, renderer tests; tests/helpers has fakes
@@ -50,6 +50,7 @@ Data flow:
 ```text
 RestScheduler -> SchedulerController -> broadcast sender --(eyerest:snapshot)--> renderer
 renderer --(eyerest:skip / postpone / get-snapshot)--> ipc handlers -> controller -> scheduler
+renderer --(eyerest:get-settings / save-settings)--> ipc handlers -> SettingsService -> file + controller.reconfigure
 ```
 
 Design rules:
@@ -112,6 +113,9 @@ all optional, durations in milliseconds: `workIntervalMs`, `warningMs`, `eyeRest
 `cyclesBeforeLongRest`, `postponeMs`. A missing file means defaults. An invalid file (bad JSON or values)
 is ignored as a whole, defaults apply, and the reason is printed to the console. Unknown keys are ignored
 with a warning. `EYEREST_FAST=1` overrides the durations from the file.
+Saving settings through IPC (`eyerest:save-settings`) validates every field in main, writes only values
+that differ from the defaults, and restarts a running cycle with a fresh work interval (a paused app stays
+paused). Saving unchanged values changes nothing. There is no settings window yet (roadmap 4.1b, 4.1c).
 
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.

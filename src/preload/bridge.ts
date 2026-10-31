@@ -1,5 +1,11 @@
+import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
-import { IPC, type EyerestApi, type IpcRendererLike } from '../shared/ipc';
+import {
+  IPC,
+  type EyerestApi,
+  type IpcRendererLike,
+  type SaveSettingsResult,
+} from '../shared/ipc';
 
 /**
  * Builds the API exposed to the renderer. Pure with respect to Electron:
@@ -11,6 +17,10 @@ import { IPC, type EyerestApi, type IpcRendererLike } from '../shared/ipc';
 export function createBridge(ipc: IpcRendererLike): EyerestApi {
   return {
     getSnapshot: () => ipc.invoke(IPC.getSnapshot.channel) as Promise<Snapshot>,
+
+    getSettings: () => ipc.invoke(IPC.getSettings.channel) as Promise<RestConfig>,
+    saveSettings: (settings) =>
+      ipc.invoke(IPC.saveSettings.channel, settings) as Promise<SaveSettingsResult>,
 
     onSnapshot(listener) {
       const handler = (_event: unknown, snapshot: unknown) => listener(snapshot as Snapshot);

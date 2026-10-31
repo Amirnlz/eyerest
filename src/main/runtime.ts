@@ -3,6 +3,7 @@ import { RestScheduler, type SchedulerOptions } from '../core/scheduler';
 import type { IpcMainLike } from '../shared/ipc';
 import { registerIpcHandlers } from './ipc-handlers';
 import { resolveConfig } from './runtime-config';
+import { SettingsService, type SettingsStorage } from './settings/settings-service';
 import {
   SchedulerController,
   type SnapshotSender,
@@ -25,6 +26,8 @@ export interface MainRuntimeDeps {
   readonly extraSenders?: readonly SnapshotSender[];
   /** Validated overrides from the settings file. `EYEREST_FAST=1` still wins. */
   readonly settingsOverrides?: Partial<RestConfig>;
+  /** Persists saved settings. Without it, `saveSettings` answers `ok: false`. */
+  readonly settingsStorage?: SettingsStorage;
   /** Test seam: inject a fake clock and ticker. */
   readonly schedulerOptions?: SchedulerOptions;
 }
@@ -49,7 +52,13 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
     ...(deps.extraSenders ?? []),
   ]);
   const controller = new SchedulerController(scheduler, sender);
-  const removeIpcHandlers = registerIpcHandlers(deps.ipcMain, controller);
+  const settings = new SettingsService({
+    env: deps.env,
+    initialOverrides: deps.settingsOverrides,
+    storage: deps.settingsStorage,
+    onApply: (next) => controller.reconfigure(next),
+  });
+  const removeIpcHandlers = registerIpcHandlers(deps.ipcMain, controller, settings);
 
   return {
     controller,

@@ -231,6 +231,118 @@ describe('RestScheduler', () => {
   });
 });
 
+describe('RestScheduler.reconfigure', () => {
+  const tenMinutes = createConfig({ workIntervalMs: 10 * MIN, eyeRestMs: 30 * SEC });
+
+  it('while idle only swaps the config: no events, no ticker, still idle', () => {
+    const { scheduler, events, snapshots, time } = setup();
+
+    scheduler.reconfigure(tenMinutes);
+
+    expect(events).toEqual([]);
+    expect(snapshots).toEqual([]);
+    expect(time.activeTickers).toBe(0);
+    expect(scheduler.getSnapshot().state.phase).toBe('idle');
+  });
+
+  it('while idle, the next start uses the new work interval', () => {
+    const { scheduler, time } = setup();
+    scheduler.reconfigure(tenMinutes);
+
+    scheduler.start();
+
+    expect(scheduler.getSnapshot().state).toEqual({
+      phase: 'working',
+      restAt: 10 * MIN,
+      restsDone: 0,
+    });
+    time.advance(10 * MIN);
+    expect(scheduler.getSnapshot().secondsRemaining).toBe(30);
+  });
+
+  it('while working, restarts the cycle with a full new work interval from now', () => {
+    const { scheduler, events, time } = setup();
+    scheduler.start();
+    time.advance(7 * MIN);
+
+    scheduler.reconfigure(tenMinutes);
+
+    expect(events.map((e) => e.type)).toEqual(['started', 'stopped', 'started']);
+    expect(scheduler.getSnapshot().state).toEqual({
+      phase: 'working',
+      restAt: 17 * MIN,
+      restsDone: 0,
+    });
+  });
+
+  it('keeps exactly one ticker after restarting', () => {
+    const { scheduler, time } = setup();
+    scheduler.start();
+
+    scheduler.reconfigure(tenMinutes);
+
+    expect(time.activeTickers).toBe(1);
+  });
+
+  it('ends a rest in progress and discards the old rest end time', () => {
+    const { scheduler, time } = setup();
+    scheduler.start();
+    time.advance(20 * MIN);
+    expect(scheduler.getSnapshot().state.phase).toBe('resting');
+
+    scheduler.reconfigure(tenMinutes);
+    time.advance(30 * SEC);
+
+    // The old 20 s rest end passed; the scheduler is working, not resting.
+    expect(scheduler.getSnapshot().state.phase).toBe('working');
+  });
+
+  it('resets the rest cycle: a new long-rest cadence counts from zero', () => {
+    const { scheduler, events, time } = setup();
+    scheduler.start();
+    for (let i = 0; i < 2; i++) {
+      time.advance(20 * MIN);
+      time.advance(20 * SEC);
+    }
+
+    scheduler.reconfigure(createConfig({ cyclesBeforeLongRest: 2 }));
+    time.advance(20 * MIN);
+    time.advance(20 * SEC);
+    time.advance(20 * MIN);
+
+    const kinds = events.flatMap((e) => (e.type === 'rest-started' ? [e.kind] : []));
+    expect(kinds).toEqual(['eye', 'eye', 'eye', 'long']);
+  });
+
+  it('applies the new rest and postpone lengths to later rests', () => {
+    const { scheduler, time } = setup();
+    scheduler.start();
+    scheduler.reconfigure(createConfig({ eyeRestMs: 45 * SEC, postponeMs: 2 * MIN }));
+
+    time.advance(20 * MIN);
+    expect(scheduler.getSnapshot().secondsRemaining).toBe(45);
+
+    scheduler.postpone();
+    expect(scheduler.getSnapshot().state).toMatchObject({
+      phase: 'working',
+      restAt: 22 * MIN,
+    });
+  });
+
+  it('a paused scheduler stays paused across repeated reconfigures', () => {
+    const { scheduler, events, time } = setup();
+    scheduler.start();
+    scheduler.stop();
+    const before = events.length;
+
+    scheduler.reconfigure(tenMinutes);
+    scheduler.reconfigure(createConfig());
+
+    expect(events).toHaveLength(before);
+    expect(time.activeTickers).toBe(0);
+  });
+});
+
 describe('RestScheduler with real timers', () => {
   beforeEach(() => {
     vi.useFakeTimers();

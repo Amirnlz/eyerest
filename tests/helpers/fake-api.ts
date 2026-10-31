@@ -1,6 +1,7 @@
 import { vi, type Mock } from 'vitest';
+import { DEFAULT_CONFIG, type RestConfig } from '../../src/core/config';
 import type { Snapshot } from '../../src/core/scheduler';
-import type { EyerestApi } from '../../src/shared/ipc';
+import type { EyerestApi, SaveSettingsResult } from '../../src/shared/ipc';
 
 export interface FakeApi extends EyerestApi {
   /** Resolves the pending `getSnapshot()` promise. */
@@ -12,6 +13,8 @@ export interface FakeApi extends EyerestApi {
   listenerCount(): number;
   skip: Mock<() => void>;
   postpone: Mock<() => void>;
+  getSettings: Mock<() => Promise<RestConfig>>;
+  saveSettings: Mock<(settings: RestConfig) => Promise<SaveSettingsResult>>;
 }
 
 export function createFakeApi(): FakeApi {
@@ -33,6 +36,10 @@ export function createFakeApi(): FakeApi {
     },
     skip: vi.fn<() => void>(),
     postpone: vi.fn<() => void>(),
+    getSettings: vi.fn<() => Promise<RestConfig>>(() => Promise.resolve(DEFAULT_CONFIG)),
+    saveSettings: vi.fn<(settings: RestConfig) => Promise<SaveSettingsResult>>((settings) =>
+      Promise.resolve({ ok: true, settings }),
+    ),
     resolveSnapshot,
     rejectSnapshot,
     push: (snapshot) => {

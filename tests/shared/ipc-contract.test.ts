@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createBridge } from '../../src/preload/bridge';
 import { registerIpcHandlers } from '../../src/main/ipc-handlers';
+import { DEFAULT_CONFIG } from '../../src/core/config';
 import { channelsOfKind, IPC } from '../../src/shared/ipc';
 import { createFakeIpcMain, createFakeIpcRenderer } from '../helpers/fake-ipc';
 
@@ -10,6 +11,11 @@ const controller = {
   getSnapshot: () => ({ state: { phase: 'idle' as const }, secondsRemaining: null }),
   skip: () => {},
   postpone: () => {},
+};
+
+const settings = {
+  getSettings: () => DEFAULT_CONFIG,
+  saveSettings: () => ({ ok: true as const, settings: DEFAULT_CONFIG }),
 };
 
 describe('IPC contract', () => {
@@ -23,7 +29,7 @@ describe('IPC contract', () => {
 
   it('has a main-side handler for every invoke and send channel, and none for push', () => {
     const ipc = createFakeIpcMain();
-    registerIpcHandlers(ipc, controller);
+    registerIpcHandlers(ipc, controller, settings);
 
     const registered = [...ipc.handlers.keys(), ...ipc.listeners.keys()].sort();
     const expected = [...channelsOfKind('invoke'), ...channelsOfKind('send')].sort();
@@ -39,6 +45,8 @@ describe('IPC contract', () => {
     const api = createBridge(ipc);
 
     await api.getSnapshot();
+    await api.getSettings();
+    await api.saveSettings(DEFAULT_CONFIG);
     api.skip();
     api.postpone();
     api.onSnapshot(() => {});
@@ -51,6 +59,8 @@ describe('IPC contract', () => {
     const api = createBridge(ipc);
 
     await api.getSnapshot();
+    await api.getSettings();
+    await api.saveSettings(DEFAULT_CONFIG);
     api.skip();
     api.postpone();
 

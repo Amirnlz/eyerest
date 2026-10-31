@@ -2,7 +2,7 @@ import { ConfigError, createConfig, type RestConfig } from '../../core/config';
 
 export const SETTINGS_FILE_NAME = 'settings.json';
 
-const SETTINGS_KEYS: readonly (keyof RestConfig)[] = [
+export const SETTINGS_KEYS: readonly (keyof RestConfig)[] = [
   'workIntervalMs',
   'warningMs',
   'eyeRestMs',

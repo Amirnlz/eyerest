@@ -1,16 +1,16 @@
 import type { IpcMainLike, IpcRendererLike } from '../../src/shared/ipc';
 
 export interface FakeIpcMain extends IpcMainLike {
-  readonly handlers: Map<string, () => unknown>;
+  readonly handlers: Map<string, (event: unknown, ...args: unknown[]) => unknown>;
   readonly listeners: Map<string, () => void>;
-  /** Simulates `ipcRenderer.invoke(channel)`. */
-  invoke(channel: string): unknown;
+  /** Simulates `ipcRenderer.invoke(channel, ...args)`. Like Electron, passes an event first. */
+  invoke(channel: string, ...args: unknown[]): unknown;
   /** Simulates `ipcRenderer.send(channel)`. */
   emit(channel: string): void;
 }
 
 export function createFakeIpcMain(): FakeIpcMain {
-  const handlers = new Map<string, () => unknown>();
+  const handlers = new Map<string, (event: unknown, ...args: unknown[]) => unknown>();
   const listeners = new Map<string, () => void>();
 
   return {
@@ -28,10 +28,10 @@ export function createFakeIpcMain(): FakeIpcMain {
     removeListener: (channel, listener) => {
       if (listeners.get(channel) === listener) listeners.delete(channel);
     },
-    invoke: (channel) => {
+    invoke: (channel, ...args) => {
       const handler = handlers.get(channel);
       if (!handler) throw new Error(`No handler for ${channel}`);
-      return handler();
+      return handler({ fakeEvent: true }, ...args);
     },
     emit: (channel) => {
       const listener = listeners.get(channel);
@@ -45,6 +45,8 @@ export interface FakeIpcRenderer extends IpcRendererLike {
   /** Every channel the bridge touched, in order. */
   readonly touched: string[];
   readonly invoked: string[];
+  /** The arguments of each `invoke`, parallel to `invoked`. */
+  readonly invokedArgs: unknown[][];
   readonly sent: string[];
   /** Simulates main pushing a payload on a channel. */
   push(channel: string, payload: unknown): void;
@@ -54,16 +56,19 @@ export interface FakeIpcRenderer extends IpcRendererLike {
 export function createFakeIpcRenderer(invokeResult: unknown = undefined): FakeIpcRenderer {
   const touched: string[] = [];
   const invoked: string[] = [];
+  const invokedArgs: unknown[][] = [];
   const sent: string[] = [];
   const listeners = new Map<string, Set<(event: unknown, ...args: unknown[]) => void>>();
 
   return {
     touched,
     invoked,
+    invokedArgs,
     sent,
-    invoke: (channel) => {
+    invoke: (channel, ...args) => {
       touched.push(channel);
       invoked.push(channel);
+      invokedArgs.push(args);
       return Promise.resolve(invokeResult);
     },
     send: (channel) => {

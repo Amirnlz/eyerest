@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_CONFIG } from '../../src/core/config';
 import { registerIpcHandlers } from '../../src/main/ipc-handlers';
-import { IPC } from '../../src/shared/ipc';
+import { IPC, type SaveSettingsResult } from '../../src/shared/ipc';
 import { createFakeIpcMain } from '../helpers/fake-ipc';
 import { WORKING } from '../helpers/fake-api';
 
@@ -10,9 +11,16 @@ function setup() {
     skip: vi.fn(),
     postpone: vi.fn(),
   };
+  const settings = {
+    getSettings: vi.fn(() => DEFAULT_CONFIG),
+    saveSettings: vi.fn<(payload: unknown) => SaveSettingsResult>((payload) => ({
+      ok: false,
+      error: `rejected ${JSON.stringify(payload)}`,
+    })),
+  };
   const ipc = createFakeIpcMain();
-  const dispose = registerIpcHandlers(ipc, controller);
-  return { controller, ipc, dispose };
+  const dispose = registerIpcHandlers(ipc, controller, settings);
+  return { controller, settings, ipc, dispose };
 }
 
 describe('registerIpcHandlers', () => {
@@ -36,9 +44,32 @@ describe('registerIpcHandlers', () => {
     expect(controller.skip).not.toHaveBeenCalled();
   });
 
+  it('answers getSettings with the settings service value', () => {
+    const { ipc, settings } = setup();
+    expect(ipc.invoke(IPC.getSettings.channel)).toBe(DEFAULT_CONFIG);
+    expect(settings.getSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the saveSettings payload through untouched and returns the result', () => {
+    const { ipc, settings } = setup();
+    const payload = { workIntervalMs: 'not validated here' };
+
+    const result = ipc.invoke(IPC.saveSettings.channel, payload);
+
+    expect(settings.saveSettings).toHaveBeenCalledTimes(1);
+    expect(settings.saveSettings).toHaveBeenCalledWith(payload);
+    expect(result).toEqual({ ok: false, error: 'rejected {"workIntervalMs":"not validated here"}' });
+  });
+
+  it('does not pass the IPC event to the settings service', () => {
+    const { ipc, settings } = setup();
+    ipc.invoke(IPC.saveSettings.channel, { a: 1 });
+    expect(settings.saveSettings.mock.calls[0]).toHaveLength(1);
+  });
+
   it('removes every handler on dispose', () => {
     const { ipc, dispose } = setup();
-    expect(ipc.handlers.size + ipc.listeners.size).toBe(3);
+    expect(ipc.handlers.size + ipc.listeners.size).toBe(5);
 
     dispose();
 

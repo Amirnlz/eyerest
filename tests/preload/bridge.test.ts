@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_CONFIG } from '../../src/core/config';
 import type { Snapshot } from '../../src/core/scheduler';
 import { createBridge } from '../../src/preload/bridge';
 import { IPC } from '../../src/shared/ipc';
@@ -13,6 +14,24 @@ describe('createBridge', () => {
   it('getSnapshot resolves with what main answers', async () => {
     const api = createBridge(createFakeIpcRenderer(snapshot));
     await expect(api.getSnapshot()).resolves.toEqual(snapshot);
+  });
+
+  it('getSettings invokes its channel with no arguments and resolves with the answer', async () => {
+    const ipc = createFakeIpcRenderer(DEFAULT_CONFIG);
+    await expect(createBridge(ipc).getSettings()).resolves.toEqual(DEFAULT_CONFIG);
+    expect(ipc.invoked).toEqual([IPC.getSettings.channel]);
+    expect(ipc.invokedArgs).toEqual([[]]);
+  });
+
+  it('saveSettings invokes its channel with the settings as the only argument', async () => {
+    const result = { ok: true, settings: DEFAULT_CONFIG };
+    const ipc = createFakeIpcRenderer(result);
+    const settings = { ...DEFAULT_CONFIG, postponeMs: 60_000 };
+
+    await expect(createBridge(ipc).saveSettings(settings)).resolves.toEqual(result);
+
+    expect(ipc.invoked).toEqual([IPC.saveSettings.channel]);
+    expect(ipc.invokedArgs).toEqual([[settings]]);
   });
 
   it('skip sends the skip channel exactly once', () => {

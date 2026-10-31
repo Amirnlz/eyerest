@@ -65,7 +65,7 @@ export class RestScheduler {
   private lastEmittedSeconds: number | null = null;
 
   constructor(
-    private readonly config: RestConfig,
+    private config: RestConfig,
     options: SchedulerOptions = {},
   ) {
     this.clock = options.clock ?? systemClock;
@@ -104,6 +104,20 @@ export class RestScheduler {
 
   postpone(): void {
     this.dispatch({ type: 'postpone', now: this.clock.now() });
+  }
+
+  /**
+   * Replaces the config. While reminders are running the cycle restarts with a
+   * fresh work interval, exactly like Pause then Resume: the in-flight
+   * countdown was computed from the old values and cannot be reinterpreted.
+   * While idle (paused) only the config changes; the next start uses it.
+   */
+  reconfigure(config: RestConfig): void {
+    const wasRunning = this.state.phase !== 'idle';
+    this.config = config;
+    if (!wasRunning) return;
+    this.stop();
+    this.start();
   }
 
   /** Stops timers and drops listeners. The instance must not be reused. */
