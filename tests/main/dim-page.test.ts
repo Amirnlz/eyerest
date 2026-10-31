@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { durations, easings } from '../../src/design/motion';
 import { resolveToken, themes } from '../../src/design/tokens';
 import {
   DIM_COLOR,
+  DIM_FADE_EASING,
   DIM_FADE_IN_MS,
   DIM_PAGE_HTML,
   DIM_PAGE_URL,
@@ -21,6 +23,12 @@ describe('dim page', () => {
     expect(DIM_PAGE_HTML).toContain('opacity:0');
     expect(DIM_PAGE_HTML).toContain(`body.${DIM_VISIBLE_CLASS}{opacity:1}`);
     expect(DIM_PAGE_HTML).toContain(`transition:opacity ${DIM_FADE_IN_MS}ms`);
+  });
+
+  it('fades in with the enter duration and easing tokens, like the overlay panel', () => {
+    expect(DIM_FADE_IN_MS).toBe(durations.base);
+    expect(DIM_FADE_EASING).toBe(easings.out);
+    expect(DIM_PAGE_HTML).toContain(`transition:opacity ${durations.base}ms ${easings.out}`);
   });
 
   it('animates opacity only', () => {

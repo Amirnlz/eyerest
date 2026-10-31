@@ -5,6 +5,7 @@
  * and Postpone restore the screen at once.
  */
 
+import { durations, easings } from '../../design/motion';
 import { resolveToken, themes } from '../../design/tokens';
 
 /**
@@ -13,7 +14,13 @@ import { resolveToken, themes } from '../../design/tokens';
  * the renderer reads the same token as `--er-color-scrim`.
  */
 export const DIM_COLOR = resolveToken(themes.light.scrim);
-export const DIM_FADE_IN_MS = 200;
+/**
+ * The fade-in is an enter, so it takes the `base` duration and `out` easing: the same values as
+ * the overlay panel's entrance, which starts at the same moment. The page has no stylesheet access
+ * to the CSS variables, so it reads the tokens here.
+ */
+export const DIM_FADE_IN_MS = durations.base;
+export const DIM_FADE_EASING = easings.out;
 /** Class toggled on `<body>` by the adapter to start the fade-in. */
 export const DIM_VISIBLE_CLASS = 'on';
 
@@ -24,7 +31,7 @@ export const DIM_PAGE_HTML = `<!doctype html>
 <title>eyerest dim</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:transparent}
-body{background:${DIM_COLOR};opacity:0;transition:opacity ${DIM_FADE_IN_MS}ms ease-out}
+body{background:${DIM_COLOR};opacity:0;transition:opacity ${DIM_FADE_IN_MS}ms ${DIM_FADE_EASING}}
 body.${DIM_VISIBLE_CLASS}{opacity:1}
 @media (prefers-reduced-motion:reduce){body{transition:none}}
 </style>

@@ -625,6 +625,7 @@ visual claim is from code only.
 
 | ID | Was | Fixed by |
 | -- | --- | -------- |
+| V16 | The dim page faded in over a raw 200 ms with `ease-out`, matching no motion token and 100 ms shorter than the overlay entrance that starts with it. | Step 3.3: `DIM_FADE_IN_MS` is `durations.base` (300 ms) and the easing is `easings.out`. A test scans renderer stylesheets for raw durations and easings. Visible change: the dim fades in 100 ms slower. |
 | V1 | A `Button` in a padded `Surface` was not concentric. | S1 clarified (applies to children that fill the content box). `Surface` `xs` and `sm` publish `--er-surface-inner-radius`, `Button` reads it. Verified in Chromium. |
 | V2, V3 | Dim color `rgba(32, 32, 32, 0.6)` and an inline `rgba()` in `App.tsx`, disagreeing with the `scrim` token. | Step 3.2a: `DIM_COLOR` is `resolveToken(themes.light.scrim)`, the integrated scrim is `.er-integrated-dim` reading `--er-color-scrim`. Visible change: the dim is now black at 40%. |
 | V4 | Positioned overlay window was opaque, so rounded corners showed window color. | Step 3.1: transparent window. Owner check on Windows and Linux X11 pending. |
@@ -634,6 +635,33 @@ visual claim is from code only.
 | V5 | `Button` transitions smeared on a theme change. | `createTransitionSuppressor` wraps every theme change and OS flip. |
 | V6 | jsdom tests only matched CSS text. | `e2e/gallery/primitives.gallery.ts` reads computed styles for the focus ring, press scale, radii, padding, outlines, forced colors and reduced motion. |
 | V9 | The token pairs ignored the 1px border. | The pairs were deleted. The CSS `calc()` subtracts `--er-stroke-hairline`, so the border is exact. |
+
+### 14.1b Step 3.3 code audit
+
+The `better-ui` "Before you finish" table was run across `src`, by search and by reading the
+files. Nothing was run in an application.
+
+| Detection | Result |
+| --------- | ------ |
+| Same radius on a padded parent and child | None. `Surface` publishes `--er-surface-inner-radius` and `Button` reads it (V1). |
+| Shadow ring with no transparent border | None. `Button` and `Surface` keep a transparent border; forced colors draws it. |
+| Hex or palette outline on `img` | None. `Photo` uses `--er-color-image-outline`. |
+| `transition: all`, `transition-all` | None. |
+| `animation` on a toggled class | None. The only keyframes are the one-shot overlay entrance. |
+| Press scale below 0.96, or no `:disabled` exclusion | None. Token 0.96, rule is `:not(:disabled):active`. |
+| `bounce`, `whileTap` | None, no motion library. |
+| `opacity: 0` in a base rule revealed by animation | None. The entrance hides in its `from` keyframe. The dim page uses a transition. |
+| Movement, scale or blur without reduced-motion handling | None. Effect tokens go neutral globally (14.2). |
+| `will-change` | None used. |
+| Hex fill or stroke in an icon SVG | None, all `currentColor`. |
+| `:hover` outside `@media (hover: hover)` | None. |
+| `overflow` auto or scroll in an overlay | None. |
+| Raw duration or easing outside the tokens | One: the dim fade (V16, fixed). |
+
+Still open and not fixed, all LOW: V7 (button height under 44 px, kept: the overlay is a pointer
+and keyboard surface and the 240 px window is tight), V8 (no input yet), V10 (no label or ref
+yet), V15 (exit animation needs a cross-process change). The roadmap exit line "violations
+register empty" is therefore not met; these four are accepted deferrals with their triggers.
 
 ### 14.2 Intentional deviations from `better-ui`
 
