@@ -74,7 +74,7 @@ Known platform risks (we handle them in the step that owns them):
 | 2.2 | Primitive components | DONE (Button with icon, Surface, Text, Countdown, ProgressRing, Icon, Photo, VisuallyHidden) |
 | 2.3 | Overlay-specific components, motion, accessibility | DONE (components, entrance motion, theme mechanism, accessibility). Exit motion: `design-system.md` V15. Shortcuts: 4.12. Theme setting: 4.13 |
 | 2.4 | Component gallery and visual regression baseline | DONE (gallery and computed-style checks; screenshot baselines dropped by decision). Waiting for your Phase 2 sign-off |
-| 3.1 | Apply design system to overlay UI | TODO |
+| 3.1 | Apply design system to overlay UI | IN REVIEW |
 | 3.2 | Apply design system to dim layer, tray, app icon | TODO |
 | 3.3 | Polish pass and visual regression update | TODO |
 | 4.x | Feature backlog (chosen together) | TODO |
@@ -344,6 +344,8 @@ Goal: the shipped app uses the design system everywhere. No behavior changes.
 ### Step 3.1: Apply to overlay UI
 
 Scope: replace the Phase 1 unstyled components in `Overlay` with the Phase 2 components. Remove the old ones. Behavior is unchanged.
+
+Found at the start of 3.1: the overlay components were already rebuilt from the primitives in 2.3a, so the remaining work is V4 (transparent positioned window). The raw dim color (V2, V3) belongs to 3.2 with the dim layer.
 
 Tests: all Phase 1 UI tests still pass unchanged (this proves no behavior drift); gallery computed-style checks cover the real overlay in each state (no screenshot baselines, by decision).
 

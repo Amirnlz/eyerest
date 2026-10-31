@@ -1,8 +1,8 @@
-import { BrowserWindow, nativeTheme, type Screen } from 'electron';
+import { BrowserWindow, type Screen } from 'electron';
 import type { OverlayLayout } from '../../shared/overlay-layout';
 import { OVERLAY_LEVEL } from '../window-levels';
 import type { DisplayPort, OverlayWindowFactory } from './ports';
-import { overlayWindowBackground } from './window-background';
+import { OVERLAY_WINDOW_BACKGROUND } from './window-background';
 
 /**
  * Thin Electron bindings for the overlay ports. All decisions live in
@@ -25,8 +25,6 @@ export interface ElectronWindowFactoryOptions {
 export function createElectronWindowFactory(
   options: ElectronWindowFactoryOptions,
 ): OverlayWindowFactory {
-  const transparent = options.layout === 'surface';
-
   return {
     create(bounds) {
       const window = new BrowserWindow({
@@ -36,14 +34,10 @@ export function createElectronWindowFactory(
         height: bounds.height,
         show: false,
         frame: false,
-        // The surface layout covers the whole work area and must be see-through.
-        // The small positioned window stays opaque until step 3.1: the panel is
-        // not styled yet. Its color follows the theme (see window-background.ts).
-        transparent,
-        backgroundColor: overlayWindowBackground(
-          options.layout,
-          nativeTheme.shouldUseDarkColors,
-        ),
+        // Both layouts are see-through: the surface layout covers the work area, and the
+        // positioned window must not show window-colored corners around the rounded panel.
+        transparent: true,
+        backgroundColor: OVERLAY_WINDOW_BACKGROUND,
         resizable: false,
         movable: false,
         minimizable: false,
@@ -58,21 +52,6 @@ export function createElectronWindowFactory(
           sandbox: true,
         },
       });
-
-      // Keep the native background in step with an OS theme change while the window lives.
-      const syncBackground = (): void => {
-        if (window.isDestroyed()) return;
-        window.setBackgroundColor(
-          overlayWindowBackground(
-            options.layout,
-            nativeTheme.shouldUseDarkColors,
-          ),
-        );
-      };
-      nativeTheme.on('updated', syncBackground);
-      window.once('closed', () =>
-        nativeTheme.removeListener('updated', syncBackground),
-      );
 
       // A new window lets clicks through; the manager makes it interactive for the rest.
       window.setIgnoreMouseEvents(true);

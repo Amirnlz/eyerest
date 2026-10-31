@@ -575,7 +575,7 @@ Each item is one step. Do them in order.
 | 2.3d | Accessibility pass: milestone announcements (A2). "Focus when the rest begins" is rejected: focus stays where it is (A6) | Done. Logic, component and e2e tests |
 | 2.4a | Gallery page in the harness (every primitive, every state, both themes) and computed-style checks in plain Chromium | Done. `e2e/gallery/*.gallery.ts`, linked from `RUNNING.md`, runs in CI on Linux |
 | 2.4b | Screenshot baselines of the gallery (`toHaveScreenshot`), Linux only | Dropped by decision: no screenshots of the app in the repository until the software is finished. Reopen at the end |
-| 3.1 | Replace the remaining Phase 1 inline styles and raw colors (V2, V3) with primitives. Make the positioned overlay window transparent (V4) after checking Windows and Linux X11. | No raw color or px outside `src/design`, rounded panel corners show no window color |
+| 3.1 | Overlay panels already use the primitives (2.3a). Make the positioned overlay window transparent (V4). The raw dim color (V2, V3) moves with the dim layer to 3.2. | Rounded panel corners show no window color. Page painted by no stylesheet. Windows and Linux X11 checked by the owner |
 | 3.2 | Dim layer, tray and app icon from tokens | `scrim` token is the only dim color |
 | 3.3 | Polish pass, run the `better-ui` Before-you-finish table across the codebase | Violations register empty |
 
@@ -587,16 +587,17 @@ Anything outside this list is a Phase 4 candidate. Record it in `docs/ROADMAP.md
 | -------- | ------- | ----- |
 | Manrope delivery | Committed woff2 file and a small loader, no dependency. The loader (`src/renderer/fonts.ts`) registers each file listed in `src/design/fonts.ts` through the `FontFace` API. Vite finds files with `import.meta.glob`, so a missing file never breaks the build. The file itself is still to be added (2.1b-2). | `src/renderer/fonts*.ts`, `src/renderer/assets/fonts/README.md` |
 | Concentric nesting | Tight surfaces publish an inner radius that controls read. See S1 and S2. | `Surface.css`, `Button.css` |
-| Positioned window background | Opaque, but taken from the theme `canvas` token and kept in sync with the OS theme. Transparency moves to step 3.1. | `src/main/overlay/window-background.ts` |
+| Positioned window background | Transparent in both layouts (step 3.1). The panel is a rounded `Surface`, so an opaque window would show window-colored corners. No OS-theme sync is needed any more. | `src/main/overlay/window-background.ts` |
 
 Why the font is a file and not `@fontsource-variable/manrope`: the app must work offline and a
 desktop bundle gains nothing from a package manager for one font. Why a `FontFace` loader and not a
 CSS `@font-face`: the generated stylesheet is a virtual module, where relative `url()` paths do not
 resolve, and a loader tolerates a missing file.
 
-Why the window is not transparent yet: the panel is still the unstyled Phase 1 markup, which is
-unreadable over a transparent background, and transparent frameless windows behave differently on
-Windows, Linux X11 without a compositor, and macOS. Step 3.1 changes it together with the panel.
+Why the window is transparent (step 3.1): the panel is a rounded, themed `Surface`, so an opaque
+window shows window-colored corners. Risk: transparent frameless windows behave differently on
+Windows, Linux X11 without a compositor, and macOS. On X11 without a compositor the transparent
+area renders opaque black. This was not verified on hardware; it is in the owner's Phase 3.1 review.
 
 ## 14. Violations register
 
@@ -611,7 +612,7 @@ visual claim is from code only.
 | -- | -------- | ---- | -------- | ------- | --- |
 | V2 | MEDIUM | F1, T1 | `src/main/dim/dim-page.ts:8`, `src/renderer/App.tsx:43` | The dim color is `rgba(32, 32, 32, 0.6)`, a tinted near-black at 60%. The `scrim` token is black at 40%. Two sources of truth that disagree. | Step 3.2: derive both from the `scrim` token through `resolveToken`. |
 | V3 | LOW | T2, C4 | `src/renderer/App.tsx` | The integrated dim box still has an `rgba()` inline style (same cause as V2). The white placement box is gone: the wrapper now paints nothing. The CSS scanner covers `ui/` and `components/` stylesheets, not TS style objects. | Step 3.2 with V2. |
-| V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts` | Partly fixed: the window color now follows the theme, so dark theme no longer flashes white. Still open: the positioned window is opaque, so a rounded panel will show window-colored corners. | Step 3.1: transparent window, after checking Windows and Linux X11. |
+| V4 | MEDIUM | S1, T7 | `src/main/overlay/electron-adapters.ts` | Partly fixed: the window color now follows the theme, so dark theme no longer flashes white. Still open: the positioned window is opaque, so a rounded panel will show window-colored corners. | Fixed in step 3.1 (transparent window). Pending the owner's check on Windows and Linux X11. |
 | V7 | LOW | A4 | `src/renderer/ui/Button.css:44-50` | `md` button is about 43.5px tall, `sm` about 35.5px (label line height plus padding plus the 1px borders). Under the 44px target. Passes the WCAG 2.2 minimum of 24px. | Add a `min-height` token at 2.75rem for `md` if the overlay needs touch use. |
 | V8 | LOW | F2, S3 | `src/design/tokens.ts` (`border-strong`) | `border-strong` has a 3:1 pair but no component uses it. `secondary` and `quiet` buttons show their edge by shadow or text only. Safe while there are no inputs. | First input or toggle must use `border-strong`. |
 | V10 | LOW | API | `src/renderer/ui/Text.tsx:21` | Props come from `<p>`. With `as="label"`, TypeScript rejects `htmlFor`. `Surface` has no `ref`. | Add a polymorphic prop type when a label or ref is first needed. |

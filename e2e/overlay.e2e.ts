@@ -109,3 +109,38 @@ test('surface: window covers the work area and the panel is drawn top-right, the
     await app.close();
   }
 });
+
+test('positioned: the page is transparent and the panel has rounded corners, so no window color shows', async () => {
+  test.skip(
+    process.platform === 'linux' &&
+      process.env['XDG_SESSION_TYPE'] === 'wayland',
+    'native Wayland uses the surface layout; covered by the surface test',
+  );
+
+  const app = await launchApp('positioned');
+  try {
+    await expect
+      .poll(async () => (await overlayState(app))?.visible, { timeout: 30_000 })
+      .toBe(true);
+
+    const page = overlayPage(app);
+    expect(page).toBeDefined();
+    if (!page) return;
+
+    const paint = await page.evaluate(() => {
+      const surface = document.querySelector('section');
+      return {
+        html: getComputedStyle(document.documentElement).backgroundColor,
+        body: getComputedStyle(document.body).backgroundColor,
+        radius: surface ? getComputedStyle(surface).borderTopLeftRadius : null,
+      };
+    });
+
+    expect(paint.html).toBe('rgba(0, 0, 0, 0)');
+    expect(paint.body).toBe('rgba(0, 0, 0, 0)');
+    expect(paint.radius).not.toBeNull();
+    expect(Number.parseFloat(paint.radius ?? '0')).toBeGreaterThan(0);
+  } finally {
+    await app.close();
+  }
+});
