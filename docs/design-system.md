@@ -49,6 +49,7 @@ Every rule below follows from this split.
 | 2.3d | Milestone announcements (A2), `VisuallyHidden`, focus policy (A6) | Done |
 | 2.4a | Gallery page (`harness/gallery.html`) and computed-style checks in Chromium (`npm run e2e:gallery`) | Done |
 | 2.4b | Screenshot baselines of the gallery (`toHaveScreenshot`), Linux only | Dropped by decision (see section 2). Reopen after the software is finished |
+| 4.1b | `NumberField` primitive (native number input, unit, hint, error without a hue), `SettingsForm`, `SettingsPage`; gallery entries. Checked in the gallery by eye only, no computed-style tests yet | Done, in review |
 | 3.x | Apply the system to the real overlay, dim layer, tray, app icon | Planned |
 
 ## 3. Architecture

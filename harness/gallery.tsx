@@ -20,6 +20,7 @@ import {
   Button,
   Countdown,
   Icon,
+  NumberField,
   Photo,
   ProgressRing,
   Surface,
@@ -34,6 +35,8 @@ import {
   type TextVariant,
 } from '../src/renderer/ui';
 import { OVERLAY_SIZE } from '../src/shared/overlay-layout';
+import { DEFAULT_CONFIG } from '../src/core/config';
+import { SettingsForm } from '../src/renderer/components/SettingsForm';
 
 const requestedTheme = new URLSearchParams(window.location.search).get('theme');
 createDomThemeController(
@@ -258,6 +261,54 @@ function Overlays() {
   );
 }
 
+function NumberFields() {
+  const noop = () => undefined;
+  return (
+    <Section id="number-field" title="NumberField">
+      <div className="gallery__row">
+        <div data-testid="number-field-default">
+          <NumberField label="Work interval" value="20" onValueChange={noop} unit="minutes" />
+        </div>
+        <div data-testid="number-field-hint">
+          <NumberField
+            label="Eye rest"
+            value="20"
+            onValueChange={noop}
+            unit="seconds"
+            hint="The length of a regular rest."
+          />
+        </div>
+        <div data-testid="number-field-invalid">
+          <NumberField
+            label="Heads-up"
+            value="0"
+            onValueChange={noop}
+            unit="seconds"
+            error="Must be greater than 0."
+          />
+        </div>
+        <div data-testid="number-field-disabled">
+          <NumberField label="Postpone by" value="5" onValueChange={noop} unit="minutes" disabled />
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+/** The whole settings form with the default values, as it looks in the settings window. */
+function SettingsFormSample() {
+  return (
+    <Section id="settings-form" title="SettingsForm">
+      <div data-testid="settings-form-sample">
+        <SettingsForm
+          initial={DEFAULT_CONFIG}
+          onSave={(settings) => Promise.resolve({ ok: true, settings })}
+        />
+      </div>
+    </Section>
+  );
+}
+
 function Gallery() {
   return (
     <main className="gallery">
@@ -269,6 +320,8 @@ function Gallery() {
       <Numbers />
       <Icons />
       <Photos />
+      <NumberFields />
+      <SettingsFormSample />
       <Overlays />
     </main>
   );

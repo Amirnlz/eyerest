@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Snapshot } from '../../src/core/scheduler';
+import { DEFAULT_CONFIG } from '../../src/core/config';
 import { announcementFor } from '../../src/renderer/announcements';
 import { copy } from '../../src/renderer/copy';
 import { toOverlayViewModel } from '../../src/renderer/view-model';
@@ -55,5 +56,19 @@ describe('copy', () => {
       expect(announcementFor(toOverlayViewModel(resting(kind, 20)), null)?.trim()).toBeTruthy();
     }
     expect(copy.announcements.restEnding('10 seconds').trim()).not.toBe('');
+  });
+});
+
+describe('settings copy', () => {
+  it('has a label, hint and unit for every setting', () => {
+    for (const field of Object.values(copy.settings.fields)) {
+      expect(field.label.trim()).not.toBe('');
+      expect(field.hint.trim()).not.toBe('');
+      expect(field.unit.trim()).not.toBe('');
+    }
+  });
+
+  it('has one field per config key', () => {
+    expect(Object.keys(copy.settings.fields).sort()).toEqual(Object.keys(DEFAULT_CONFIG).sort());
   });
 });

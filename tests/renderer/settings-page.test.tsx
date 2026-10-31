@@ -1,0 +1,57 @@
+// @vitest-environment jsdom
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_CONFIG } from '../../src/core/config';
+import { SettingsPage } from '../../src/renderer/components/SettingsPage';
+import { copy } from '../../src/renderer/copy';
+import { createFakeApi } from '../helpers/fake-api';
+
+describe('SettingsPage', () => {
+  it('is the main landmark', () => {
+    render(<SettingsPage api={createFakeApi()} />);
+    expect(screen.getByRole('main')).toBeInTheDocument();
+  });
+
+  it('announces loading, then shows the form with the values from main', async () => {
+    const api = createFakeApi();
+    api.getSettings.mockResolvedValue({ ...DEFAULT_CONFIG, workIntervalMs: 30 * 60_000 });
+    render(<SettingsPage api={api} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(copy.settings.status.loading);
+
+    const field = await screen.findByRole('spinbutton', { name: 'Work interval' });
+    expect(field).toHaveValue(30);
+    expect(screen.queryByText(copy.settings.status.loading)).toBeNull();
+  });
+
+  it('asks main once for the settings', async () => {
+    const api = createFakeApi();
+    render(<SettingsPage api={api} />);
+    await screen.findByRole('form');
+    expect(api.getSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows an alert and no form when the settings cannot be loaded', async () => {
+    const api = createFakeApi();
+    api.getSettings.mockRejectedValue(new Error('ipc down'));
+    render(<SettingsPage api={api} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(copy.settings.status.loadFailed);
+    expect(screen.queryByRole('form')).toBeNull();
+  });
+
+  it('saves through the api and shows the confirmation', async () => {
+    const api = createFakeApi();
+    render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+
+    const field = await screen.findByRole('spinbutton', { name: 'Postpone by' });
+    await user.clear(field);
+    await user.type(field, '2');
+    await user.click(screen.getByRole('button', { name: copy.settings.actions.save }));
+
+    expect(api.saveSettings).toHaveBeenCalledWith({ ...DEFAULT_CONFIG, postponeMs: 120_000 });
+    expect(await screen.findByText(copy.settings.status.saved)).toBeInTheDocument();
+  });
+});

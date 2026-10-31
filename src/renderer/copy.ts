@@ -22,6 +22,66 @@ export const copy = {
     skip: 'Skip',
     postpone: 'Postpone',
   },
+  settings: {
+    title: 'Settings',
+    restartNote: 'Saving restarts the work timer. A paused app stays paused.',
+    groups: {
+      work: 'Work',
+      rest: 'Rests',
+      postpone: 'Postpone',
+    },
+    fields: {
+      workIntervalMs: {
+        label: 'Work interval',
+        hint: 'How long you work before a rest.',
+        unit: 'minutes',
+      },
+      warningMs: {
+        label: 'Heads-up',
+        hint: 'The countdown shown before a rest starts.',
+        unit: 'seconds',
+      },
+      eyeRestMs: {
+        label: 'Eye rest',
+        hint: 'The length of a regular rest.',
+        unit: 'seconds',
+      },
+      longRestMs: {
+        label: 'Long rest',
+        hint: 'The length of the longer rest.',
+        unit: 'minutes',
+      },
+      cyclesBeforeLongRest: {
+        label: 'Long rest every',
+        hint: 'Every Nth rest is a long rest.',
+        unit: 'rests',
+      },
+      postponeMs: {
+        label: 'Postpone by',
+        hint: 'How far Postpone moves the next rest.',
+        unit: 'minutes',
+      },
+    },
+    actions: {
+      save: 'Save',
+      saving: 'Saving',
+      restoreDefaults: 'Restore defaults',
+    },
+    status: {
+      loading: 'Loading settings.',
+      loadFailed: 'Could not load settings.',
+      saved: 'Settings saved.',
+      saveFailed: 'Could not save settings. Try again.',
+      fixErrors: 'Fix the highlighted fields to save.',
+    },
+    errors: {
+      required: 'Enter a number.',
+      positive: 'Must be greater than 0.',
+      wholeNumber: 'Must be a whole number, 1 or more.',
+      warningTooLong: 'Must be shorter than the work interval.',
+      tooLarge: 'Too large.',
+    },
+  },
   /** Spoken to screen readers at milestones only, never every second. */
   announcements: {
     warning: (duration: string) => `Eye rest starts in ${duration}.`,

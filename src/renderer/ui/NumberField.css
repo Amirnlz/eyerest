@@ -1,0 +1,82 @@
+/* NumberField primitive. Tokens only. Inputs keep a border (S3): it marks the edge of a text box. */
+
+.er-number-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-1);
+}
+
+.er-number-field__label {
+  color: var(--er-color-text-primary);
+  font-family: var(--er-font-family-sans);
+  font-size: var(--er-type-label-size);
+  font-weight: var(--er-type-label-weight);
+  line-height: var(--er-type-label-line-height);
+  letter-spacing: var(--er-type-label-letter-spacing);
+}
+
+.er-number-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--er-space-2);
+}
+
+.er-number-field__input {
+  box-sizing: border-box;
+  inline-size: 6rem;
+  margin: 0;
+  padding-block: var(--er-space-2);
+  padding-inline: var(--er-space-3);
+  border: var(--er-stroke-hairline) solid var(--er-color-border-strong);
+  border-radius: var(--er-radius-sm);
+  color: var(--er-color-text-primary);
+  background-color: var(--er-color-surface-inset);
+  box-shadow: var(--er-elevation-inset-sm);
+  font-family: var(--er-font-family-sans);
+  font-size: var(--er-type-body-size);
+  font-weight: var(--er-type-body-weight);
+  line-height: var(--er-type-body-line-height);
+  font-variant-numeric: var(--er-type-body-numeric);
+  transition-property: border-color, box-shadow;
+  transition-duration: var(--er-duration-quick);
+  transition-timing-function: var(--er-ease-out);
+}
+
+/* Invalid: the edge takes the primary text color. The message under the box is the real signal. */
+
+.er-number-field--invalid .er-number-field__input {
+  border-color: var(--er-color-text-primary);
+}
+
+@media (hover: hover) {
+  .er-number-field__input:not(:disabled):hover {
+    border-color: var(--er-color-text-secondary);
+  }
+
+  .er-number-field--invalid .er-number-field__input:not(:disabled):hover {
+    border-color: var(--er-color-text-primary);
+  }
+}
+
+.er-number-field__input:focus-visible {
+  outline: var(--er-stroke-focus) solid var(--er-color-focus-ring);
+  outline-offset: var(--er-stroke-focus-offset);
+}
+
+.er-number-field__input:disabled {
+  cursor: not-allowed;
+  opacity: var(--er-opacity-disabled);
+  box-shadow: var(--er-elevation-flat);
+}
+
+/* Forced colors removes box-shadow and color tokens; system colors keep the edge visible. */
+
+@media (forced-colors: active) {
+  .er-number-field__input {
+    border-color: FieldText;
+  }
+
+  .er-number-field__input:disabled {
+    border-color: GrayText;
+  }
+}

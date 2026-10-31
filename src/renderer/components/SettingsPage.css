@@ -1,0 +1,9 @@
+/* The settings window has no overlay background, so the page paints the canvas itself. */
+
+.er-settings-page {
+  box-sizing: border-box;
+  min-block-size: 100vh;
+  padding: var(--er-space-6);
+  color: var(--er-color-text-primary);
+  background-color: var(--er-color-canvas);
+}

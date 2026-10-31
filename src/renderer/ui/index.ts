@@ -6,6 +6,11 @@ export {
   type ButtonSize,
   type ButtonVariant,
 } from './Button';
+export {
+  NumberField,
+  numberFieldClassName,
+  type NumberFieldProps,
+} from './NumberField';
 export { VisuallyHidden, type VisuallyHiddenProps } from './VisuallyHidden';
 export {
   Photo,

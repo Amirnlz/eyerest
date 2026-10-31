@@ -115,7 +115,7 @@ is ignored as a whole, defaults apply, and the reason is printed to the console.
 with a warning. `EYEREST_FAST=1` overrides the durations from the file.
 Saving settings through IPC (`eyerest:save-settings`) validates every field in main, writes only values
 that differ from the defaults, and restarts a running cycle with a fresh work interval (a paused app stays
-paused). Saving unchanged values changes nothing. There is no settings window yet (roadmap 4.1b, 4.1c).
+paused). Saving unchanged values changes nothing. The settings form components exist (`SettingsForm`, `SettingsPage`) but no window opens them yet (roadmap 4.1c).
 
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
