@@ -19,10 +19,12 @@
     ],
     "category": "Utility",
     "maintainer": "Amir Nasrollahzadeh <amiirnlz79@gmail.com>",
-    "synopsis": "Reminds you to rest your eyes"
+    "synopsis": "Reminds you to rest your eyes",
+    "icon": "build/icon.png"
   },
   "win": {
-    "target": "nsis"
+    "target": "nsis",
+    "icon": "build/icon.png"
   },
   "mac": {
     "target": "dmg",
@@ -30,6 +32,16 @@
     "identity": null,
     "extendInfo": {
       "LSUIElement": true
+    },
+    "icon": "build/icon.png"
+  },
+  "extraResources": [
+    {
+      "from": "resources/tray",
+      "to": "tray",
+      "filter": [
+        "*.png"
+      ]
     }
-  }
+  ]
 }

@@ -75,7 +75,7 @@ Known platform risks (we handle them in the step that owns them):
 | 2.3 | Overlay-specific components, motion, accessibility | DONE (components, entrance motion, theme mechanism, accessibility). Exit motion: `design-system.md` V15. Shortcuts: 4.12. Theme setting: 4.13 |
 | 2.4 | Component gallery and visual regression baseline | DONE (gallery and computed-style checks; screenshot baselines dropped by decision). Waiting for your Phase 2 sign-off |
 | 3.1 | Apply design system to overlay UI | DONE |
-| 3.2 | Apply design system to dim layer, tray, app icon | PARTIAL: 3.2a dim layer in review, 3.2b icons TODO |
+| 3.2 | Apply design system to dim layer, tray, app icon | PARTIAL: 3.2a dim layer DONE, 3.2b tray and app icons in review, 3.2c installer artwork TODO |
 | 3.3 | Polish pass and visual regression update | TODO |
 | 4.x | Feature backlog (chosen together) | TODO |
 
@@ -218,7 +218,7 @@ Send this: `Start Step 1.7`, plus a statement of which players you use daily (br
 
 Scope:
 
-- System tray icon (plain placeholder) with: Pause/Resume reminders, Quit. Status text shows the next rest time.
+- System tray icon with: Pause/Resume reminders, Quit. Status text shows the next rest time.
 - Single instance lock. Second launch focuses nothing and exits.
 - App starts the scheduler on launch and does not show a main window.
 - Settings: JSON file in the user data dir, loaded through `createConfig` validation. Invalid file falls back to defaults and is reported, never crashes.
@@ -353,7 +353,7 @@ Send this: `Start Step 3.1`
 
 ### Step 3.2: Apply to dim layer, tray, app icon
 
-Split into 3.2a (dim color from tokens, V2 and V3) and 3.2b (icons and installer artwork), because one step is one small tested change.
+Split into 3.2a (dim color from tokens, V2 and V3), 3.2b (tray icon set and app icon) and 3.2c (installer artwork), because one step is one small tested change.
 
 Scope: dim color and opacity from tokens; tray icon set (template image on macOS, light and dark variants on Windows and Linux); app icon for installers; installer artwork where the builder supports it.
 

@@ -22,6 +22,7 @@
     "dev:renderer": "vite harness",
     "e2e": "npm run build && playwright test",
     "e2e:gallery": "playwright test -c playwright.gallery.config.ts",
+    "icons": "EYEREST_WRITE_ICONS=1 vitest run tests/design/brand-icons.test.ts",
     "package": "npm run build && electron-builder"
   },
   "dependencies": {

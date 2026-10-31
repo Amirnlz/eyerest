@@ -1,17 +1,37 @@
-import { Menu, Tray, nativeImage, type MenuItemConstructorOptions } from 'electron';
-import { TRAY_ICON_DATA_URL, TRAY_ICON_SCALE_FACTOR } from './tray-icon';
+import { Menu, Tray, nativeImage, nativeTheme, type MenuItemConstructorOptions } from 'electron';
+import { join } from 'node:path';
+import { selectTrayIconFile } from './tray-icon';
 import type { TrayPort } from './tray-controller';
+
+export interface ElectronTrayOptions {
+  /** Folder holding the tray icon files (see `trayIconDir`). */
+  readonly iconDir: string;
+}
 
 /**
  * Thin Electron bindings for the tray port. All decisions live in
- * `TrayController` and `buildTrayMenu`; this file only renders the model, so it
- * is covered by manual checks instead of unit tests.
+ * `TrayController`, `buildTrayMenu` and `selectTrayIconFile`; this file only renders the model,
+ * so it is covered by manual checks instead of unit tests.
  */
-export function createElectronTrayPort(): TrayPort {
-  const icon = nativeImage.createFromDataURL(TRAY_ICON_DATA_URL);
-  const tray = new Tray(
-    nativeImage.createFromBuffer(icon.toPNG(), { scaleFactor: TRAY_ICON_SCALE_FACTOR }),
-  );
+export function createElectronTrayPort(options: ElectronTrayOptions): TrayPort {
+  // createFromPath loads the `@2x` sibling by itself.
+  const loadIcon = () =>
+    nativeImage.createFromPath(
+      join(options.iconDir, selectTrayIconFile(process.platform, nativeTheme.shouldUseDarkColors)),
+    );
+
+  const initial = loadIcon();
+  if (initial.isEmpty()) {
+    console.error(`[tray] icon missing or unreadable in ${options.iconDir}`);
+  }
+  const tray = new Tray(initial);
+
+  // macOS recolors the template image itself. Elsewhere the file follows the OS color setting.
+  const followTheme = process.platform !== 'darwin';
+  const onThemeChange = (): void => {
+    if (!tray.isDestroyed()) tray.setImage(loadIcon());
+  };
+  if (followTheme) nativeTheme.on('updated', onThemeChange);
 
   return {
     setMenu(model, onSelect) {
@@ -24,6 +44,7 @@ export function createElectronTrayPort(): TrayPort {
       tray.setContextMenu(Menu.buildFromTemplate(template));
     },
     destroy() {
+      if (followTheme) nativeTheme.removeListener('updated', onThemeChange);
       if (!tray.isDestroyed()) tray.destroy();
     },
   };

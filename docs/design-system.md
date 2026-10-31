@@ -577,7 +577,8 @@ Each item is one step. Do them in order.
 | 2.4b | Screenshot baselines of the gallery (`toHaveScreenshot`), Linux only | Dropped by decision: no screenshots of the app in the repository until the software is finished. Reopen at the end |
 | 3.1 | Overlay panels already use the primitives (2.3a). Make the positioned overlay window transparent (V4). The raw dim color (V2, V3) moves with the dim layer to 3.2. | Rounded panel corners show no window color. Page painted by no stylesheet. Windows and Linux X11 checked by the owner |
 | 3.2a | Dim layer from the `scrim` token (V2, V3) | `scrim` token is the only dim color. No raw color in renderer TS or TSX |
-| 3.2b | Tray icon set, app icon, installer artwork | Every icon file exists and the builder config references it |
+| 3.2b | Tray icon set and app icon from the `eye` glyph | Every icon file exists, equals the generator output, and the builder config references it |
+| 3.2c | Installer artwork where the builder supports it (NSIS sidebar and header, DMG background) | Files exist and the builder config references them |
 | 3.3 | Polish pass, run the `better-ui` Before-you-finish table across the codebase | Violations register empty |
 
 Anything outside this list is a Phase 4 candidate. Record it in `docs/ROADMAP.md`.
@@ -588,6 +589,8 @@ Anything outside this list is a Phase 4 candidate. Record it in `docs/ROADMAP.md
 | -------- | ------- | ----- |
 | Manrope delivery | Committed woff2 file and a small loader, no dependency. The loader (`src/renderer/fonts.ts`) registers each file listed in `src/design/fonts.ts` through the `FontFace` API. Vite finds files with `import.meta.glob`, so a missing file never breaks the build. The file itself is still to be added (2.1b-2). | `src/renderer/fonts*.ts`, `src/renderer/assets/fonts/README.md` |
 | Concentric nesting | Tight surfaces publish an inner radius that controls read. See S1 and S2. | `Surface.css`, `Button.css` |
+| Brand icons | One mark: the design system `eye` glyph. A pure generator (`src/design/brand-icons.ts`) rasterizes it to PNG with a distance field, no dependency and no binary tool. Committed files are checked against the generator by pixel, and `npm run icons` rewrites them. Colors are palette values. The app icon is a rounded square on the macOS grid, one 1024 file that electron-builder converts to `.ico` and `.icns`. | `src/design/brand-icons.ts`, `build/icon.png`, `resources/tray/` |
+| Tray icon variants | macOS: one black template image (the system recolors it). Windows and Linux: a dark glyph for light surfaces and a light glyph for dark ones, chosen from `nativeTheme.shouldUseDarkColors` and swapped on `updated`. Each has an `@2x` file. Files ship as `extraResources`, outside the asar. | `src/main/tray/tray-icon.ts`, `electron-builder.json` |
 | Positioned window background | Transparent in both layouts (step 3.1). The panel is a rounded `Surface`, so an opaque window would show window-colored corners. No OS-theme sync is needed any more. | `src/main/overlay/window-background.ts` |
 
 Why the font is a file and not `@fontsource-variable/manrope`: the app must work offline and a
@@ -680,3 +683,12 @@ Do not:
 
 Commands: `npm run check`, `npm run lint`, `npm test`, `npm run dev:renderer`, `npm run e2e`,
 `npm run e2e:gallery`.
+
+## 15. Open checks for the brand icons (step 3.2b)
+
+Nothing here was verified on hardware.
+
+- Windows: the taskbar follows the system theme (`SystemUsesLightTheme`) while Electron reports the app theme through `nativeTheme.shouldUseDarkColors`. If a user mixes them, the tray glyph can vanish. A fix needs the system theme, which Electron does not expose: a Phase 4 candidate if it shows up.
+- Linux: panels differ (GNOME needs an extension for tray icons, KDE and XFCE draw their own). The light and dark choice follows the desktop color scheme, not the panel color.
+- macOS: the template image is 16 and 32 px black with alpha. Check it in light and dark menu bars.
+- The `.ico` and `.icns` files are produced by electron-builder from `build/icon.png` at package time. Check the installer and the Dock or taskbar icon once with `npm run package`.

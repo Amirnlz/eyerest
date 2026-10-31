@@ -22,6 +22,7 @@ import { SETTINGS_FILE_NAME, loadSettings } from './settings/settings';
 import { acquireSingleInstance } from './single-instance';
 import { createElectronTrayPort } from './tray/electron-tray-adapter';
 import { TrayController } from './tray/tray-controller';
+import { trayIconDir } from './tray/tray-icon';
 
 // Must run before the app is ready: it chooses the display backend and GPU use.
 const startup = resolveStartupConfig(process.platform, process.env);
@@ -121,11 +122,20 @@ void app.whenReady().then(() => {
   }
 
   // Tray: Pause/Resume reminders and Quit, plus the next rest time.
-  tray = new TrayController(createElectronTrayPort(), {
-    pause: () => runtime?.controller.pause(),
-    resume: () => runtime?.controller.resume(),
-    quit: () => app.quit(),
-  });
+  tray = new TrayController(
+    createElectronTrayPort({
+      iconDir: trayIconDir({
+        isPackaged: app.isPackaged,
+        resourcesPath: process.resourcesPath,
+        appPath: app.getAppPath(),
+      }),
+    }),
+    {
+      pause: () => runtime?.controller.pause(),
+      resume: () => runtime?.controller.resume(),
+      quit: () => app.quit(),
+    },
+  );
 
   runtime = createMainRuntime({
     env: process.env,
