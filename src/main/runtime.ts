@@ -28,6 +28,8 @@ export interface MainRuntimeDeps {
   readonly settingsOverrides?: Partial<RestConfig>;
   /** Persists saved settings. Without it, `saveSettings` answers `ok: false`. */
   readonly settingsStorage?: SettingsStorage;
+  /** Closes the settings window when the renderer asks. Absent in tests that have no window. */
+  readonly closeSettingsWindow?: () => void;
   /** Test seam: inject a fake clock and ticker. */
   readonly schedulerOptions?: SchedulerOptions;
 }
@@ -58,7 +60,11 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
     storage: deps.settingsStorage,
     onApply: (next) => controller.reconfigure(next),
   });
-  const removeIpcHandlers = registerIpcHandlers(deps.ipcMain, controller, settings);
+  const removeIpcHandlers = registerIpcHandlers(deps.ipcMain, controller, {
+    getSettings: () => settings.getSettings(),
+    saveSettings: (payload) => settings.saveSettings(payload),
+    closeSettings: () => deps.closeSettingsWindow?.(),
+  });
 
   return {
     controller,

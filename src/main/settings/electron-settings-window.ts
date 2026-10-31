@@ -6,6 +6,8 @@ export interface ElectronSettingsWindowOptions {
   readonly preloadPath: string;
   readonly target: RendererTarget;
   readonly title: string;
+  /** Lifecycle logging, enabled by `EYEREST_DEBUG=1`. */
+  readonly log?: (message: string) => void;
 }
 
 /**
@@ -57,7 +59,12 @@ export function createElectronSettingsWindowFactory(
         window.show();
         window.focus();
       };
-      window.once('ready-to-show', focus);
+      window.once('ready-to-show', () => {
+        options.log?.('ready-to-show; showing and focusing');
+        focus();
+      });
+      window.on('show', () => options.log?.('shown'));
+      window.on('closed', () => options.log?.('closed'));
 
       loadSettingsPage(window, options.target);
 

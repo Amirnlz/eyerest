@@ -34,7 +34,19 @@ async function openSettings(app: App): Promise<Page> {
   return page;
 }
 
-const field = (page: Page, name: string) => page.getByRole('spinbutton', { name });
+const field = (page: Page, name: string) => page.getByRole('textbox', { name, exact: true });
+
+/**
+ * Submits from the keyboard. A pointer click first waits for the element to be "stable", which
+ * needs animation frames; a settings window that is not painting never produces them and the
+ * click times out. A key press does not wait for frames and still exercises the real submit path.
+ */
+async function submit(page: Page, name: string) {
+  await field(page, name).press('Enter');
+}
+
+/** Resolves when the page's window closes. Register before the action that closes it. */
+const closed = (page: Page) => page.waitForEvent('close', { timeout: 10_000 });
 
 test(
   'opens a normal, focused window with the default values',
@@ -80,12 +92,12 @@ test(
     const first = await launchApp('positioned', { env: OPEN_SETTINGS, userDataDir: dir });
     try {
       const page = await openSettings(first);
-      await field(page, 'Postpone by').fill('2');
-      await page.getByRole('button', { name: 'Save' }).click();
+      await field(page, 'Postpone by').fill('3');
+      await submit(page, 'Postpone by');
 
       await expect(page.getByRole('status')).toHaveText('Settings saved.');
       // Only the value that differs from the defaults is stored, in milliseconds.
-      expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ postponeMs: 120_000 });
+      expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ postponeMs: 180_000 });
     } finally {
       await first.close();
     }
@@ -93,7 +105,7 @@ test(
     const second = await launchApp('positioned', { env: OPEN_SETTINGS, userDataDir: dir });
     try {
       const page = await openSettings(second);
-      await expect(field(page, 'Postpone by')).toHaveValue('2');
+      await expect(field(page, 'Postpone by')).toHaveValue('3');
       await expect(field(page, 'Work interval')).toHaveValue('20');
     } finally {
       await second.close();
@@ -108,7 +120,7 @@ test(
     try {
       const page = await openSettings(app);
       await field(page, 'Heads-up').fill('');
-      await page.getByRole('button', { name: 'Save' }).click();
+      await submit(page, 'Heads-up');
 
       await expect(page.getByRole('alert')).toHaveText('Fix the highlighted fields to save.');
       await expect(field(page, 'Heads-up')).toBeFocused();
@@ -129,18 +141,90 @@ test(
       // The form would stop this, so go around it: main must not trust the renderer.
       const reply = await page.evaluate(() =>
         window.eyerest?.saveSettings({
-          workIntervalMs: 60_000,
-          warningMs: 60_000,
+          workIntervalMs: 24 * 60 * 60_000,
+          warningMs: 15_000,
           eyeRestMs: 20_000,
           longRestMs: 600_000,
           cyclesBeforeLongRest: 3,
           postponeMs: 300_000,
         }),
       );
-      expect(reply).toEqual({
-        ok: false,
-        error: 'warningMs must be shorter than workIntervalMs',
-      });
+      expect(reply).toMatchObject({ ok: false });
+      expect(JSON.stringify(reply)).toMatch(/workIntervalMs/);
+      expect(existsSync(join(dir, 'settings.json'))).toBe(false);
+    } finally {
+      await app.close();
+    }
+  }),
+);
+
+test(
+  'refuses a number outside the allowed range and writes nothing',
+  withUserDataDir(async (dir) => {
+    const app = await launchApp('positioned', { env: OPEN_SETTINGS, userDataDir: dir });
+    try {
+      const page = await openSettings(app);
+      await field(page, 'Work interval').fill('41');
+      await submit(page, 'Work interval');
+
+      await expect(page.getByRole('alert')).toHaveText('Fix the highlighted fields to save.');
+      await expect(field(page, 'Work interval')).toHaveAttribute('aria-invalid', 'true');
+      expect(existsSync(join(dir, 'settings.json'))).toBe(false);
+    } finally {
+      await app.close();
+    }
+  }),
+);
+
+test(
+  'takes digits only and has no spin buttons',
+  withUserDataDir(async (dir) => {
+    const app = await launchApp('positioned', { env: OPEN_SETTINGS, userDataDir: dir });
+    try {
+      const page = await openSettings(app);
+      await expect(page.getByRole('spinbutton')).toHaveCount(0);
+
+      const input = field(page, 'Postpone by');
+      await input.fill('');
+      await input.pressSequentially('a4-.x');
+      await expect(input).toHaveValue('4');
+    } finally {
+      await app.close();
+    }
+  }),
+);
+
+test(
+  'closes with Escape',
+  withUserDataDir(async (dir) => {
+    const app = await launchApp('positioned', { env: OPEN_SETTINGS, userDataDir: dir });
+    try {
+      const page = await openSettings(app);
+      await field(page, 'Work interval').focus();
+      const gone = closed(page);
+      await page.keyboard.press('Escape');
+      await gone;
+      expect(app.windows().some((candidate) => candidate.url().includes('view=settings'))).toBe(
+        false,
+      );
+    } finally {
+      await app.close();
+    }
+  }),
+);
+
+test(
+  'closes with the Close button, saving nothing',
+  withUserDataDir(async (dir) => {
+    const app = await launchApp('positioned', { env: OPEN_SETTINGS, userDataDir: dir });
+    try {
+      const page = await openSettings(app);
+      await field(page, 'Postpone by').fill('3');
+      const close = page.getByRole('button', { name: 'Close' });
+      await close.focus();
+      const gone = closed(page);
+      await close.press('Enter');
+      await gone;
       expect(existsSync(join(dir, 'settings.json'))).toBe(false);
     } finally {
       await app.close();

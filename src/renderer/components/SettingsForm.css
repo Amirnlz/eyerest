@@ -25,6 +25,7 @@
 
 .er-settings-form__actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--er-space-3);
 }

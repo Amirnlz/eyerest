@@ -1,9 +1,54 @@
-/* The settings window has no overlay background, so the page paints the canvas itself. */
+/*
+ * The settings window has no overlay background, so the page paints the canvas itself. The page is
+ * the scroll container (fixed to the window), so the document never scrolls and the body margin
+ * cannot add a second scrollbar.
+ */
 
 .er-settings-page {
+  position: fixed;
+  inset: 0;
   box-sizing: border-box;
-  min-block-size: 100vh;
   padding: var(--er-space-6);
+  overflow-y: auto;
+  /* Scrolling past the end must not bounce the window or a page behind it. */
+  overscroll-behavior: contain;
   color: var(--er-color-text-primary);
   background-color: var(--er-color-canvas);
+}
+
+/*
+ * Scrollbar in the design tokens (Chromium only, which is all Electron ships). A narrow bar with a
+ * rounded thumb in the strong border color, no track. The transparent border plus `background-clip`
+ * leaves a gap around the thumb, so it reads thinner than its hit area. The standard
+ * `scrollbar-color` is not set: where it is supported it would replace these rules and bring back
+ * the platform's square thumb.
+ */
+
+.er-settings-page::-webkit-scrollbar {
+  inline-size: var(--er-space-3);
+}
+
+.er-settings-page::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.er-settings-page::-webkit-scrollbar-thumb {
+  border: var(--er-space-1) solid transparent;
+  border-radius: var(--er-radius-sm);
+  background-color: var(--er-color-border-strong);
+  background-clip: padding-box;
+}
+
+@media (hover: hover) {
+  .er-settings-page::-webkit-scrollbar-thumb:hover {
+    background-color: var(--er-color-text-secondary);
+  }
+}
+
+/* Forced colors replaces the palette, so the thumb takes a system color. */
+
+@media (forced-colors: active) {
+  .er-settings-page::-webkit-scrollbar-thumb {
+    background-color: ButtonText;
+  }
 }

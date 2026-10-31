@@ -25,9 +25,13 @@ export class SettingsWindowManager {
   }
 
   /** Closes the window if one is open. Safe to call twice. */
-  dispose(): void {
+  close(): void {
     const current = this.window;
     this.window = null;
     if (current !== null && !current.isDestroyed()) current.close();
+  }
+
+  dispose(): void {
+    this.close();
   }
 }

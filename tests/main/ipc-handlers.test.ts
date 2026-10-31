@@ -17,6 +17,7 @@ function setup() {
       ok: false,
       error: `rejected ${JSON.stringify(payload)}`,
     })),
+    closeSettings: vi.fn(),
   };
   const ipc = createFakeIpcMain();
   const dispose = registerIpcHandlers(ipc, controller, settings);
@@ -67,9 +68,17 @@ describe('registerIpcHandlers', () => {
     expect(settings.saveSettings.mock.calls[0]).toHaveLength(1);
   });
 
+  it('forwards closeSettings to the settings side once, and nothing else', () => {
+    const { ipc, settings, controller } = setup();
+    ipc.emit(IPC.closeSettings.channel);
+    expect(settings.closeSettings).toHaveBeenCalledTimes(1);
+    expect(controller.skip).not.toHaveBeenCalled();
+    expect(controller.postpone).not.toHaveBeenCalled();
+  });
+
   it('removes every handler on dispose', () => {
     const { ipc, dispose } = setup();
-    expect(ipc.handlers.size + ipc.listeners.size).toBe(5);
+    expect(ipc.handlers.size + ipc.listeners.size).toBe(6);
 
     dispose();
 

@@ -133,6 +133,7 @@ void app.whenReady().then(() => {
       ),
       target: resolveRendererTarget(),
       title: 'eyerest settings',
+      log: debug ? (message) => console.info(`[settings-window] ${message}`) : undefined,
     }),
   );
 
@@ -156,6 +157,7 @@ void app.whenReady().then(() => {
   runtime = createMainRuntime({
     env: process.env,
     settingsOverrides: settings.overrides,
+    closeSettingsWindow: () => settingsWindow?.close(),
     settingsStorage: {
       save: (overrides) => saveSettings(settingsFs, settingsPath, overrides),
     },

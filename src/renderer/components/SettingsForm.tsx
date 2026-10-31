@@ -5,6 +5,7 @@ import { copy } from '../copy';
 import {
   SETTINGS_FIELDS,
   SETTINGS_GROUPS,
+  fieldRange,
   toFormValues,
   validateForm,
   type FormValues,
@@ -18,6 +19,8 @@ export interface SettingsFormProps {
   readonly initial: RestConfig;
   /** Persists the settings. A rejection is shown as a failed save, never thrown into the tree. */
   readonly onSave: (settings: RestConfig) => Promise<SaveSettingsResult>;
+  /** Closes the window. Unsaved edits are dropped, as with any Close. */
+  readonly onClose: () => void;
 }
 
 type Status =
@@ -36,7 +39,7 @@ const IDLE: Status = { kind: 'idle' };
  * No control is disabled while saving or when nothing changed: a control that disables itself
  * drops keyboard focus. Fields go read-only while saving and the submit handler ignores repeats.
  */
-export function SettingsForm({ initial, onSave }: SettingsFormProps) {
+export function SettingsForm({ initial, onSave, onClose }: SettingsFormProps) {
   const titleId = useId();
   const [values, setValues] = useState<FormValues>(() => toFormValues(initial));
   const [touched, setTouched] = useState<ReadonlySet<SettingsFieldKey>>(new Set());
@@ -109,6 +112,7 @@ export function SettingsForm({ initial, onSave }: SettingsFormProps) {
           {group.keys.map((key) => {
             const text = copy.settings.fields[key];
             const visible = submitted || touched.has(key);
+            const { min, max } = fieldRange(key);
             return (
               <NumberField
                 key={key}
@@ -117,11 +121,10 @@ export function SettingsForm({ initial, onSave }: SettingsFormProps) {
                 }}
                 label={text.label}
                 hint={text.hint}
-                unit={text.unit}
+                unit={copy.settings.range(min, max, text.unit)}
+                maxLength={String(max).length}
                 value={values[key]}
                 error={visible ? errors[key] : undefined}
-                min={0}
-                step="any"
                 readOnly={saving}
                 onValueChange={(next) => edit(key, next)}
                 onBlur={() => touch(key)}
@@ -141,6 +144,9 @@ export function SettingsForm({ initial, onSave }: SettingsFormProps) {
           }}
         >
           {copy.settings.actions.restoreDefaults}
+        </Button>
+        <Button variant="quiet" onClick={onClose}>
+          {copy.settings.actions.close}
         </Button>
         <Button type="submit" variant="primary" aria-busy={saving || undefined}>
           {saving ? copy.settings.actions.saving : copy.settings.actions.save}

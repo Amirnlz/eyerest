@@ -17,7 +17,7 @@ describe('validateSettingsPayload', () => {
       eyeRestMs: 40_000,
       longRestMs: 15 * 60_000,
       cyclesBeforeLongRest: 4,
-      postponeMs: 2 * 60_000,
+      postponeMs: 4 * 60_000,
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -73,20 +73,53 @@ describe('validateSettingsPayload', () => {
     ['negative duration', { postponeMs: -1 }, /postponeMs/],
     ['NaN', { workIntervalMs: Number.NaN }, /workIntervalMs/],
     ['Infinity', { longRestMs: Number.POSITIVE_INFINITY }, /longRestMs/],
-    ['fractional cycle', { cyclesBeforeLongRest: 2.5 }, /cyclesBeforeLongRest/],
+    ['fractional cycle inside the range', { cyclesBeforeLongRest: 2.5 }, /cyclesBeforeLongRest/],
     ['cycle below 1', { cyclesBeforeLongRest: 0 }, /cyclesBeforeLongRest/],
     ['warning equal to work', { warningMs: DEFAULT_CONFIG.workIntervalMs }, /warningMs/],
-  ])('rejects the config rule: %s', (_name, override, pattern) => {
+  ])('rejects the value: %s', (_name, override, pattern) => {
     const result = validateSettingsPayload({ ...DEFAULT_CONFIG, ...override });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toMatch(pattern);
   });
 
-  it('accepts warning one millisecond shorter than work (boundary)', () => {
-    const result = validateSettingsPayload({
-      ...DEFAULT_CONFIG,
-      warningMs: DEFAULT_CONFIG.workIntervalMs - 1,
+  describe('limits (half to twice the default)', () => {
+    const MIN = 60_000;
+    const SEC = 1_000;
+    // [key, smallest accepted, largest accepted]
+    const ranges = [
+      ['workIntervalMs', 10 * MIN, 40 * MIN],
+      ['warningMs', 7.5 * SEC, 30 * SEC],
+      ['eyeRestMs', 10 * SEC, 40 * SEC],
+      ['longRestMs', 5 * MIN, 20 * MIN],
+      ['postponeMs', 2.5 * MIN, 10 * MIN],
+    ] as const;
+
+    it.each(ranges)('%s accepts both ends', (key, low, high) => {
+      expect(validateSettingsPayload({ ...DEFAULT_CONFIG, [key]: low }).ok).toBe(true);
+      expect(validateSettingsPayload({ ...DEFAULT_CONFIG, [key]: high }).ok).toBe(true);
     });
-    expect(result.ok).toBe(true);
+
+    it.each(ranges)('%s rejects just outside both ends, naming the range', (key, low, high) => {
+      const below = validateSettingsPayload({ ...DEFAULT_CONFIG, [key]: low - 1 });
+      const above = validateSettingsPayload({ ...DEFAULT_CONFIG, [key]: high + 1 });
+      expect(below).toEqual({ ok: false, error: `${key} must be between ${low} and ${high}.` });
+      expect(above).toEqual({ ok: false, error: `${key} must be between ${low} and ${high}.` });
+    });
+
+    it('cyclesBeforeLongRest accepts 2 to 6 and rejects 1 and 7', () => {
+      for (const ok of [2, 3, 6]) {
+        expect(validateSettingsPayload({ ...DEFAULT_CONFIG, cyclesBeforeLongRest: ok }).ok).toBe(true);
+      }
+      for (const bad of [1, 7]) {
+        expect(validateSettingsPayload({ ...DEFAULT_CONFIG, cyclesBeforeLongRest: bad })).toEqual({
+          ok: false,
+          error: 'cyclesBeforeLongRest must be between 1.5 and 6.',
+        });
+      }
+    });
+
+    it('rejects a huge value that would break time arithmetic', () => {
+      expect(validateSettingsPayload({ ...DEFAULT_CONFIG, workIntervalMs: 1e15 }).ok).toBe(false);
+    });
   });
 });

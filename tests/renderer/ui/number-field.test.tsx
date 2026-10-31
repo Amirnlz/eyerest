@@ -5,7 +5,7 @@ import { createRef, useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { NumberField, numberFieldClassName } from '../../../src/renderer/ui';
+import { NumberField, digitsOnly, numberFieldClassName } from '../../../src/renderer/ui';
 
 describe('numberFieldClassName', () => {
   it('adds the invalid modifier only for an invalid field', () => {
@@ -14,17 +14,54 @@ describe('numberFieldClassName', () => {
   });
 });
 
+describe('digitsOnly', () => {
+  it.each([
+    ['123', '123'],
+    ['', ''],
+    ['a1b2c3', '123'],
+    ['1.5', '15'],
+    ['-5', '5'],
+    ['+5', '5'],
+    ['1e3', '13'],
+    [' 4 2 ', '42'],
+    ['०१२', ''],
+  ])('keeps only the digits of %j', (input, expected) => {
+    expect(digitsOnly(input)).toBe(expected);
+  });
+});
+
 describe('NumberField', () => {
-  it('renders a spinbutton named by its label', () => {
+  it('renders a text box named by its label, not a spinbutton', () => {
     render(<NumberField label="Work interval" value="20" onValueChange={() => undefined} />);
-    const input = screen.getByRole('spinbutton', { name: 'Work interval' });
-    expect(input).toHaveValue(20);
-    expect(input).toHaveAttribute('type', 'number');
+    const input = screen.getByRole('textbox', { name: 'Work interval' });
+    expect(input).toHaveValue('20');
+    expect(screen.queryByRole('spinbutton')).toBeNull();
   });
 
-  it('reports each change as the raw string', async () => {
+  it('has no spin buttons: a text input with a numeric keyboard hint', () => {
+    render(<NumberField label="Work interval" value="20" onValueChange={() => undefined} />);
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveAttribute('type', 'text');
+    expect(input).toHaveAttribute('inputmode', 'numeric');
+    expect(input).toHaveAttribute('autocomplete', 'off');
+    expect(input).toHaveAttribute('spellcheck', 'false');
+  });
+
+  function Harness({ maxLength }: { readonly maxLength?: number }) {
+    const [value, setValue] = useState('');
+    return (
+      <NumberField
+        label="Work interval"
+        value={value}
+        onValueChange={setValue}
+        maxLength={maxLength}
+      />
+    );
+  }
+
+  it('reports the digits typed, one change per keystroke', async () => {
     const onValueChange = vi.fn();
-    function Harness() {
+    function Spy() {
       const [value, setValue] = useState('');
       return (
         <NumberField
@@ -37,11 +74,48 @@ describe('NumberField', () => {
         />
       );
     }
-    render(<Harness />);
+    render(<Spy />);
 
-    await userEvent.type(screen.getByRole('spinbutton'), '25');
+    await userEvent.type(screen.getByRole('textbox'), '25');
 
     expect(onValueChange.mock.calls).toEqual([['2'], ['25']]);
+  });
+
+  it('drops letters, signs, dots and exponents as they are typed', async () => {
+    render(<Harness />);
+    const input = screen.getByRole('textbox');
+
+    await userEvent.type(input, 'a1-b.2e+3');
+
+    expect(input).toHaveValue('123');
+  });
+
+  it('keeps only the digits of pasted text', async () => {
+    render(<Harness />);
+    const input = screen.getByRole('textbox');
+
+    await userEvent.click(input);
+    await userEvent.paste('4a5.6');
+
+    expect(input).toHaveValue('456');
+  });
+
+  it('never reports a non-digit to the owner', async () => {
+    const onValueChange = vi.fn();
+    render(<NumberField label="A" value="" onValueChange={onValueChange} />);
+
+    await userEvent.type(screen.getByRole('textbox'), 'x-1.5e');
+
+    for (const [value] of onValueChange.mock.calls) expect(value).toMatch(/^\d*$/);
+  });
+
+  it('stops at maxLength', async () => {
+    render(<Harness maxLength={2} />);
+    const input = screen.getByRole('textbox');
+
+    await userEvent.type(input, '12345');
+
+    expect(input).toHaveValue('12');
   });
 
   it('reads the unit and the hint as the description', () => {
@@ -54,16 +128,15 @@ describe('NumberField', () => {
         hint="The length of a regular rest."
       />,
     );
-    const input = screen.getByRole('spinbutton', { name: 'Eye rest' });
+    const input = screen.getByRole('textbox', { name: 'Eye rest' });
     expect(input).toHaveAccessibleDescription('seconds The length of a regular rest.');
   });
 
   it('has no description and is valid when there is no unit, hint or error', () => {
     render(<NumberField label="Eye rest" value="20" onValueChange={() => undefined} />);
-    const input = screen.getByRole('spinbutton');
+    const input = screen.getByRole('textbox');
     expect(input).not.toHaveAttribute('aria-describedby');
     expect(input).not.toHaveAttribute('aria-invalid');
-    expect(input).toBeValid();
   });
 
   it('marks an error: invalid, described by the message, with the invalid class', () => {
@@ -76,7 +149,7 @@ describe('NumberField', () => {
         error="Must be greater than 0."
       />,
     );
-    const input = screen.getByRole('spinbutton', { name: 'Heads-up' });
+    const input = screen.getByRole('textbox', { name: 'Heads-up' });
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input).toHaveAccessibleDescription('seconds Must be greater than 0.');
     expect(container.firstElementChild).toHaveClass('er-number-field--invalid');
@@ -96,7 +169,7 @@ describe('NumberField', () => {
         />
       </>,
     );
-    expect(screen.getByRole('spinbutton')).toHaveAccessibleDescription('seconds Extra help');
+    expect(screen.getByRole('textbox')).toHaveAccessibleDescription('seconds Extra help');
   });
 
   it('gives every field its own ids', () => {
@@ -106,7 +179,7 @@ describe('NumberField', () => {
         <NumberField label="B" value="2" onValueChange={() => undefined} unit="x" />
       </>,
     );
-    const [a, b] = screen.getAllByRole('spinbutton');
+    const [a, b] = screen.getAllByRole('textbox');
     expect(a?.id).not.toBe(b?.id);
     expect(a).toHaveAccessibleName('A');
     expect(b).toHaveAccessibleName('B');
@@ -115,7 +188,7 @@ describe('NumberField', () => {
   it('does not fire and is exposed as disabled when disabled', async () => {
     const onValueChange = vi.fn();
     render(<NumberField label="Eye rest" value="20" onValueChange={onValueChange} disabled />);
-    const input = screen.getByRole('spinbutton');
+    const input = screen.getByRole('textbox');
     expect(input).toBeDisabled();
     await userEvent.type(input, '5');
     expect(onValueChange).not.toHaveBeenCalled();
@@ -126,17 +199,17 @@ describe('NumberField', () => {
       <NumberField label="Eye rest" value="20" onValueChange={() => undefined} />,
     );
     await userEvent.tab();
-    expect(screen.getByRole('spinbutton')).toHaveFocus();
+    expect(screen.getByRole('textbox')).toHaveFocus();
 
     rerender(<NumberField label="Eye rest" value="20" onValueChange={() => undefined} disabled />);
     await userEvent.tab();
-    expect(screen.getByRole('spinbutton')).not.toHaveFocus();
+    expect(screen.getByRole('textbox')).not.toHaveFocus();
   });
 
   it('can be focused by clicking its label', async () => {
     render(<NumberField label="Eye rest" value="20" onValueChange={() => undefined} />);
     await userEvent.click(screen.getByText('Eye rest'));
-    expect(screen.getByRole('spinbutton')).toHaveFocus();
+    expect(screen.getByRole('textbox')).toHaveFocus();
   });
 
   it('passes through data and input attributes and forwards the ref', () => {
@@ -148,15 +221,13 @@ describe('NumberField', () => {
         value="20"
         onValueChange={() => undefined}
         data-testid="field"
-        min={0}
-        step="any"
+        maxLength={3}
         readOnly
       />,
     );
     const input = screen.getByTestId('field');
     expect(ref.current).toBe(input);
-    expect(input).toHaveAttribute('min', '0');
-    expect(input).toHaveAttribute('step', 'any');
+    expect(input).toHaveAttribute('maxlength', '3');
     expect(input).toHaveAttribute('readonly');
   });
 });

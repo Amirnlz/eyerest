@@ -4,13 +4,13 @@ import './NumberField.css';
 
 export interface NumberFieldProps extends Omit<
   ComponentPropsWithRef<'input'>,
-  'className' | 'type' | 'value' | 'onChange' | 'id' | 'children'
+  'className' | 'type' | 'inputMode' | 'value' | 'onChange' | 'id' | 'children'
 > {
   /** Visible label. It is the field's accessible name. */
   readonly label: string;
   /**
-   * The text in the box. A string, not a number, so a half-typed entry ("1.", "") survives
-   * until the owner parses it.
+   * The text in the box: digits only, possibly empty. A string, not a number, so an empty box and
+   * leading zeros survive until the owner parses it.
    */
   readonly value: string;
   readonly onValueChange: (value: string) => void;
@@ -22,14 +22,21 @@ export interface NumberFieldProps extends Omit<
   readonly error?: string;
 }
 
+/** Keeps the digits 0 to 9 and drops everything else. */
+export function digitsOnly(text: string): string {
+  return text.replace(/\D/g, '');
+}
+
 export function numberFieldClassName(invalid: boolean): string {
   return invalid ? 'er-number-field er-number-field--invalid' : 'er-number-field';
 }
 
 /**
- * Labelled number box on a native `<input type="number">`, so the spinbutton role, arrow keys and
- * disabled behavior come free. Invalid state is a message and a stronger edge, never a hue (F1).
- * Takes props and callbacks only (C8): validation belongs to the owner.
+ * Labelled box for a whole number. A native text input with a numeric keyboard hint, not
+ * `type="number"`: that type draws spin buttons and accepts `e`, `+`, `-` and `.`. Anything typed or
+ * pasted that is not a digit is dropped before `onValueChange` sees it. Invalid state is a message
+ * and a stronger edge, never a hue (F1). Takes props and callbacks only (C8): the range belongs to
+ * the owner.
  */
 export function NumberField({
   label,
@@ -66,10 +73,13 @@ export function NumberField({
         <input
           {...props}
           id={id}
-          type="number"
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          spellCheck={false}
           className="er-number-field__input"
           value={value}
-          onChange={(event) => onValueChange(event.target.value)}
+          onChange={(event) => onValueChange(digitsOnly(event.target.value))}
           aria-invalid={invalid ? true : undefined}
           aria-describedby={describedBy}
         />

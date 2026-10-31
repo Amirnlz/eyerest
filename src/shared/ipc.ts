@@ -18,6 +18,7 @@ export const IPC = {
   saveSettings: { channel: 'eyerest:save-settings', kind: 'invoke' },
   skip: { channel: 'eyerest:skip', kind: 'send' },
   postpone: { channel: 'eyerest:postpone', kind: 'send' },
+  closeSettings: { channel: 'eyerest:close-settings', kind: 'send' },
   snapshot: { channel: 'eyerest:snapshot', kind: 'push' },
 } as const satisfies Record<string, { channel: string; kind: IpcKind }>;
 
@@ -58,6 +59,8 @@ export interface EyerestApi {
   skip(): void;
   /** User pressed Postpone. */
   postpone(): void;
+  /** Closes the settings window. A window without a title bar (native Wayland) has no other way. */
+  closeSettings(): void;
 }
 
 /** Minimal shape of Electron's `ipcMain` that we depend on (lets us fake it in tests). */

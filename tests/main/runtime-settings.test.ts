@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_CONFIG, type RestConfig } from '../../src/core/config';
 import type { Snapshot } from '../../src/core/scheduler';
 import { createMainRuntime } from '../../src/main/runtime';
@@ -9,7 +9,13 @@ import { FakeTime } from '../helpers/fake-time';
 const MIN = 60_000;
 const SEC = 1_000;
 
-function setup(options: { settingsOverrides?: Partial<RestConfig>; failSave?: boolean } = {}) {
+function setup(
+  options: {
+    settingsOverrides?: Partial<RestConfig>;
+    failSave?: boolean;
+    closeSettingsWindow?: () => void;
+  } = {},
+) {
   const time = new FakeTime();
   const ipcMain = createFakeIpcMain();
   const pushed: Snapshot[] = [];
@@ -18,6 +24,7 @@ function setup(options: { settingsOverrides?: Partial<RestConfig>; failSave?: bo
   const runtime = createMainRuntime({
     env: {},
     settingsOverrides: options.settingsOverrides,
+    closeSettingsWindow: options.closeSettingsWindow,
     settingsStorage: {
       save: (overrides) => {
         if (options.failSave) throw new Error('disk full');
@@ -131,6 +138,18 @@ describe('settings through the main runtime', () => {
 
     expect(result.ok).toBe(false);
     expect(runtime.controller.getSnapshot().state).toMatchObject({ restAt: 20 * MIN });
+  });
+
+  it('closeSettings reaches the window closer', () => {
+    const closeSettingsWindow = vi.fn();
+    const { ipcMain } = setup({ closeSettingsWindow });
+    ipcMain.emit(IPC.closeSettings.channel);
+    expect(closeSettingsWindow).toHaveBeenCalledTimes(1);
+  });
+
+  it('closeSettings without a window closer is a no-op', () => {
+    const { ipcMain } = setup();
+    expect(() => ipcMain.emit(IPC.closeSettings.channel)).not.toThrow();
   });
 
   it('removes the settings handlers on dispose', () => {

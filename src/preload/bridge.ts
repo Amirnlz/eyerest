@@ -30,5 +30,6 @@ export function createBridge(ipc: IpcRendererLike): EyerestApi {
 
     skip: () => ipc.send(IPC.skip.channel),
     postpone: () => ipc.send(IPC.postpone.channel),
+    closeSettings: () => ipc.send(IPC.closeSettings.channel),
   };
 }

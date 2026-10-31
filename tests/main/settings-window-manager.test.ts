@@ -64,6 +64,22 @@ describe('SettingsWindowManager', () => {
     expect(factory.last.focused).toBe(1);
   });
 
+  it('close() closes the open window and lets open() build a fresh one', () => {
+    const { factory, manager } = setup();
+    manager.open();
+    manager.close();
+    expect(factory.windows[0]?.closeCalls).toBe(1);
+
+    manager.open();
+    expect(factory.windows).toHaveLength(2);
+  });
+
+  it('close() without a window does nothing', () => {
+    const { factory, manager } = setup();
+    expect(() => manager.close()).not.toThrow();
+    expect(factory.windows).toHaveLength(0);
+  });
+
   it('dispose() closes the open window once', () => {
     const { factory, manager } = setup();
     manager.open();

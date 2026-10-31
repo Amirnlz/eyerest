@@ -52,8 +52,8 @@ describe('SettingsService.getSettings', () => {
 
   it('returns what was last saved', () => {
     const { service } = setup();
-    service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 2 * MIN });
-    expect(service.getSettings().postponeMs).toBe(2 * MIN);
+    service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 3 * MIN });
+    expect(service.getSettings().postponeMs).toBe(3 * MIN);
   });
 });
 
@@ -88,7 +88,7 @@ describe('SettingsService.saveSettings', () => {
 
   it('applies on change, then not again for the same values', () => {
     const { service, applied } = setup();
-    const next = { ...DEFAULT_CONFIG, postponeMs: 2 * MIN };
+    const next = { ...DEFAULT_CONFIG, postponeMs: 3 * MIN };
     service.saveSettings(next);
     service.saveSettings({ ...next });
     expect(applied).toHaveLength(1);
@@ -96,7 +96,7 @@ describe('SettingsService.saveSettings', () => {
 
   it('applies the config with EYEREST_FAST on top of the saved values', () => {
     const { service, applied } = setup({ env: { EYEREST_FAST: '1' } });
-    service.saveSettings({ ...DEFAULT_CONFIG, cyclesBeforeLongRest: 5, workIntervalMs: 99 * MIN });
+    service.saveSettings({ ...DEFAULT_CONFIG, cyclesBeforeLongRest: 5, workIntervalMs: 30 * MIN });
 
     expect(applied).toHaveLength(1);
     expect(applied[0]).toMatchObject({
@@ -121,16 +121,16 @@ describe('SettingsService.saveSettings', () => {
   });
 
   it('keeps the previous settings after a rejected save', () => {
-    const { service } = setup({ initialOverrides: { postponeMs: 2 * MIN } });
+    const { service } = setup({ initialOverrides: { postponeMs: 3 * MIN } });
     service.saveSettings({ ...DEFAULT_CONFIG, eyeRestMs: 0 });
-    expect(service.getSettings().postponeMs).toBe(2 * MIN);
+    expect(service.getSettings().postponeMs).toBe(3 * MIN);
   });
 
   it('answers ok:false, reports the cause and applies nothing when persisting fails', () => {
     const failure = new Error('EACCES');
     const { service, applied, onError } = setup({ saveError: failure });
 
-    const result = service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 2 * MIN });
+    const result = service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 3 * MIN });
 
     expect(result).toEqual({ ok: false, error: 'Could not save settings. Try again.' });
     expect(onError).toHaveBeenCalledWith(failure);
@@ -140,13 +140,13 @@ describe('SettingsService.saveSettings', () => {
 
   it('does not expose the technical error text to the renderer', () => {
     const { service } = setup({ saveError: new Error('EACCES: /home/me/.config/eyerest') });
-    const result = service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 2 * MIN });
+    const result = service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 3 * MIN });
     expect(JSON.stringify(result)).not.toMatch(/EACCES|home/);
   });
 
   it('answers ok:false when no storage is configured', () => {
     const { service, applied } = setup({ withStorage: false });
-    const result = service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 2 * MIN });
+    const result = service.saveSettings({ ...DEFAULT_CONFIG, postponeMs: 3 * MIN });
     expect(result).toEqual({ ok: false, error: 'Settings storage is unavailable.' });
     expect(applied).toEqual([]);
   });

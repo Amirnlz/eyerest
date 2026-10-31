@@ -13,6 +13,7 @@ export interface FakeApi extends EyerestApi {
   listenerCount(): number;
   skip: Mock<() => void>;
   postpone: Mock<() => void>;
+  closeSettings: Mock<() => void>;
   getSettings: Mock<() => Promise<RestConfig>>;
   saveSettings: Mock<(settings: RestConfig) => Promise<SaveSettingsResult>>;
 }
@@ -36,6 +37,7 @@ export function createFakeApi(): FakeApi {
     },
     skip: vi.fn<() => void>(),
     postpone: vi.fn<() => void>(),
+    closeSettings: vi.fn<() => void>(),
     getSettings: vi.fn<() => Promise<RestConfig>>(() => Promise.resolve(DEFAULT_CONFIG)),
     saveSettings: vi.fn<(settings: RestConfig) => Promise<SaveSettingsResult>>((settings) =>
       Promise.resolve({ ok: true, settings }),

@@ -100,7 +100,7 @@ Override with `EYEREST_PLACEMENT=positioned|surface`.
 Linux display and GPU: the display backend is left to Electron (`EYEREST_OZONE=x11|wayland` forces one).
 Hardware acceleration is off on Linux (some GPU drivers crash the GPU process and leave windows blank);
 `EYEREST_GPU=1` turns it back on.
-Debug: `EYEREST_DEBUG=1` prints a line each time the overlay window is created, shown, hidden or changes mode.
+Debug: `EYEREST_DEBUG=1` prints a line each time the overlay window is created, shown, hidden or changes mode, and when the settings window is ready, shown or closed.
 
 Tray and lifecycle: the app has no main window and lives in the system tray (menu: next rest time,
 Pause/Resume reminders, Quit). Pause stops the scheduler and hides the overlay and dim layer at once;
@@ -117,6 +117,11 @@ Saving settings through IPC (`eyerest:save-settings`) validates every field in m
 that differ from the defaults, and restarts a running cycle with a fresh work interval (a paused app stays
 paused). Saving unchanged values changes nothing. The tray menu has a Settings entry that opens a settings window (one at a time; opening it again focuses it).
 The window is a normal framed window in the same renderer bundle, selected with `?view=settings`.
+It closes with the Close button or Escape (native Wayland windows have no title-bar buttons). Fields take
+digits only. Each value must lie between half and twice its default (work 10 to 40 min, heads-up 8 to 30 s,
+eye rest 10 to 40 s, long rest 5 to 20 min, long rest every 2 to 6 rests, postpone 3 to 10 min); main
+rejects anything outside that range. The limits live in `src/core/settings-limits.ts` and do not apply to
+`settings.json` loaded at startup or to `EYEREST_FAST`.
 
 `EYEREST_OPEN_SETTINGS=1` opens the settings window at launch (used by the Playwright settings test,
 which cannot click a native tray menu).

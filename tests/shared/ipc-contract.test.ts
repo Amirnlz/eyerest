@@ -16,6 +16,7 @@ const controller = {
 const settings = {
   getSettings: () => DEFAULT_CONFIG,
   saveSettings: () => ({ ok: true as const, settings: DEFAULT_CONFIG }),
+  closeSettings: () => {},
 };
 
 describe('IPC contract', () => {
@@ -49,6 +50,7 @@ describe('IPC contract', () => {
     await api.saveSettings(DEFAULT_CONFIG);
     api.skip();
     api.postpone();
+    api.closeSettings();
     api.onSnapshot(() => {});
 
     expect([...new Set(ipc.touched)].sort()).toEqual([...allChannels].sort());
@@ -63,6 +65,7 @@ describe('IPC contract', () => {
     await api.saveSettings(DEFAULT_CONFIG);
     api.skip();
     api.postpone();
+    api.closeSettings();
 
     expect(ipc.invoked).toEqual(channelsOfKind('invoke'));
     expect(ipc.sent.sort()).toEqual(channelsOfKind('send').sort());

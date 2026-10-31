@@ -80,6 +80,7 @@ Known platform risks (we handle them in the step that owns them):
 | 4.1a | Settings data path: IPC get/save, validation, persistence, live apply | DONE |
 | 4.1b | Settings form: `NumberField`, `SettingsForm`, `SettingsPage`, form model, jsdom tests | DONE |
 | 4.1c | Settings window, tray entry, e2e | IN REVIEW (branch `feat/4.1c-settings-window`) |
+| 4.1d | Settings fixes: close path, digits-only fields, limits, scrollbar, e2e fixes; `docs/ISSUES.md` | IN REVIEW (branch `fix/settings-issues`, stacked on 4.1c) |
 | 4.x | Feature backlog (chosen together) | TODO |
 
 ---

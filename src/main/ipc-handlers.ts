@@ -16,6 +16,7 @@ export interface IpcController {
 export interface IpcSettings {
   getSettings(): RestConfig;
   saveSettings(payload: unknown): SaveSettingsResult;
+  closeSettings(): void;
 }
 
 /**
@@ -29,11 +30,13 @@ export function registerIpcHandlers(
 ): () => void {
   const onSkip = () => controller.skip();
   const onPostpone = () => controller.postpone();
+  const onCloseSettings = () => settings.closeSettings();
 
   ipc.handle(IPC.getSnapshot.channel, () => controller.getSnapshot());
   ipc.handle(IPC.getSettings.channel, () => settings.getSettings());
   ipc.handle(IPC.saveSettings.channel, (_event, payload) => settings.saveSettings(payload));
   ipc.on(IPC.skip.channel, onSkip);
+  ipc.on(IPC.closeSettings.channel, onCloseSettings);
   ipc.on(IPC.postpone.channel, onPostpone);
 
   return () => {
@@ -42,5 +45,6 @@ export function registerIpcHandlers(
     ipc.removeHandler(IPC.saveSettings.channel);
     ipc.removeListener(IPC.skip.channel, onSkip);
     ipc.removeListener(IPC.postpone.channel, onPostpone);
+    ipc.removeListener(IPC.closeSettings.channel, onCloseSettings);
   };
 }

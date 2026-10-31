@@ -46,6 +46,12 @@ describe('createBridge', () => {
     expect(ipc.sent).toEqual([IPC.postpone.channel]);
   });
 
+  it('closeSettings sends its channel exactly once, with no payload', () => {
+    const ipc = createFakeIpcRenderer();
+    createBridge(ipc).closeSettings();
+    expect(ipc.sent).toEqual([IPC.closeSettings.channel]);
+  });
+
   it('delivers pushed snapshots to listeners', () => {
     const ipc = createFakeIpcRenderer();
     const listener = vi.fn();

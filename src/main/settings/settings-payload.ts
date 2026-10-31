@@ -1,4 +1,5 @@
 import { ConfigError, createConfig, type RestConfig } from '../../core/config';
+import { SETTINGS_LIMITS, isWithinLimits } from '../../core/settings-limits';
 import { SETTINGS_KEYS } from './settings';
 
 export type SettingsPayloadResult =
@@ -13,7 +14,7 @@ function fail(error: string): SettingsPayloadResult {
  * Validates an untrusted `saveSettings` payload from a renderer. Pure: never
  * throws. Stricter than the settings file parser: the renderer owns the whole
  * form, so every key must be present and an unknown key is an error, not a
- * warning. Value rules come from `createConfig`, the single source of truth.
+ * warning. Values must lie within `SETTINGS_LIMITS`; the remaining rules come from `createConfig`.
  */
 export function validateSettingsPayload(value: unknown): SettingsPayloadResult {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -32,6 +33,10 @@ export function validateSettingsPayload(value: unknown): SettingsPayloadResult {
     const entry = received.get(key);
     if (entry === undefined) return fail(`${key} is missing.`);
     if (typeof entry !== 'number') return fail(`${key} must be a number.`);
+    if (!isWithinLimits(key, entry)) {
+      const { min, max } = SETTINGS_LIMITS[key];
+      return fail(`${key} must be between ${min} and ${max}.`);
+    }
     values[key] = entry;
   }
 

@@ -67,6 +67,7 @@ export const copy = {
       save: 'Save',
       saving: 'Saving',
       restoreDefaults: 'Restore defaults',
+      close: 'Close',
     },
     status: {
       loading: 'Loading settings.',
@@ -75,12 +76,11 @@ export const copy = {
       saveFailed: 'Could not save settings. Try again.',
       fixErrors: 'Fix the highlighted fields to save.',
     },
+    /** The allowed range shown beside a field, such as "10 to 40 minutes". */
+    range: (min: number, max: number, unit: string) => `${min} to ${max} ${unit}`,
     errors: {
       required: 'Enter a number.',
-      positive: 'Must be greater than 0.',
-      wholeNumber: 'Must be a whole number, 1 or more.',
-      warningTooLong: 'Must be shorter than the work interval.',
-      tooLarge: 'Too large.',
+      outOfRange: (min: number, max: number) => `Enter a number from ${min} to ${max}.`,
     },
   },
   /** Spoken to screen readers at milestones only, never every second. */

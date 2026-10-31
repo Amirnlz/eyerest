@@ -20,8 +20,8 @@ describe('SettingsPage', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent(copy.settings.status.loading);
 
-    const field = await screen.findByRole('spinbutton', { name: 'Work interval' });
-    expect(field).toHaveValue(30);
+    const field = await screen.findByRole('textbox', { name: 'Work interval' });
+    expect(field).toHaveValue('30');
     expect(screen.queryByText(copy.settings.status.loading)).toBeNull();
   });
 
@@ -46,12 +46,81 @@ describe('SettingsPage', () => {
     render(<SettingsPage api={api} />);
     const user = userEvent.setup();
 
-    const field = await screen.findByRole('spinbutton', { name: 'Postpone by' });
+    const field = await screen.findByRole('textbox', { name: 'Postpone by' });
     await user.clear(field);
-    await user.type(field, '2');
+    await user.type(field, '3');
     await user.click(screen.getByRole('button', { name: copy.settings.actions.save }));
 
-    expect(api.saveSettings).toHaveBeenCalledWith({ ...DEFAULT_CONFIG, postponeMs: 120_000 });
+    expect(api.saveSettings).toHaveBeenCalledWith({ ...DEFAULT_CONFIG, postponeMs: 180_000 });
     expect(await screen.findByText(copy.settings.status.saved)).toBeInTheDocument();
+  });
+
+  it('closes the window through the api with the Close button', async () => {
+    const api = createFakeApi();
+    render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: copy.settings.actions.close }));
+
+    expect(api.closeSettings).toHaveBeenCalledTimes(1);
+    expect(api.saveSettings).not.toHaveBeenCalled();
+  });
+
+  it('closes the window on Escape', async () => {
+    const api = createFakeApi();
+    render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+    await screen.findByRole('form');
+
+    await user.keyboard('{Escape}');
+
+    expect(api.closeSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes on Escape while a field has focus', async () => {
+    const api = createFakeApi();
+    render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+    (await screen.findByRole('textbox', { name: 'Postpone by' })).focus();
+
+    await user.keyboard('{Escape}');
+
+    expect(api.closeSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores other keys', async () => {
+    const api = createFakeApi();
+    render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+    await screen.findByRole('form');
+
+    await user.keyboard('{Enter}a');
+
+    expect(api.closeSettings).not.toHaveBeenCalled();
+  });
+
+  it('offers Close, and closes on Escape, when the settings cannot be loaded', async () => {
+    const api = createFakeApi();
+    api.getSettings.mockRejectedValue(new Error('ipc down'));
+    render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: copy.settings.actions.close }));
+    expect(api.closeSettings).toHaveBeenCalledTimes(1);
+
+    await user.keyboard('{Escape}');
+    expect(api.closeSettings).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops listening for Escape once unmounted', async () => {
+    const api = createFakeApi();
+    const view = render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+    await screen.findByRole('form');
+
+    view.unmount();
+    await user.keyboard('{Escape}');
+
+    expect(api.closeSettings).not.toHaveBeenCalled();
   });
 });

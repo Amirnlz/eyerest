@@ -8,6 +8,7 @@ export {
 } from './Button';
 export {
   NumberField,
+  digitsOnly,
   numberFieldClassName,
   type NumberFieldProps,
 } from './NumberField';
