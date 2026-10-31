@@ -3,17 +3,20 @@ import { dirname, join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { contrastRatio } from '../../src/design/color';
 import {
+  BRAND_ARTWORK,
   BRAND_ICONS,
+  DMG_LAYOUT,
   EYE_IRIS,
   EYE_PATH,
   ROLE_STYLES,
   decodePng,
   encodePng,
   flattenPath,
+  renderDmgBackground,
   renderIcon,
   type IconSpec,
 } from '../../src/design/brand-icons';
-import { palette } from '../../src/design/tokens';
+import { palette, resolveToken, themes } from '../../src/design/tokens';
 import { icons } from '../../src/renderer/ui/icons';
 
 /**
@@ -29,6 +32,11 @@ if (process.env['EYEREST_WRITE_ICONS'] === '1') {
     for (const spec of BRAND_ICONS) {
       mkdirSync(dirname(root(spec.file)), { recursive: true });
       writeFileSync(root(spec.file), encodePng(spec.size, spec.size, renderIcon(spec)));
+    }
+    for (const art of BRAND_ARTWORK) {
+      const width = DMG_LAYOUT.width * art.scale;
+      const height = DMG_LAYOUT.height * art.scale;
+      writeFileSync(root(art.file), encodePng(width, height, renderDmgBackground(art.scale)));
     }
   });
 }
@@ -165,5 +173,55 @@ describe('icon appearance', () => {
       expect(pixel(png, 0, i)[3], `left column y=${i}`).toBe(0);
       expect(pixel(png, png.width - 1, i)[3], `right column y=${i}`).toBe(0);
     }
+  });
+});
+
+describe('DMG background', () => {
+  it.each(BRAND_ARTWORK)('$file matches the generator and has the window size times its scale', (art) => {
+    const png = decodeFile(art.file);
+    expect([png.width, png.height]).toEqual([DMG_LAYOUT.width * art.scale, DMG_LAYOUT.height * art.scale]);
+    expect([...png.rgba]).toEqual([...renderDmgBackground(art.scale)]);
+  });
+
+  it('the @2x image is the base image at twice the size and uses the electron-builder name', () => {
+    expect(BRAND_ARTWORK.map((art) => art.file)).toEqual(['build/background.png', 'build/background@2x.png']);
+    expect(BRAND_ARTWORK.map((art) => art.scale)).toEqual([1, 2]);
+  });
+
+  it('uses the light canvas token and a palette ink', () => {
+    expect(DMG_LAYOUT.canvas.toUpperCase()).toBe(resolveToken(themes.light.canvas).toUpperCase());
+    expect(Object.values(palette)).toContain(DMG_LAYOUT.arrow.toUpperCase());
+  });
+
+  it('the arrow reads on the canvas at non-text contrast (3 to 1)', () => {
+    expect(contrastRatio(DMG_LAYOUT.arrow, DMG_LAYOUT.canvas)).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(BRAND_ARTWORK)('$file is opaque, canvas colored at the corners and under both icons', (art) => {
+    const png = decodeFile(art.file);
+    const at = (x: number, y: number) => pixel(png, Math.round(x * art.scale), Math.round(y * art.scale));
+    const canvas = [0xe3, 0xe3, 0xe3, 255];
+    expect(at(0, 0)).toEqual(canvas);
+    expect(at(DMG_LAYOUT.width - 1, DMG_LAYOUT.height - 1)).toEqual(canvas);
+    // Finder draws the icons here, so the image must stay empty.
+    expect(at(DMG_LAYOUT.app.x, DMG_LAYOUT.app.y)).toEqual(canvas);
+    expect(at(DMG_LAYOUT.applications.x, DMG_LAYOUT.applications.y)).toEqual(canvas);
+  });
+
+  it.each(BRAND_ARTWORK)('$file draws the arrow between the two icons, at their height', (art) => {
+    const png = decodeFile(art.file);
+    const middle = (DMG_LAYOUT.app.x + DMG_LAYOUT.applications.x) / 2;
+    expect(pixel(png, middle * art.scale, DMG_LAYOUT.app.y * art.scale).slice(0, 3)).toEqual([0x5c, 0x5c, 0x5c]);
+  });
+
+  it('keeps the arrow clear of both icons by the gap', () => {
+    const png = decodeFile('build/background.png');
+    const half = DMG_LAYOUT.iconSize / 2;
+    const inkColumns: number[] = [];
+    for (let x = 0; x < png.width; x += 1) {
+      for (let y = 0; y < png.height; y += 1) if (pixel(png, x, y)[0] !== 0xe3) inkColumns.push(x);
+    }
+    expect(Math.min(...inkColumns)).toBeGreaterThanOrEqual(DMG_LAYOUT.app.x + half);
+    expect(Math.max(...inkColumns)).toBeLessThanOrEqual(DMG_LAYOUT.applications.x - half);
   });
 });

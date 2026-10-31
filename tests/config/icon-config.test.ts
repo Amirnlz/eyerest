@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BRAND_ICONS } from '../../src/design/brand-icons';
+import { BRAND_ARTWORK, BRAND_ICONS, DMG_LAYOUT } from '../../src/design/brand-icons';
 import { TRAY_ICON_DIR_NAME, TRAY_ICON_FILES } from '../../src/main/tray/tray-icon';
 
 const root = join(__dirname, '../..');
@@ -12,6 +12,13 @@ interface BuilderConfig {
   linux?: { icon?: string };
   win?: { icon?: string };
   mac?: { icon?: string };
+  dmg?: {
+    background?: string;
+    iconSize?: number;
+    window?: { width?: number; height?: number };
+    contents?: { x?: number; y?: number; type?: string; path?: string }[];
+  };
+  nsis?: { oneClick?: boolean; installerSidebar?: string; installerHeader?: string };
 }
 
 const builder = JSON.parse(readFileSync(join(root, 'electron-builder.json'), 'utf8')) as BuilderConfig;
@@ -61,5 +68,35 @@ describe('tray icons in the builder config', () => {
       expect(generated.has(file), file).toBe(true);
       expect(generated.has(file.replace('.png', '@2x.png')), file).toBe(true);
     }
+  });
+});
+
+describe('DMG artwork in the builder config', () => {
+  it('references the base background, and the @2x file sits next to it', () => {
+    expect(builder.dmg?.background).toBe(BRAND_ARTWORK[0]?.file);
+    for (const art of BRAND_ARTWORK) expect(existsSync(join(root, art.file)), art.file).toBe(true);
+  });
+
+  it('the window is the size of the image', () => {
+    expect(builder.dmg?.window).toEqual({ width: DMG_LAYOUT.width, height: DMG_LAYOUT.height });
+  });
+
+  it('places the app and the Applications link where the arrow expects them', () => {
+    expect(builder.dmg?.iconSize).toBe(DMG_LAYOUT.iconSize);
+    expect(builder.dmg?.contents).toEqual([
+      { x: DMG_LAYOUT.app.x, y: DMG_LAYOUT.app.y },
+      { x: DMG_LAYOUT.applications.x, y: DMG_LAYOUT.applications.y, type: 'link', path: '/Applications' },
+    ]);
+  });
+});
+
+describe('NSIS artwork', () => {
+  // electron-builder shows the sidebar and header images only in the assisted (wizard) installer.
+  // The installer is one-click, so those files would never appear. Switching to the wizard is a
+  // change of installer behavior and a roadmap candidate, not part of the design pass.
+  it('is not configured while the installer is one-click', () => {
+    expect(builder.nsis?.oneClick ?? true).toBe(true);
+    expect(builder.nsis?.installerSidebar).toBeUndefined();
+    expect(builder.nsis?.installerHeader).toBeUndefined();
   });
 });

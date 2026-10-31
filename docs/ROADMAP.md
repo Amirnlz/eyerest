@@ -75,7 +75,7 @@ Known platform risks (we handle them in the step that owns them):
 | 2.3 | Overlay-specific components, motion, accessibility | DONE (components, entrance motion, theme mechanism, accessibility). Exit motion: `design-system.md` V15. Shortcuts: 4.12. Theme setting: 4.13 |
 | 2.4 | Component gallery and visual regression baseline | DONE (gallery and computed-style checks; screenshot baselines dropped by decision). Waiting for your Phase 2 sign-off |
 | 3.1 | Apply design system to overlay UI | DONE |
-| 3.2 | Apply design system to dim layer, tray, app icon | PARTIAL: 3.2a dim layer DONE, 3.2b tray and app icons in review, 3.2c installer artwork TODO |
+| 3.2 | Apply design system to dim layer, tray, app icon | 3.2a dim layer, 3.2b tray and app icons DONE. 3.2c DMG artwork in review. NSIS artwork deferred (candidate 4.14) |
 | 3.3 | Polish pass and visual regression update | TODO |
 | 4.x | Feature backlog (chosen together) | TODO |
 
@@ -353,9 +353,11 @@ Send this: `Start Step 3.1`
 
 ### Step 3.2: Apply to dim layer, tray, app icon
 
-Split into 3.2a (dim color from tokens, V2 and V3), 3.2b (tray icon set and app icon) and 3.2c (installer artwork), because one step is one small tested change.
+Split into 3.2a (dim color from tokens, V2 and V3), 3.2b (tray icon set and app icon) and 3.2c (installer artwork: DMG only, see below), because one step is one small tested change.
 
 Scope: dim color and opacity from tokens; tray icon set (template image on macOS, light and dark variants on Windows and Linux); app icon for installers; installer artwork where the builder supports it.
+
+Installer artwork decision: electron-builder shows the NSIS sidebar and header images only in the assisted (wizard) installer. The installer is one-click, so that artwork would never appear, and switching to the wizard changes installer behavior. NSIS artwork moves to candidate 4.14. The one-click installer already uses the app icon. The DMG background is shown, so 3.2c covers it.
 
 Tests: logic tests that every required icon size and variant file exists and is referenced by the builder config; dim layer reads its values from tokens.
 
@@ -392,6 +394,7 @@ We pick and order these when Phase 3 closes. Each becomes its own step with the 
 | 4.11 | Auto-update and code signing | Needed for smooth installs on Windows and macOS. |
 | 4.12 | Global shortcuts | Skip or postpone without the mouse. Originally listed under Step 2.3. Moved here: they are behavior, and they conflict with the focus policy (the overlay never takes focus, `docs/design-system.md` A6), so they must be OS-level shortcuts with a chosen key combination per platform. |
 | 4.13 | Theme setting | System, light or dark, stored in main, validated IPC channel, entry in the tray menu. The renderer mechanism exists (Step 2.3c). |
+| 4.14 | Assisted Windows installer | Switch NSIS to `oneClick: false`, then add the sidebar (164 by 314 BMP) and header BMP from the brand generator. A behavior change: the user sees wizard pages. |
 
 Send this to begin Phase 4: `Plan Phase 4` with the features you want and their priority.
 

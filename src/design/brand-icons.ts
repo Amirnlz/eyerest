@@ -3,6 +3,7 @@
  * an almond outline with a filled iris. This file turns it into the PNG files the app ships:
  * the app icon and the tray icon set. Nothing here is Electron or DOM; it is a pure function from
  * a spec to RGBA pixels, so a test can regenerate every file and compare it with the committed one.
+ * It also draws the DMG window background (`BRAND_ARTWORK`).
  *
  * Pixels come from a signed distance field with a one-pixel coverage ramp. No dependency and no
  * rasterizer binary, so the output is the same on every machine. Colors are palette values
@@ -235,6 +236,78 @@ export function renderIcon(spec: IconSpec): Uint8Array {
         }
       }
       pixels[offset + 3] = Math.round(alpha * 255);
+    }
+  }
+  return pixels;
+}
+
+/**
+ * DMG window background (macOS installer). The window is drawn by Finder, so the icons, their
+ * labels and the title bar are not part of the image: it carries only the canvas and an arrow from
+ * the app to the Applications link. The positions below are written to `electron-builder.json`
+ * (a test compares them), so the arrow always sits between the two icons.
+ */
+export const DMG_LAYOUT = Object.freeze({
+  width: 540,
+  height: 380,
+  iconSize: 80,
+  app: Object.freeze({ x: 130, y: 220 }),
+  applications: Object.freeze({ x: 410, y: 220 }),
+  /** Free space between an icon and the arrow end. */
+  arrowGap: 16,
+  arrowStroke: 3,
+  arrowHead: 14,
+  canvas: '#E3E3E3',
+  arrow: '#5C5C5C',
+});
+
+export interface ArtworkSpec {
+  readonly file: string;
+  /** 1 for the base image, 2 for the Retina `@2x` image. */
+  readonly scale: 1 | 2;
+}
+
+export const BRAND_ARTWORK: readonly ArtworkSpec[] = [
+  { file: 'build/background.png', scale: 1 },
+  { file: 'build/background@2x.png', scale: 2 },
+];
+
+/** Straight RGBA for the DMG background at the given scale, `width * scale` by `height * scale`. */
+export function renderDmgBackground(scale: 1 | 2): Uint8Array {
+  const layout = DMG_LAYOUT;
+  const width = layout.width * scale;
+  const height = layout.height * scale;
+  const canvas = hexToRgb(layout.canvas);
+  const ink = hexToRgb(layout.arrow);
+
+  const startX = layout.app.x + layout.iconSize / 2 + layout.arrowGap;
+  const endX = layout.applications.x - layout.iconSize / 2 - layout.arrowGap;
+  const y = layout.app.y;
+  const arm = layout.arrowHead * Math.SQRT1_2;
+  const tip: Point = { x: endX, y };
+  const segments: readonly (readonly [Point, Point])[] = [
+    [{ x: startX, y }, tip],
+    [tip, { x: endX - arm, y: y - arm }],
+    [tip, { x: endX - arm, y: y + arm }],
+  ];
+
+  const pixels = new Uint8Array(width * height * 4);
+  for (let row = 0; row < height; row += 1) {
+    for (let column = 0; column < width; column += 1) {
+      // Work in 1x units so one layout serves both scales.
+      const px = (column + 0.5) / scale;
+      const py = (row + 0.5) / scale;
+      let nearest = Number.POSITIVE_INFINITY;
+      for (const [a, b] of segments) nearest = Math.min(nearest, distanceToSegment(px, py, a, b));
+      // Round caps: a segment's distance already rounds its ends.
+      const ink01 = coverage((nearest - layout.arrowStroke / 2) * scale);
+      const offset = (row * width + column) * 4;
+      for (let channel = 0; channel < 3; channel += 1) {
+        const back = canvas[channel] as number;
+        const front = ink[channel] as number;
+        pixels[offset + channel] = Math.round(front * ink01 + back * (1 - ink01));
+      }
+      pixels[offset + 3] = 255;
     }
   }
   return pixels;

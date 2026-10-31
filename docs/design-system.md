@@ -578,7 +578,7 @@ Each item is one step. Do them in order.
 | 3.1 | Overlay panels already use the primitives (2.3a). Make the positioned overlay window transparent (V4). The raw dim color (V2, V3) moves with the dim layer to 3.2. | Rounded panel corners show no window color. Page painted by no stylesheet. Windows and Linux X11 checked by the owner |
 | 3.2a | Dim layer from the `scrim` token (V2, V3) | `scrim` token is the only dim color. No raw color in renderer TS or TSX |
 | 3.2b | Tray icon set and app icon from the `eye` glyph | Every icon file exists, equals the generator output, and the builder config references it |
-| 3.2c | Installer artwork where the builder supports it (NSIS sidebar and header, DMG background) | Files exist and the builder config references them |
+| 3.2c | DMG window background (1x and @2x). NSIS artwork is deferred: it only shows in the assisted installer, and the installer is one-click (ROADMAP 4.14) | Files exist, equal the generator output, and the builder config references them and places the icons under the arrow |
 | 3.3 | Polish pass, run the `better-ui` Before-you-finish table across the codebase | Violations register empty |
 
 Anything outside this list is a Phase 4 candidate. Record it in `docs/ROADMAP.md`.
@@ -590,6 +590,7 @@ Anything outside this list is a Phase 4 candidate. Record it in `docs/ROADMAP.md
 | Manrope delivery | Committed woff2 file and a small loader, no dependency. The loader (`src/renderer/fonts.ts`) registers each file listed in `src/design/fonts.ts` through the `FontFace` API. Vite finds files with `import.meta.glob`, so a missing file never breaks the build. The file itself is still to be added (2.1b-2). | `src/renderer/fonts*.ts`, `src/renderer/assets/fonts/README.md` |
 | Concentric nesting | Tight surfaces publish an inner radius that controls read. See S1 and S2. | `Surface.css`, `Button.css` |
 | Brand icons | One mark: the design system `eye` glyph. A pure generator (`src/design/brand-icons.ts`) rasterizes it to PNG with a distance field, no dependency and no binary tool. Committed files are checked against the generator by pixel, and `npm run icons` rewrites them. Colors are palette values. The app icon is a rounded square on the macOS grid, one 1024 file that electron-builder converts to `.ico` and `.icns`. | `src/design/brand-icons.ts`, `build/icon.png`, `resources/tray/` |
+| DMG background | Canvas token color plus one arrow between the app and the Applications link, no text (Finder draws icon labels). 540 by 380 with a 1080 by 760 `@2x` file that electron-builder picks by name. Layout numbers live in one constant and are written to `electron-builder.json`. | `src/design/brand-icons.ts` (`DMG_LAYOUT`), `build/background*.png` |
 | Tray icon variants | macOS: one black template image (the system recolors it). Windows and Linux: a dark glyph for light surfaces and a light glyph for dark ones, chosen from `nativeTheme.shouldUseDarkColors` and swapped on `updated`. Each has an `@2x` file. Files ship as `extraResources`, outside the asar. | `src/main/tray/tray-icon.ts`, `electron-builder.json` |
 | Positioned window background | Transparent in both layouts (step 3.1). The panel is a rounded `Surface`, so an opaque window would show window-colored corners. No OS-theme sync is needed any more. | `src/main/overlay/window-background.ts` |
 
