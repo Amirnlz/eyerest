@@ -12,6 +12,7 @@ export interface TrayPort {
 export interface TrayActions {
   pause(): void;
   resume(): void;
+  openSettings(): void;
   quit(): void;
 }
 
@@ -59,6 +60,9 @@ export class TrayController implements SnapshotSender {
         if (this.lastPhase === null) return;
         if (this.lastPhase === 'idle') this.actions.resume();
         else this.actions.pause();
+        return;
+      case 'settings':
+        this.actions.openSettings();
         return;
       case 'quit':
         this.actions.quit();

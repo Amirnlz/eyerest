@@ -17,8 +17,10 @@ import { OverlayWindowManager } from './overlay/overlay-window-manager';
 import { isNativeWayland, resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
 import { createMainRuntime, type MainRuntime } from './runtime';
+import { createElectronSettingsWindowFactory } from './settings/electron-settings-window';
 import { createNodeSettingsFs } from './settings/node-settings-fs';
 import { SETTINGS_FILE_NAME, loadSettings, saveSettings } from './settings/settings';
+import { SettingsWindowManager } from './settings/settings-window-manager';
 import { acquireSingleInstance } from './single-instance';
 import { createElectronTrayPort } from './tray/electron-tray-adapter';
 import { TrayController } from './tray/tray-controller';
@@ -37,6 +39,7 @@ let runtime: MainRuntime | null = null;
 let overlay: OverlayWindowManager | null = null;
 let dim: DimLayerManager | null = null;
 let tray: TrayController | null = null;
+let settingsWindow: SettingsWindowManager | null = null;
 
 // Single instance: a second launch quits at once and shows nothing.
 const primaryInstance = acquireSingleInstance(app);
@@ -122,7 +125,18 @@ void app.whenReady().then(() => {
     if (debug) console.info(`[settings] ${settings.status} ${settingsPath}`);
   }
 
-  // Tray: Pause/Resume reminders and Quit, plus the next rest time.
+  // Settings window: opened from the tray menu, one at a time, same renderer bundle.
+  settingsWindow = new SettingsWindowManager(
+    createElectronSettingsWindowFactory({
+      preloadPath: fileURLToPath(
+        new URL('../preload/index.cjs', import.meta.url),
+      ),
+      target: resolveRendererTarget(),
+      title: 'eyerest settings',
+    }),
+  );
+
+  // Tray: Pause/Resume reminders, Settings and Quit, plus the next rest time.
   tray = new TrayController(
     createElectronTrayPort({
       iconDir: trayIconDir({
@@ -134,6 +148,7 @@ void app.whenReady().then(() => {
     {
       pause: () => runtime?.controller.pause(),
       resume: () => runtime?.controller.resume(),
+      openSettings: () => settingsWindow?.open(),
       quit: () => app.quit(),
     },
   );
@@ -153,6 +168,9 @@ void app.whenReady().then(() => {
   dim.start();
   overlay.start();
   runtime.start();
+
+  // Test hook for the Playwright settings test: Playwright cannot click a native tray menu.
+  if (process.env['EYEREST_OPEN_SETTINGS'] === '1') settingsWindow.open();
 });
 
 // The app has no regular window and lives in the tray. This listener replaces
@@ -170,4 +188,6 @@ app.on('before-quit', () => {
   dim = null;
   tray?.dispose();
   tray = null;
+  settingsWindow?.dispose();
+  settingsWindow = null;
 });

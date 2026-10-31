@@ -12,11 +12,12 @@ export const TRAY_COPY = {
   restingLong: 'Long rest in progress',
   pause: 'Pause reminders',
   resume: 'Resume reminders',
+  settings: 'Settings',
   quit: 'Quit',
   nextRest: (time: string) => `Next rest at ${time}`,
 } as const;
 
-export type TrayItemId = 'status' | 'toggle' | 'quit';
+export type TrayItemId = 'status' | 'toggle' | 'settings' | 'quit';
 
 export type TrayMenuItem =
   | { readonly kind: 'item'; readonly id: TrayItemId; readonly label: string; readonly enabled: boolean }
@@ -47,7 +48,7 @@ export function statusText(snapshot: Snapshot, formatTime: (epochMs: number) => 
 }
 
 /**
- * Menu per scheduler state. The scheduler is idle exactly when reminders are
+ * Menu per scheduler state: status, Pause or Resume, Settings, Quit. The scheduler is idle exactly when reminders are
  * paused (it starts at launch), so idle shows Resume and every other phase
  * shows Pause.
  */
@@ -62,6 +63,7 @@ export function buildTrayMenu(
     items: [
       { kind: 'item', id: 'status', label: status, enabled: false },
       { kind: 'item', id: 'toggle', label: paused ? TRAY_COPY.resume : TRAY_COPY.pause, enabled: true },
+      { kind: 'item', id: 'settings', label: TRAY_COPY.settings, enabled: true },
       { kind: 'separator' },
       { kind: 'item', id: 'quit', label: TRAY_COPY.quit, enabled: true },
     ],

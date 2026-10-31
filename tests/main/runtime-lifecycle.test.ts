@@ -27,6 +27,7 @@ function setup(settingsOverrides: Partial<RestConfig> = {}) {
     {
       pause: () => runtime?.controller.pause(),
       resume: () => runtime?.controller.resume(),
+      openSettings: () => {},
       quit: () => {},
     },
     (ms) => `T${ms}`,
@@ -56,7 +57,7 @@ function setup(settingsOverrides: Partial<RestConfig> = {}) {
 describe('pause and resume through the tray', () => {
   it('shows the working menu at launch', () => {
     const { fakeTray } = setup();
-    expect(fakeTray.labels).toEqual(['Next rest at T20000', 'Pause reminders', 'Quit']);
+    expect(fakeTray.labels).toEqual(['Next rest at T20000', 'Pause reminders', 'Settings', 'Quit']);
   });
 
   it('Pause during the rest hides the overlay and the dim layer at once', () => {
@@ -69,7 +70,7 @@ describe('pause and resume through the tray', () => {
 
     expect(overlayWindow().visible).toBe(false);
     expect(dimWindow().visible).toBe(false);
-    expect(fakeTray.labels).toEqual(['Paused', 'Resume reminders', 'Quit']);
+    expect(fakeTray.labels).toEqual(['Paused', 'Resume reminders', 'Settings', 'Quit']);
   });
 
   it('Pause during the warning hides the overlay', () => {

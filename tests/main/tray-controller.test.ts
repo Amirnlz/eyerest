@@ -20,7 +20,7 @@ describe('TrayController', () => {
     it('shows the next rest time while working', () => {
       const { tray, controller } = setup();
       controller.send(WORKING);
-      expect(tray.labels).toEqual(['Next rest at T20000', 'Pause reminders', 'Quit']);
+      expect(tray.labels).toEqual(['Next rest at T20000', 'Pause reminders', 'Settings', 'Quit']);
     });
 
     it('follows the phases: working, warning, resting, working', () => {
@@ -38,7 +38,7 @@ describe('TrayController', () => {
       const { tray, controller } = setup();
       controller.send(WORKING);
       controller.send(IDLE);
-      expect(tray.labels).toEqual(['Paused', 'Resume reminders', 'Quit']);
+      expect(tray.labels).toEqual(['Paused', 'Resume reminders', 'Settings', 'Quit']);
     });
 
     it('does not touch the tray for every countdown second', () => {
@@ -93,6 +93,15 @@ describe('TrayController', () => {
       }
     });
 
+    it('Settings opens the settings window in every state, and nothing else', () => {
+      for (const snapshot of [IDLE, WORKING, warning(5), resting(5)]) {
+        const { tray, actions, controller } = setup();
+        controller.send(snapshot);
+        tray.click('settings');
+        expect(actions.calls).toEqual(['openSettings']);
+      }
+    });
+
     it('the status line does nothing', () => {
       const { tray, actions, controller } = setup();
       controller.send(WORKING);
@@ -115,6 +124,7 @@ describe('TrayController', () => {
       controller.dispose();
       controller.send(IDLE);
       controller.handle('quit');
+      controller.handle('settings');
 
       expect(tray.destroyed).toBe(1);
       expect(tray.menus).toHaveLength(1);

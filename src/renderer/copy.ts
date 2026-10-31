@@ -24,6 +24,7 @@ export const copy = {
   },
   settings: {
     title: 'Settings',
+    windowTitle: 'eyerest settings',
     restartNote: 'Saving restarts the work timer. A paused app stays paused.',
     groups: {
       work: 'Work',

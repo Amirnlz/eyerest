@@ -41,6 +41,9 @@ export class FakeTrayActions implements TrayActions {
   resume(): void {
     this.calls.push('resume');
   }
+  openSettings(): void {
+    this.calls.push('openSettings');
+  }
   quit(): void {
     this.calls.push('quit');
   }

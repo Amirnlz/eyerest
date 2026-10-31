@@ -7,13 +7,28 @@ import { _electron as electron, type Page } from '@playwright/test';
 
 export type Layout = 'positioned' | 'surface';
 
-export async function launchApp(layout: Layout = 'positioned') {
+export interface LaunchOptions {
+  /** Extra environment variables, such as `EYEREST_OPEN_SETTINGS=1`. */
+  readonly env?: Readonly<Record<string, string>>;
+  /**
+   * A private user data dir. Tests that save settings must pass one, so they never touch the
+   * real `settings.json` of the person running them. It also scopes the single-instance lock.
+   */
+  readonly userDataDir?: string;
+}
+
+export async function launchApp(layout: Layout = 'positioned', options: LaunchOptions = {}) {
   return electron.launch({
-    args: ['.', ...(process.platform === 'linux' ? ['--no-sandbox'] : [])],
+    args: [
+      '.',
+      ...(process.platform === 'linux' ? ['--no-sandbox'] : []),
+      ...(options.userDataDir === undefined ? [] : [`--user-data-dir=${options.userDataDir}`]),
+    ],
     env: {
       ...process.env,
       EYEREST_FAST: '1',
       EYEREST_PLACEMENT: layout,
+      ...options.env,
     } as Record<string, string>,
   });
 }

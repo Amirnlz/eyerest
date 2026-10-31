@@ -28,10 +28,11 @@ describe('buildTrayMenu', () => {
   const labels = (model: ReturnType<typeof buildTrayMenu>) =>
     model.items.map((item) => (item.kind === 'separator' ? '---' : item.label));
 
-  it('while working: status, Pause, separator, Quit', () => {
+  it('while working: status, Pause, Settings, separator, Quit', () => {
     expect(labels(buildTrayMenu(WORKING, fmt))).toEqual([
       'Next rest at T20000',
       'Pause reminders',
+      'Settings',
       '---',
       'Quit',
     ]);
@@ -44,8 +45,14 @@ describe('buildTrayMenu', () => {
     expect(labels(buildTrayMenu(snapshot, fmt))[1]).toBe('Pause reminders');
   });
 
-  it('when paused: status, Resume, separator, Quit', () => {
-    expect(labels(buildTrayMenu(IDLE, fmt))).toEqual(['Paused', 'Resume reminders', '---', 'Quit']);
+  it('when paused: status, Resume, Settings, separator, Quit', () => {
+    expect(labels(buildTrayMenu(IDLE, fmt))).toEqual([
+      'Paused',
+      'Resume reminders',
+      'Settings',
+      '---',
+      'Quit',
+    ]);
   });
 
   it('the status line is disabled; Pause/Resume and Quit are enabled', () => {
@@ -53,6 +60,7 @@ describe('buildTrayMenu', () => {
     expect(items.map((item) => [item.id, item.enabled])).toEqual([
       ['status', false],
       ['toggle', true],
+      ['settings', true],
       ['quit', true],
     ]);
   });

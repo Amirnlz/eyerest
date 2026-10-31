@@ -78,7 +78,8 @@ Known platform risks (we handle them in the step that owns them):
 | 3.2 | Apply design system to dim layer, tray, app icon | 3.2a dim layer, 3.2b tray and app icons DONE. 3.2c DMG artwork in review. NSIS artwork deferred (candidate 4.14) |
 | 3.3 | Polish pass and visual regression update | PARTIAL: code audit in review. Hardware pass and exit review wait for the owner |
 | 4.1a | Settings data path: IPC get/save, validation, persistence, live apply | DONE |
-| 4.1b | Settings form: `NumberField`, `SettingsForm`, `SettingsPage`, form model, jsdom tests | IN REVIEW (branch `feat/4.1b-settings-form`) |
+| 4.1b | Settings form: `NumberField`, `SettingsForm`, `SettingsPage`, form model, jsdom tests | DONE |
+| 4.1c | Settings window, tray entry, e2e | IN REVIEW (branch `feat/4.1c-settings-window`) |
 | 4.x | Feature backlog (chosen together) | TODO |
 
 ---
