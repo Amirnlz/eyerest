@@ -106,10 +106,17 @@ Pause/Resume reminders, Quit). Pause stops the scheduler and hides the overlay a
 Resume starts a fresh cycle. A second launch exits immediately. On Linux the tray needs a
 StatusNotifier/AppIndicator host (GNOME needs the AppIndicator extension), otherwise no icon is shown.
 
+Theme: a "Theme" submenu in the tray (System, Light, Dark; System is the default and follows the OS). The choice
+lives in main (`preferences.json`, key `theme`), reaches each window in its URL (`?theme=`, so the first paint is
+right) and is pushed to open windows when it changes. Only the app's own windows follow it: window frames and the
+tray icon stay with the OS theme on purpose (the tray icon must contrast with the OS bar, not with this choice).
+An unknown value in the file rejects the whole file (then sound and theme both fall back to defaults) and is
+logged as `[preferences]`.
+
 Sound cues: a soft chime when a rest starts and one when it runs out by itself (none after Skip or Postpone).
 The tray menu has a "Mute sounds" checkbox and a "Sound volume" submenu (Low 25%, Medium 50%, High 100%).
 Default is on at Medium. Choices persist in `preferences.json` next to `settings.json` (keys `soundMuted`,
-`soundVolume`; an invalid file is ignored and logged). Main pushes each cue to the overlay window, which plays it
+`soundVolume`). Main pushes each cue to the overlay window, which plays it
 (`autoplayPolicy: no-user-gesture-required`); a missing file or refused playback is logged as `[sound]` and never
 affects a rest. The files are `resources/sounds/rest-start.ogg` and `rest-end.ogg` (see the README there for the
 rules and credits). Muting the cue does not mute other apps. Audio output is not verified on any OS yet, and the

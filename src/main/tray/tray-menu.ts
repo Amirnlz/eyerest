@@ -1,6 +1,7 @@
 import type { Snapshot } from '../../core/scheduler';
 import { AUTOSTART_UNSUPPORTED, type AutostartState } from '../autostart/ports';
 import { SOUND_VOLUMES, type SoundPrefs, type SoundVolume } from '../../shared/sound';
+import { themePreferences, type ThemePreference } from '../../shared/theme';
 
 /**
  * Tray copy. English only until localization (Phase 4); kept in one object so
@@ -20,11 +21,14 @@ export const TRAY_COPY = {
   muteSounds: 'Mute sounds',
   soundVolume: 'Sound volume',
   volume: { low: 'Low', medium: 'Medium', high: 'High' } satisfies Record<SoundVolume, string>,
+  theme: 'Theme',
+  themeNames: { system: 'System', light: 'Light', dark: 'Dark' } satisfies Record<ThemePreference, string>,
   quit: 'Quit',
   nextRest: (time: string) => `Next rest at ${time}`,
 } as const;
 
 export type VolumeItemId = `volume-${SoundVolume}`;
+export type ThemeItemId = `theme-${ThemePreference}`;
 
 export type TrayItemId =
   | 'status'
@@ -33,7 +37,13 @@ export type TrayItemId =
   | 'autostart'
   | 'mute'
   | VolumeItemId
+  | ThemeItemId
   | 'quit';
+
+/** The theme a tray item id stands for, or null for any other id. */
+export function themeOfItem(id: TrayItemId): ThemePreference | null {
+  return themePreferences.find((preference) => `theme-${preference}` === id) ?? null;
+}
 
 /** The volume step a tray item id stands for, or null for any other id. */
 export function volumeOfItem(id: TrayItemId): SoundVolume | null {
@@ -106,9 +116,26 @@ function soundItems(sound: SoundPrefs): TrayMenuItem[] {
   ];
 }
 
+function themeMenu(theme: ThemePreference): TrayMenuItem {
+  return {
+    kind: 'submenu',
+    label: TRAY_COPY.theme,
+    items: themePreferences.map(
+      (preference): TrayMenuItem => ({
+        kind: 'item',
+        id: `theme-${preference}`,
+        label: TRAY_COPY.themeNames[preference],
+        enabled: true,
+        checked: theme === preference,
+        radio: true,
+      }),
+    ),
+  };
+}
+
 /**
  * Menu per scheduler state: status, Pause or Resume, Settings, Launch at login (when supported),
- * sound mute and volume (when wired), Quit. The scheduler is idle exactly when reminders are
+ * sound mute and volume and Theme (when wired), Quit. The scheduler is idle exactly when reminders are
  * paused (it starts at launch), so idle shows Resume and every other phase
  * shows Pause.
  */
@@ -117,6 +144,7 @@ export function buildTrayMenu(
   formatTime: (epochMs: number) => string,
   autostart: AutostartState = AUTOSTART_UNSUPPORTED,
   sound: SoundPrefs | null = null,
+  theme: ThemePreference | null = null,
 ): TrayMenuModel {
   const status = statusText(snapshot, formatTime);
   const paused = snapshot.state.phase === 'idle';
@@ -138,6 +166,7 @@ export function buildTrayMenu(
           ]
         : []),
       ...(sound === null ? [] : soundItems(sound)),
+      ...(theme === null ? [] : [themeMenu(theme)]),
       { kind: 'separator' },
       { kind: 'item', id: 'quit', label: TRAY_COPY.quit, enabled: true },
     ],

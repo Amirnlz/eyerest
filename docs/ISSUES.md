@@ -46,4 +46,8 @@ Severity: `HIGH` blocks use or a release, `MEDIUM` degrades use, `LOW` polish or
 | I24 | LOW | Sound (4.5) | The shipped `.ogg` files are synthesized placeholders. Replace with chosen CC0 files (see `resources/sounds/README.md`). | OPEN (owner) |
 | I25 | LOW | Sound (4.5) | Changing the volume in the tray plays no preview, so the new level is only heard at the next rest. | OPEN (candidate) |
 | I26 | LOW | Sound (4.5) | A rest that begins while the machine is asleep or locked still pushes a cue. Output follows the OS volume. | OPEN |
+| I27 | LOW | Theme (4.13) | The theme choice only covers the app's renderer windows. The settings window frame, native menus and the tray icon follow the OS theme. Deliberate for the tray icon; the frame could follow via `nativeTheme.themeSource` only if the tray icon is kept on the real OS value. | OPEN (candidate) |
+| I28 | LOW | Theme (4.13) | A theme change pushed while a window is still loading is lost: the window keeps the value from its URL. Needs a read-back at boot if it ever shows up. | OPEN |
+| I29 | LOW | Preferences | One invalid value in `preferences.json` resets every preference, not only the bad one. Same rule as `settings.json`. | OPEN (candidate) |
+| I30 | LOW | Theme (4.13) | The Theme choice is not in the settings window. It is a tray entry only, as the roadmap row says. | DEFERRED |
 

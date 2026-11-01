@@ -24,3 +24,4 @@ export {
   createDocumentThemeTarget,
   createDomThemeController,
 } from './dom';
+export { followThemeFromMain, themeFromSearch } from './boot';

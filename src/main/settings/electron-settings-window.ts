@@ -1,4 +1,5 @@
 import { BrowserWindow, app } from 'electron';
+import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from '../../shared/theme';
 import type { RendererTarget } from '../overlay/electron-adapters';
 import type { SettingsWindowFactory } from './window-ports';
 
@@ -8,6 +9,8 @@ export interface ElectronSettingsWindowOptions {
   readonly title: string;
   /** Lifecycle logging, enabled by `EYEREST_DEBUG=1`. */
   readonly log?: (message: string) => void;
+  /** The theme choice when the window opens. Later changes arrive as pushes. */
+  readonly getTheme?: () => ThemePreference;
 }
 
 /**
@@ -66,7 +69,7 @@ export function createElectronSettingsWindowFactory(
       window.on('show', () => options.log?.('shown'));
       window.on('closed', () => options.log?.('closed'));
 
-      loadSettingsPage(window, options.target);
+      loadSettingsPage(window, options.target, options.getTheme?.() ?? DEFAULT_THEME_PREFERENCE);
 
       return {
         focus,
@@ -78,13 +81,21 @@ export function createElectronSettingsWindowFactory(
   };
 }
 
-/** The renderer picks the settings screen from the `?view=settings` query parameter. */
-function loadSettingsPage(window: BrowserWindow, target: RendererTarget): void {
+/**
+ * The renderer picks the settings screen from `?view=settings` and the theme from `?theme=`, so
+ * the first paint already has the right theme.
+ */
+function loadSettingsPage(
+  window: BrowserWindow,
+  target: RendererTarget,
+  theme: ThemePreference,
+): void {
   if (target.kind === 'url') {
     const url = new URL(target.url);
     url.searchParams.set('view', 'settings');
+    url.searchParams.set('theme', theme);
     void window.loadURL(url.toString());
   } else {
-    void window.loadFile(target.path, { query: { view: 'settings' } });
+    void window.loadFile(target.path, { query: { view: 'settings', theme } });
   }
 }

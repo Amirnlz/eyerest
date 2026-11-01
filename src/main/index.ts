@@ -18,8 +18,10 @@ import { isNativeWayland, resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
 import { createBroadcastCueOutput } from './sound/cue-output';
 import { SoundCueSender } from './sound/sound-cue-sender';
-import { SOUND_PREFS_FILE_NAME } from './sound/sound-prefs';
-import { SoundPrefsStore } from './sound/sound-prefs-store';
+import { PREFERENCES_FILE_NAME } from './preferences/preferences';
+import { PreferencesStore, soundPrefsView } from './preferences/preferences-store';
+import { createBroadcastThemeOutput } from './theme/theme-output';
+import { ThemeService } from './theme/theme-service';
 import { createMainRuntime, type MainRuntime } from './runtime';
 import { createElectronSettingsWindowFactory } from './settings/electron-settings-window';
 import { createNodeSettingsFs } from './settings/node-settings-fs';
@@ -75,6 +77,20 @@ void app.whenReady().then(() => {
       `gpu=${startup.disableHardwareAcceleration ? 'off' : 'default'} debug=${debug}`,
   );
 
+  // Person-level choices (sound, theme) live in preferences.json. Created first: the overlay and
+  // settings windows read the theme choice when they open. Changes are pushed to open windows.
+  const settingsFs = createNodeSettingsFs();
+  const getRendererTargets = () =>
+    BrowserWindow.getAllWindows().map((window) => window.webContents);
+  const preferences = new PreferencesStore(
+    settingsFs,
+    join(app.getPath('userData'), PREFERENCES_FILE_NAME),
+    (message) => console.warn(`[preferences] ${message}`),
+  );
+  const soundPrefs = soundPrefsView(preferences);
+  const theme = new ThemeService(preferences, createBroadcastThemeOutput(getRendererTargets));
+  const soundCues = new SoundCueSender(soundPrefs, createBroadcastCueOutput(getRendererTargets));
+
   overlay = new OverlayWindowManager(
     createElectronWindowFactory({
       preloadPath: fileURLToPath(
@@ -83,6 +99,7 @@ void app.whenReady().then(() => {
       target: resolveRendererTarget(),
       layout,
       integratedDim,
+      getTheme: () => theme.get(),
     }),
     createElectronDisplayPort(screen),
     {
@@ -109,7 +126,6 @@ void app.whenReady().then(() => {
   // Settings file in the user data dir. A missing file means defaults; a bad
   // file falls back to defaults and is reported, never a crash.
   const settingsPath = join(app.getPath('userData'), SETTINGS_FILE_NAME);
-  const settingsFs = createNodeSettingsFs();
   const settings = loadSettings(settingsFs, settingsPath);
   if (settings.status === 'invalid') {
     console.error(
@@ -120,16 +136,6 @@ void app.whenReady().then(() => {
     if (debug) console.info(`[settings] ${settings.status} ${settingsPath}`);
   }
 
-  // Sound choices (mute, volume) live in preferences.json; cues are pushed to the overlay renderer.
-  const getRendererTargets = () =>
-    BrowserWindow.getAllWindows().map((window) => window.webContents);
-  const soundPrefs = new SoundPrefsStore(
-    settingsFs,
-    join(app.getPath('userData'), SOUND_PREFS_FILE_NAME),
-    (message) => console.warn(`[sound] ${message}`),
-  );
-  const soundCues = new SoundCueSender(soundPrefs, createBroadcastCueOutput(getRendererTargets));
-
   // Settings window: opened from the tray menu, one at a time, same renderer bundle.
   settingsWindow = new SettingsWindowManager(
     createElectronSettingsWindowFactory({
@@ -139,6 +145,7 @@ void app.whenReady().then(() => {
       target: resolveRendererTarget(),
       title: 'eyerest settings',
       log: debug ? (message) => console.info(`[settings-window] ${message}`) : undefined,
+      getTheme: () => theme.get(),
     }),
   );
 
@@ -170,6 +177,7 @@ void app.whenReady().then(() => {
       }),
       log: (message) => console.warn(`[autostart] ${message}`),
       sound: soundPrefs,
+      theme,
     },
   );
 

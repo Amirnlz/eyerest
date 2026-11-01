@@ -1,17 +1,12 @@
 import type { ThemeName } from '../../design/tokens';
+import type { ThemePreference } from '../../shared/theme';
 
-/** What the user chooses. `system` follows the OS and is the default. */
-export const themePreferences = ['system', 'light', 'dark'] as const;
-export type ThemePreference = (typeof themePreferences)[number];
-
-export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';
-
-export function isThemePreference(value: unknown): value is ThemePreference {
-  return (
-    typeof value === 'string' &&
-    (themePreferences as readonly string[]).includes(value)
-  );
-}
+export {
+  DEFAULT_THEME_PREFERENCE,
+  isThemePreference,
+  themePreferences,
+  type ThemePreference,
+} from '../../shared/theme';
 
 /**
  * Value of the `data-theme` attribute on the root element. `null` means no attribute: the

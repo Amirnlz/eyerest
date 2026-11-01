@@ -8,15 +8,18 @@ import { copy } from './copy';
 import { loadBundledFonts } from './fonts-bootstrap';
 import { createAudioPlayer, createBrowserAudio } from './sound/audio-player';
 import { SOUND_URLS } from './sound/sound-assets';
-import { createDomThemeController } from './theme';
+import { createDomThemeController, followThemeFromMain, themeFromSearch } from './theme';
 import { resolveView } from './view';
 
 void loadBundledFonts();
-// Follows the OS theme. A user setting needs a store in the main process (roadmap candidate).
-createDomThemeController(window).start();
-
 const api = window.eyerest;
 if (!api) throw new Error('window.eyerest is missing: the preload script did not run');
+
+// The choice (System, Light or Dark) lives in main. It arrives in the URL for the first paint and as
+// a push when the person changes it in the tray.
+const theme = createDomThemeController(window, themeFromSearch(window.location.search));
+theme.start();
+followThemeFromMain(theme, api);
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Missing #root element');

@@ -3,6 +3,7 @@ import { DEFAULT_CONFIG, type RestConfig } from '../../src/core/config';
 import type { Snapshot } from '../../src/core/scheduler';
 import type { EyerestApi, SaveSettingsResult } from '../../src/shared/ipc';
 import type { PlayCue } from '../../src/shared/sound';
+import type { ThemePreference } from '../../src/shared/theme';
 
 export interface FakeApi extends EyerestApi {
   /** Resolves the pending `getSnapshot()` promise. */
@@ -15,6 +16,9 @@ export interface FakeApi extends EyerestApi {
   /** Simulates main pushing a sound cue. */
   pushCue(cue: PlayCue): void;
   cueListenerCount(): number;
+  /** Simulates main pushing a theme choice. */
+  pushTheme(preference: ThemePreference): void;
+  themeListenerCount(): number;
   skip: Mock<() => void>;
   postpone: Mock<() => void>;
   closeSettings: Mock<() => void>;
@@ -25,6 +29,7 @@ export interface FakeApi extends EyerestApi {
 export function createFakeApi(): FakeApi {
   const listeners = new Set<(snapshot: Snapshot) => void>();
   const cueListeners = new Set<(cue: PlayCue) => void>();
+  const themeListeners = new Set<(preference: ThemePreference) => void>();
   let resolveSnapshot!: (snapshot: Snapshot) => void;
   let rejectSnapshot!: (error: unknown) => void;
   const initial = new Promise<Snapshot>((resolve, reject) => {
@@ -46,6 +51,12 @@ export function createFakeApi(): FakeApi {
         cueListeners.delete(listener);
       };
     },
+    onTheme: (listener) => {
+      themeListeners.add(listener);
+      return () => {
+        themeListeners.delete(listener);
+      };
+    },
     skip: vi.fn<() => void>(),
     postpone: vi.fn<() => void>(),
     closeSettings: vi.fn<() => void>(),
@@ -63,6 +74,10 @@ export function createFakeApi(): FakeApi {
       for (const listener of [...cueListeners]) listener(cue);
     },
     cueListenerCount: () => cueListeners.size,
+    pushTheme: (preference) => {
+      for (const listener of [...themeListeners]) listener(preference);
+    },
+    themeListenerCount: () => themeListeners.size,
   };
 }
 

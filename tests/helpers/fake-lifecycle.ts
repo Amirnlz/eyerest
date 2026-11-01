@@ -1,6 +1,8 @@
 import type { AutostartPort, AutostartState } from '../../src/main/autostart/ports';
 import type { SoundPrefsPort } from '../../src/main/sound/ports';
+import type { ThemePort } from '../../src/main/theme/ports';
 import type { SoundPrefs } from '../../src/shared/sound';
+import type { ThemePreference } from '../../src/shared/theme';
 import type { SettingsFs } from '../../src/main/settings/settings';
 import type { TrayActions, TrayPort } from '../../src/main/tray/tray-controller';
 import type { TrayItemId, TrayMenuModel } from '../../src/main/tray/tray-menu';
@@ -116,5 +118,18 @@ export class FakeSoundPrefs implements SoundPrefsPort {
   set(next: SoundPrefs): void {
     this.changes.push(next);
     this.prefs = next;
+  }
+}
+
+/** In-memory theme choice that records every change. */
+export class FakeThemePort implements ThemePort {
+  readonly changes: ThemePreference[] = [];
+  constructor(public preference: ThemePreference = 'system') {}
+  get(): ThemePreference {
+    return this.preference;
+  }
+  set(next: ThemePreference): void {
+    this.changes.push(next);
+    this.preference = next;
   }
 }

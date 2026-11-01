@@ -1,6 +1,7 @@
 import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
 import type { PlayCue } from './sound';
+import type { ThemePreference } from './theme';
 
 /**
  * Single source of truth for IPC between main, preload and renderer.
@@ -22,6 +23,7 @@ export const IPC = {
   closeSettings: { channel: 'eyerest:close-settings', kind: 'send' },
   snapshot: { channel: 'eyerest:snapshot', kind: 'push' },
   playCue: { channel: 'eyerest:play-cue', kind: 'push' },
+  theme: { channel: 'eyerest:theme', kind: 'push' },
 } as const satisfies Record<string, { channel: string; kind: IpcKind }>;
 
 export type IpcName = keyof typeof IPC;
@@ -59,6 +61,8 @@ export interface EyerestApi {
   onSnapshot(listener: (snapshot: Snapshot) => void): () => void;
   /** Subscribes to sound cues pushed by main. Payloads are validated; malformed ones are dropped. */
   onCue(listener: (cue: PlayCue) => void): () => void;
+  /** Subscribes to theme changes made in the tray. Unknown values are dropped. */
+  onTheme(listener: (preference: ThemePreference) => void): () => void;
   /** User pressed Skip. */
   skip(): void;
   /** User pressed Postpone. */

@@ -1,9 +1,11 @@
 import type { Snapshot } from '../../core/scheduler';
 import { AUTOSTART_UNSUPPORTED, type AutostartPort, type AutostartState } from '../autostart/ports';
 import type { SoundPrefs } from '../../shared/sound';
+import type { ThemePreference } from '../../shared/theme';
 import type { SnapshotSender } from '../scheduler-controller';
 import type { SoundPrefsPort } from '../sound/ports';
-import { buildTrayMenu, volumeOfItem, type TrayItemId, type TrayMenuModel } from './tray-menu';
+import type { ThemePort } from '../theme/ports';
+import { buildTrayMenu, themeOfItem, volumeOfItem, type TrayItemId, type TrayMenuModel } from './tray-menu';
 
 /** The part of Electron's `Tray` the controller uses. */
 export interface TrayPort {
@@ -24,6 +26,8 @@ export interface TrayControllerOptions {
   readonly autostart?: AutostartPort;
   /** Sound mute and volume. Without it the menu has no sound items. */
   readonly sound?: SoundPrefsPort;
+  /** Theme choice. Without it the menu has no Theme submenu. */
+  readonly theme?: ThemePort;
   readonly log?: (message: string) => void;
 }
 
@@ -66,6 +70,7 @@ export class TrayController implements SnapshotSender {
       this.formatTime,
       this.currentAutostart(),
       this.options.sound?.get() ?? null,
+      this.options.theme?.get() ?? null,
     );
     // Snapshots arrive every second during the warning and rest; only touch
     // the real tray when something visible changed.
@@ -130,6 +135,11 @@ export class TrayController implements SnapshotSender {
       case 'volume-high':
         this.changeSound((prefs) => ({ ...prefs, volume: volumeOfItem(id) ?? prefs.volume }));
         return;
+      case 'theme-system':
+      case 'theme-light':
+      case 'theme-dark':
+        this.changeTheme(themeOfItem(id));
+        return;
       case 'quit':
         this.actions.quit();
         return;
@@ -142,6 +152,13 @@ export class TrayController implements SnapshotSender {
     const port = this.options.sound;
     if (port === undefined || this.lastSnapshot === null) return;
     port.set(change(port.get()));
+    this.render(this.lastSnapshot);
+  }
+
+  private changeTheme(next: ThemePreference | null): void {
+    const port = this.options.theme;
+    if (port === undefined || next === null || this.lastSnapshot === null) return;
+    port.set(next);
     this.render(this.lastSnapshot);
   }
 

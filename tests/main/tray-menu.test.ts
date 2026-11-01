@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TRAY_COPY, buildTrayMenu, statusText, volumeOfItem } from '../../src/main/tray/tray-menu';
+import { TRAY_COPY, buildTrayMenu, statusText, themeOfItem, volumeOfItem } from '../../src/main/tray/tray-menu';
 import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
 
 const fmt = (epochMs: number) => `T${epochMs}`;
@@ -197,6 +197,75 @@ describe('volumeOfItem', () => {
     expect(volumeOfItem('volume-high')).toBe('high');
     for (const id of ['status', 'toggle', 'settings', 'autostart', 'mute', 'quit'] as const) {
       expect(volumeOfItem(id)).toBeNull();
+    }
+  });
+});
+
+describe('buildTrayMenu theme submenu', () => {
+  const themeMenu = (model: ReturnType<typeof buildTrayMenu>) =>
+    model.items.find((entry) => entry.kind === 'submenu' && entry.label === TRAY_COPY.theme);
+
+  it('is absent unless the theme is wired', () => {
+    expect(themeMenu(buildTrayMenu(WORKING, fmt))).toBeUndefined();
+  });
+
+  it.each(['system', 'light', 'dark'] as const)(
+    'has three radio items with only %s checked',
+    (theme) => {
+      const menu = themeMenu(buildTrayMenu(WORKING, fmt, undefined, null, theme));
+      expect(menu?.kind).toBe('submenu');
+      if (menu?.kind !== 'submenu') return;
+      expect(
+        menu.items.map((entry) =>
+          entry.kind === 'item' ? [entry.id, entry.label, entry.checked, entry.radio] : null,
+        ),
+      ).toEqual([
+        ['theme-system', 'System', theme === 'system', true],
+        ['theme-light', 'Light', theme === 'light', true],
+        ['theme-dark', 'Dark', theme === 'dark', true],
+      ]);
+    },
+  );
+
+  it('sits after the sound items and before the separator and Quit', () => {
+    const model = buildTrayMenu(
+      WORKING,
+      fmt,
+      { supported: true, enabled: false },
+      { muted: false, volume: 'medium' },
+      'system',
+    );
+    expect(
+      model.items.map((entry) =>
+        entry.kind === 'separator' ? '---' : entry.kind === 'submenu' ? entry.label : entry.id,
+      ),
+    ).toEqual([
+      'status',
+      'toggle',
+      'settings',
+      'autostart',
+      'mute',
+      'Sound volume',
+      'Theme',
+      '---',
+      'quit',
+    ]);
+  });
+
+  it('is offered in every phase', () => {
+    for (const snapshot of [IDLE, AWAY, warning(10), resting(10)]) {
+      expect(themeMenu(buildTrayMenu(snapshot, fmt, undefined, null, 'dark'))).toBeDefined();
+    }
+  });
+});
+
+describe('themeOfItem', () => {
+  it('maps the three theme ids and nothing else', () => {
+    expect(themeOfItem('theme-system')).toBe('system');
+    expect(themeOfItem('theme-light')).toBe('light');
+    expect(themeOfItem('theme-dark')).toBe('dark');
+    for (const id of ['status', 'toggle', 'settings', 'autostart', 'mute', 'volume-low', 'quit'] as const) {
+      expect(themeOfItem(id)).toBeNull();
     }
   });
 });

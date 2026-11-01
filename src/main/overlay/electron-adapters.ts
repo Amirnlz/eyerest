@@ -1,5 +1,6 @@
 import { BrowserWindow, type Screen } from 'electron';
 import type { OverlayLayout } from '../../shared/overlay-layout';
+import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from '../../shared/theme';
 import { OVERLAY_LEVEL } from '../window-levels';
 import type { DisplayPort, OverlayWindowFactory } from './ports';
 import { OVERLAY_WINDOW_BACKGROUND } from './window-background';
@@ -20,6 +21,8 @@ export interface ElectronWindowFactoryOptions {
   readonly layout: OverlayLayout;
   /** Draw the dim and rest panel in this window when native Wayland forbids stacking. */
   readonly integratedDim?: boolean;
+  /** The theme choice when the window is created. Later changes arrive as pushes. */
+  readonly getTheme?: () => ThemePreference;
 }
 
 export function createElectronWindowFactory(
@@ -89,6 +92,7 @@ export function createElectronWindowFactory(
         options.target,
         options.layout,
         options.integratedDim,
+        options.getTheme?.(),
       );
 
       return {
@@ -105,21 +109,26 @@ export function createElectronWindowFactory(
   };
 }
 
-/** The layout is passed to the renderer as a `?layout=` query parameter. */
+/**
+ * The layout and the theme choice are passed to the renderer as `?layout=` and `?theme=` query
+ * parameters, so the first paint already has the right theme.
+ */
 function loadRenderer(
   window: BrowserWindow,
   target: RendererTarget,
   layout: OverlayLayout,
   integratedDim = false,
+  theme: ThemePreference = DEFAULT_THEME_PREFERENCE,
 ): void {
   if (target.kind === 'url') {
     const url = new URL(target.url);
     url.searchParams.set('layout', layout);
+    url.searchParams.set('theme', theme);
     if (integratedDim) url.searchParams.set('integratedDim', '1');
     void window.loadURL(url.toString());
   } else {
     void window.loadFile(target.path, {
-      query: { layout, ...(integratedDim ? { integratedDim: '1' } : {}) },
+      query: { layout, theme, ...(integratedDim ? { integratedDim: '1' } : {}) },
     });
   }
 }

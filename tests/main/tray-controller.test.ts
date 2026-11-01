@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TrayController } from '../../src/main/tray/tray-controller';
 import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
-import { FakeAutostart, FakeSoundPrefs, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
+import { FakeAutostart, FakeSoundPrefs, FakeThemePort, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
 
 function setup() {
   const tray = new FakeTray();
@@ -327,5 +327,72 @@ describe('TrayController sound', () => {
     const { controller } = setup();
     controller.send(WORKING);
     expect(() => controller.handle('mute')).not.toThrow();
+  });
+});
+
+
+describe('TrayController theme', () => {
+  function withTheme(theme = new FakeThemePort()) {
+    const tray = new FakeTray();
+    const controller = new TrayController(tray, new FakeTrayActions(), (ms) => `T${ms}`, { theme });
+    return { tray, controller, theme };
+  }
+
+  const checkedThemes = (tray: FakeTray) => {
+    const menu = tray.menu.items.find((entry) => entry.kind === 'submenu' && entry.label === 'Theme');
+    if (menu?.kind !== 'submenu') return [];
+    return menu.items.flatMap((entry) => (entry.kind === 'item' && entry.checked ? [entry.id] : []));
+  };
+
+  it('has no Theme submenu without a port', () => {
+    const { tray, controller } = setup();
+    controller.send(WORKING);
+    expect(checkedThemes(tray)).toEqual([]);
+    expect(tray.menu.items.some((entry) => entry.kind === 'submenu')).toBe(false);
+  });
+
+  it('shows the current choice', () => {
+    const { tray, controller } = withTheme(new FakeThemePort('dark'));
+    controller.send(WORKING);
+    expect(checkedThemes(tray)).toEqual(['theme-dark']);
+  });
+
+  it.each([
+    ['theme-light', 'light'],
+    ['theme-dark', 'dark'],
+    ['theme-system', 'system'],
+  ] as const)('%s sets the theme to %s and the menu shows it at once', (id, theme) => {
+    const { tray, controller, theme: port } = withTheme(
+      new FakeThemePort(theme === 'dark' ? 'light' : 'dark'),
+    );
+    controller.send(WORKING);
+
+    tray.click(id);
+
+    expect(port.changes).toEqual([theme]);
+    expect(checkedThemes(tray)).toEqual([id]);
+  });
+
+  it('keeps the phase text after a change', () => {
+    const { tray, controller } = withTheme();
+    controller.send(warning(10));
+    tray.click('theme-dark');
+    expect(tray.labels[0]).toBe('Rest starting soon');
+  });
+
+  it('ignores a click before the first snapshot, after dispose, and with no port', () => {
+    const early = withTheme();
+    early.controller.handle('theme-dark');
+    expect(early.theme.changes).toEqual([]);
+
+    const late = withTheme();
+    late.controller.send(WORKING);
+    late.controller.dispose();
+    late.controller.handle('theme-dark');
+    expect(late.theme.changes).toEqual([]);
+
+    const bare = setup();
+    bare.controller.send(WORKING);
+    expect(() => bare.controller.handle('theme-dark')).not.toThrow();
   });
 });
