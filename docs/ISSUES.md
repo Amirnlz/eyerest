@@ -21,8 +21,8 @@ Severity: `HIGH` blocks use or a release, `MEDIUM` degrades use, `LOW` polish or
 
 | ID | Sev | Area | Problem | Status | Source |
 | -- | --- | ---- | ------- | ------ | ------ |
-| I7 | MEDIUM | Media (1.6) | VLC and Spotify do not pause on Linux; a browser does. Cause unknown (MPRIS plugin off, packaged builds on another bus name). | NEEDS INFO (owner research) | ROADMAP 1.6 |
-| I8 | MEDIUM | Media (1.7) | No Windows or macOS media adapter. | DEFERRED (needs research) | ROADMAP 1.7 |
+| I7 | MEDIUM | Media (1.6) | VLC and Spotify do not pause on Linux; a browser does. Cause unknown (MPRIS plugin off, packaged builds on another bus name). | NEEDS INFO (owner research). Code now on branch `media-control-test`, not master | ROADMAP 1.6 |
+| I8 | MEDIUM | Media (1.7) | No Windows or macOS media adapter. | DEFERRED (needs research). To be built on `media-control-test` | ROADMAP 1.7 |
 | I9 | LOW | Phase 3 | Hardware pass and exit review not done. | OPEN (owner) | ROADMAP 3.3 |
 | I10 | LOW | Packaging | NSIS installer artwork deferred. | DEFERRED | ROADMAP 3.2, candidate 4.14 |
 | I11 | LOW | Overlay | No exit animation; `hide()` runs on the same snapshot that leaves the rest phase. | DEFERRED | design-system.md V15 |

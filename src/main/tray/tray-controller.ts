@@ -30,7 +30,7 @@ export function formatClockTime(epochMs: number): string {
 /**
  * Keeps the tray menu in step with the scheduler and turns menu clicks into
  * actions. A `SnapshotSender`, so it plugs into the same pipeline as the
- * overlay, the dim layer and the media pauser.
+ * overlay and the dim layer.
  *
  * It holds no scheduling state: Pause and Resume go through `actions`, and the
  * resulting idle or working snapshot comes back through `send`.

@@ -13,8 +13,6 @@ import {
   type RendererTarget,
 } from './overlay/electron-adapters';
 import { createElectronIdleSource } from './idle/electron-idle-source';
-import { createMediaController } from './media/create-media-controller';
-import { RestMediaPauser } from './media/rest-media-pauser';
 import { OverlayWindowManager } from './overlay/overlay-window-manager';
 import { isNativeWayland, resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
@@ -104,15 +102,6 @@ void app.whenReady().then(() => {
     },
   );
 
-  // Pauses playing media once per rest start (Linux MPRIS; other platforms no-op).
-  const mediaLog = debug
-    ? (message: string) => console.info(`[media] ${message}`)
-    : undefined;
-  const media = new RestMediaPauser(
-    createMediaController(process.platform, mediaLog),
-    { log: mediaLog },
-  );
-
   // Settings file in the user data dir. A missing file means defaults; a bad
   // file falls back to defaults and is reported, never a crash.
   const settingsPath = join(app.getPath('userData'), SETTINGS_FILE_NAME);
@@ -183,7 +172,7 @@ void app.whenReady().then(() => {
     ipcMain,
     getTargets: () =>
       BrowserWindow.getAllWindows().map((window) => window.webContents),
-    extraSenders: [overlay, dim, media, tray],
+    extraSenders: [overlay, dim, tray],
   });
 
   dim.start();

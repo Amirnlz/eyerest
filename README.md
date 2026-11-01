@@ -9,7 +9,7 @@ Cross-platform desktop app (Linux, Windows, macOS) that reminds the user to rest
 - During a rest: countdown + `Skip` and `Postpone` buttons.
   - Skip: ends this rest, next rest in 20 min.
   - Postpone: next rest in 5 min; all later rests shift by the same amount.
-- Overlay at top-right, always on top. At rest time the screen is dimmed and media is paused (later steps).
+- Overlay at top-right, always on top. At rest time the screen is dimmed. Pausing media is not in the app for now (see `docs/ROADMAP.md`, steps 1.6 and 1.7).
 
 ## Project phases
 
@@ -35,7 +35,6 @@ src/shared/     IPC contract (channel names, kinds, EyerestApi type)
 src/main/       Electron main process: runtime composition, controller, IPC handlers
 src/main/overlay/  top-right overlay window: bounds maths, manager, Electron adapters
 src/main/dim/      screen dim layer: one window per display, manager, Electron adapters
-src/main/media/    media pause at rest start: port, null controller, Linux MPRIS adapter (busctl)
 src/main/tray/     tray icon and menu (Pause/Resume, Quit): menu model, controller, Electron adapter
 src/main/settings/ settings file: parse, validate, load, atomic save; IPC payload validator; SettingsService
 src/preload/    contextBridge bridge (createBridge is Electron-free and tested)
@@ -57,7 +56,7 @@ Design rules:
 
 - The engine is pure. Time is passed in as `now`, so every rule is testable without timers.
 - The scheduler talks to time only through the `Clock` and `Ticker` ports.
-- Side effects (overlay, dimming, media pause) will be adapters that subscribe to scheduler events. They never live in the core.
+- Side effects (overlay, dimming) are adapters that subscribe to scheduler events. They never live in the core.
 
 ## Decisions made in step 1
 
