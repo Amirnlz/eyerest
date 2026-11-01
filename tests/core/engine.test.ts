@@ -443,3 +443,78 @@ describe('remainingMs', () => {
     expect(remainingMs({ phase: 'warning', restAt: 1_000, restsDone: 0 }, 5_000)).toBe(0);
   });
 });
+
+describe('tick with do not disturb (quiet)', () => {
+  const quiet = (now: number): EngineAction => ({ type: 'tick', now, quiet: true });
+  const working = (restAt: number, restsDone = 0): EngineState => ({
+    phase: 'working',
+    restAt,
+    restsDone,
+  });
+
+  it('does not open the warning window', () => {
+    const result = transition(working(20 * MIN), quiet(20 * MIN - 15 * SEC), config);
+    expect(result).toEqual({ state: working(20 * MIN), events: [] });
+  });
+
+  it('swallows the rest when it falls due: slot consumed, next one a full interval later', () => {
+    const result = transition(working(20 * MIN), quiet(20 * MIN), config);
+    expect(result.state).toEqual(working(40 * MIN, 1));
+    expect(result.events).toEqual([{ type: 'rest-suppressed', kind: 'eye' }]);
+  });
+
+  it('a late tick (wake from sleep) swallows from now, not from the old time', () => {
+    const result = transition(working(20 * MIN), quiet(90 * MIN), config);
+    expect(result.state).toEqual(working(110 * MIN, 1));
+  });
+
+  it('names the long rest when the swallowed one was the 3rd', () => {
+    const result = transition(working(60 * MIN, 2), quiet(60 * MIN), config);
+    expect(result.events).toEqual([{ type: 'rest-suppressed', kind: 'long' }]);
+    expect(result.state).toEqual(working(80 * MIN, 3));
+  });
+
+  it('a swallowed rest counts toward the cycle: eye, eye, then the 3rd is long', () => {
+    let state: EngineState = working(20 * MIN);
+    let now = 20 * MIN;
+    const kinds: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const result = transition(state, quiet(now), config);
+      for (const event of result.events) if (event.type === 'rest-suppressed') kinds.push(event.kind);
+      state = result.state;
+      now = state.phase === 'working' ? state.restAt : now;
+    }
+    expect(kinds).toEqual(['eye', 'eye', 'long']);
+  });
+
+  it('turning on during the warning swallows that rest at once', () => {
+    const warning: EngineState = { phase: 'warning', restAt: 20 * MIN, restsDone: 0 };
+    const result = transition(warning, quiet(20 * MIN - 5 * SEC), config);
+    expect(result.state).toEqual(working(20 * MIN - 5 * SEC + 20 * MIN, 1));
+    expect(result.events).toEqual([{ type: 'rest-suppressed', kind: 'eye' }]);
+  });
+
+  it('turning on during a rest ends it like a skip', () => {
+    const rest: EngineState = { phase: 'resting', kind: 'eye', endsAt: 20 * SEC, restsDone: 0 };
+    const result = transition(rest, quiet(5 * SEC), config);
+    expect(result.state).toEqual(working(5 * SEC + 20 * MIN, 1));
+    expect(result.events).toEqual([{ type: 'rest-skipped', kind: 'eye' }]);
+  });
+
+  it.each([
+    ['idle', IDLE_STATE],
+    ['away', { phase: 'away', since: 0, remainingMs: 5 * MIN, restsDone: 0 } as EngineState],
+  ])('leaves %s alone', (_name, state) => {
+    expect(transition(state, quiet(99 * MIN), config)).toEqual({ state, events: [] });
+  });
+
+  it('is off by default and when false: ticks behave as before', () => {
+    const state = working(20 * MIN);
+    expect(transition(state, { type: 'tick', now: 20 * MIN }, config).events[0]?.type).toBe(
+      'rest-started',
+    );
+    expect(
+      transition(state, { type: 'tick', now: 20 * MIN, quiet: false }, config).events[0]?.type,
+    ).toBe('rest-started');
+  });
+});

@@ -426,6 +426,112 @@ describe('RestScheduler away and back', () => {
   });
 });
 
+describe('RestScheduler do not disturb', () => {
+  it('no warning or rest while on, and the swallowed rest is reported', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    scheduler.setQuiet(true);
+    events.length = 0;
+
+    time.advance(20 * MIN);
+
+    expect(events.map((event) => event.type)).toEqual(['rest-suppressed']);
+    expect(scheduler.getSnapshot().state).toEqual({
+      phase: 'working',
+      restAt: 40 * MIN,
+      restsDone: 1,
+    });
+  });
+
+  it('turning it on during the warning ends it at once and tells listeners', () => {
+    const { scheduler, time, events, snapshots } = setup();
+    scheduler.start();
+    time.advance(20 * MIN - 10 * SEC);
+    expect(scheduler.getSnapshot().state.phase).toBe('warning');
+    events.length = 0;
+
+    scheduler.setQuiet(true);
+
+    expect(events.map((event) => event.type)).toEqual(['rest-suppressed']);
+    expect(snapshots.at(-1)?.state.phase).toBe('working');
+  });
+
+  it('turning it on during a rest ends the rest at once', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    time.advance(20 * MIN);
+    expect(scheduler.getSnapshot().state.phase).toBe('resting');
+    events.length = 0;
+
+    scheduler.setQuiet(true);
+
+    expect(events.map((event) => event.type)).toEqual(['rest-skipped']);
+    expect(scheduler.getSnapshot().state.phase).toBe('working');
+  });
+
+  it('turning it off lets the next rest happen normally', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    scheduler.setQuiet(true);
+    time.advance(20 * MIN); // swallowed, next due at 40 min
+    scheduler.setQuiet(false);
+    events.length = 0;
+
+    time.advance(20 * MIN - 15 * SEC);
+    expect(events.map((event) => event.type)).toEqual(['warning-started']);
+  });
+
+  it('setting the same value twice does nothing', () => {
+    const { scheduler, events } = setup();
+    scheduler.start();
+    events.length = 0;
+    scheduler.setQuiet(false);
+    scheduler.setQuiet(true);
+    scheduler.setQuiet(true);
+    expect(events).toEqual([]);
+    expect(scheduler.isQuiet()).toBe(true);
+  });
+
+  it('survives Pause, Resume and reconfigure', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    scheduler.setQuiet(true);
+    scheduler.stop();
+    scheduler.start();
+    scheduler.reconfigure(createConfig());
+    events.length = 0;
+
+    time.advance(20 * MIN);
+
+    expect(events.map((event) => event.type)).toEqual(['rest-suppressed']);
+  });
+
+  it('while paused it changes nothing, and applies when resumed', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.setQuiet(true);
+    expect(scheduler.getSnapshot().state.phase).toBe('idle');
+    scheduler.start();
+    events.length = 0;
+    time.advance(20 * MIN);
+    expect(events.map((event) => event.type)).toEqual(['rest-suppressed']);
+  });
+
+  it('an absence that ends after the rest was due swallows it when the person is back', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    scheduler.setQuiet(true);
+    time.advance(5 * MIN);
+    scheduler.away(5 * MIN);
+    time.advance(5 * MIN); // under the 10 min long rest, so the countdown resumes
+    scheduler.back(); // 15 min left
+    events.length = 0;
+
+    time.advance(15 * MIN);
+
+    expect(events.map((event) => event.type)).toEqual(['rest-suppressed']);
+  });
+});
+
 describe('RestScheduler with real timers', () => {
   beforeEach(() => {
     vi.useFakeTimers();

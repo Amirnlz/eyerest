@@ -28,6 +28,9 @@ class FakeScheduler implements SchedulerPort {
     this.calls.push('reconfigure');
     this.configs.push(config);
   }
+  setQuiet(quiet: boolean) {
+    this.calls.push(`quiet:${String(quiet)}`);
+  }
   getSnapshot() {
     return this.snapshot;
   }
@@ -106,6 +109,13 @@ describe('SchedulerController', () => {
 
     expect(scheduler.calls).toEqual(['reconfigure']);
     expect(scheduler.configs).toEqual([config]);
+  });
+
+  it('setQuiet hands the switch to the scheduler and nothing else', () => {
+    const { scheduler, controller } = setup();
+    controller.setQuiet(true);
+    controller.setQuiet(false);
+    expect(scheduler.calls).toEqual(['quiet:true', 'quiet:false']);
   });
 
   it('pause stops the scheduler and forwards the idle snapshot', () => {

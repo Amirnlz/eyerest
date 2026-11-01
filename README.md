@@ -113,6 +113,14 @@ tray icon stay with the OS theme on purpose (the tray icon must contrast with th
 An unknown value in the file rejects the whole file (then sound and theme both fall back to defaults) and is
 logged as `[preferences]`.
 
+Do not disturb: a "Do not disturb" checkbox in the tray. While it is on, no warning, rest, overlay or sound
+appears: a rest that falls due is skipped (it counts toward the "every 3rd is long" cycle, like Skip) and the next
+one is a full work interval later. Turning it on during a warning or a rest ends it at once. Turning it off lets
+rests come back normally. The tray status reads "Do not disturb: rests skipped" instead of the next rest time. It is
+kept in memory only and starts off at every launch, so one forgotten click cannot silence the app for good. It is
+independent of Pause (which stops the cycle) and of idle detection. It is manual: Electron cannot tell a
+fullscreen presentation or a call, so nothing is detected automatically.
+
 Guided eye exercises: during the 20 s eye rest the message becomes three prompts, one third of the rest each:
 look far away, roll your eyes, blink. A small looping picture sits beside the text and stops under the OS
 "reduce motion" setting (the still picture stays). Each new prompt is read out once by a screen reader. The 10 min

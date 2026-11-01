@@ -9,6 +9,7 @@ export interface SchedulerPort {
   skip(): void;
   postpone(): void;
   reconfigure(config: RestConfig): void;
+  setQuiet(quiet: boolean): void;
   getSnapshot(): Snapshot;
   subscribe(listener: Listener): () => void;
   dispose(): void;
@@ -64,6 +65,11 @@ export class SchedulerController {
 
   postpone(): void {
     this.scheduler.postpone();
+  }
+
+  /** Do not disturb on or off. See `RestScheduler.setQuiet`. */
+  setQuiet(quiet: boolean): void {
+    this.scheduler.setQuiet(quiet);
   }
 
   /**
