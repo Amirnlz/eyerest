@@ -15,6 +15,17 @@ function fakeTarget(options: { destroyed?: boolean; throws?: boolean } = {}) {
   return { target, send };
 }
 
+describe('createCompositeSender events', () => {
+  it('forwards the events to every sender', () => {
+    const a = vi.fn();
+    const b = vi.fn();
+    const events = [{ type: 'rest-started', kind: 'eye', endsAt: 5 }] as const;
+    createCompositeSender([{ send: a }, { send: b }]).send(WORKING, events);
+    expect(a).toHaveBeenCalledWith(WORKING, events);
+    expect(b).toHaveBeenCalledWith(WORKING, events);
+  });
+});
+
 describe('createBroadcastSender', () => {
   it('sends the snapshot on the snapshot channel to every live target', () => {
     const a = fakeTarget();
@@ -94,7 +105,7 @@ describe('createCompositeSender', () => {
 
     expect(() => composite.send(WORKING)).not.toThrow();
     expect(onError).toHaveBeenCalledTimes(1);
-    expect(after).toHaveBeenCalledWith(WORKING);
+    expect(after).toHaveBeenCalledWith(WORKING, undefined);
   });
 
   it('does nothing with no senders', () => {

@@ -1,5 +1,6 @@
 import type { Snapshot } from '../../core/scheduler';
 import { AUTOSTART_UNSUPPORTED, type AutostartState } from '../autostart/ports';
+import { SOUND_VOLUMES, type SoundPrefs, type SoundVolume } from '../../shared/sound';
 
 /**
  * Tray copy. English only until localization (Phase 4); kept in one object so
@@ -16,11 +17,28 @@ export const TRAY_COPY = {
   resume: 'Resume reminders',
   settings: 'Settings',
   launchAtLogin: 'Launch at login',
+  muteSounds: 'Mute sounds',
+  soundVolume: 'Sound volume',
+  volume: { low: 'Low', medium: 'Medium', high: 'High' } satisfies Record<SoundVolume, string>,
   quit: 'Quit',
   nextRest: (time: string) => `Next rest at ${time}`,
 } as const;
 
-export type TrayItemId = 'status' | 'toggle' | 'settings' | 'autostart' | 'quit';
+export type VolumeItemId = `volume-${SoundVolume}`;
+
+export type TrayItemId =
+  | 'status'
+  | 'toggle'
+  | 'settings'
+  | 'autostart'
+  | 'mute'
+  | VolumeItemId
+  | 'quit';
+
+/** The volume step a tray item id stands for, or null for any other id. */
+export function volumeOfItem(id: TrayItemId): SoundVolume | null {
+  return SOUND_VOLUMES.find((volume) => `volume-${volume}` === id) ?? null;
+}
 
 export type TrayMenuItem =
   | {
@@ -28,9 +46,12 @@ export type TrayMenuItem =
       readonly id: TrayItemId;
       readonly label: string;
       readonly enabled: boolean;
-      /** Present only on checkbox items. */
+      /** Present on checkbox and radio items. */
       readonly checked?: boolean;
+      /** With `checked`: a radio item (one of a group) instead of a checkbox. */
+      readonly radio?: true;
     }
+  | { readonly kind: 'submenu'; readonly label: string; readonly items: readonly TrayMenuItem[] }
   | { readonly kind: 'separator' };
 
 /** Everything the tray shows, as plain data. The Electron adapter only renders it. */
@@ -59,8 +80,35 @@ export function statusText(snapshot: Snapshot, formatTime: (epochMs: number) => 
   }
 }
 
+function soundItems(sound: SoundPrefs): TrayMenuItem[] {
+  return [
+    {
+      kind: 'item',
+      id: 'mute',
+      label: TRAY_COPY.muteSounds,
+      enabled: true,
+      checked: sound.muted,
+    },
+    {
+      kind: 'submenu',
+      label: TRAY_COPY.soundVolume,
+      items: SOUND_VOLUMES.map(
+        (volume): TrayMenuItem => ({
+          kind: 'item',
+          id: `volume-${volume}`,
+          label: TRAY_COPY.volume[volume],
+          enabled: true,
+          checked: sound.volume === volume,
+          radio: true,
+        }),
+      ),
+    },
+  ];
+}
+
 /**
- * Menu per scheduler state: status, Pause or Resume, Settings, Launch at login (when supported), Quit. The scheduler is idle exactly when reminders are
+ * Menu per scheduler state: status, Pause or Resume, Settings, Launch at login (when supported),
+ * sound mute and volume (when wired), Quit. The scheduler is idle exactly when reminders are
  * paused (it starts at launch), so idle shows Resume and every other phase
  * shows Pause.
  */
@@ -68,6 +116,7 @@ export function buildTrayMenu(
   snapshot: Snapshot,
   formatTime: (epochMs: number) => string,
   autostart: AutostartState = AUTOSTART_UNSUPPORTED,
+  sound: SoundPrefs | null = null,
 ): TrayMenuModel {
   const status = statusText(snapshot, formatTime);
   const paused = snapshot.state.phase === 'idle';
@@ -88,6 +137,7 @@ export function buildTrayMenu(
             } as const,
           ]
         : []),
+      ...(sound === null ? [] : soundItems(sound)),
       { kind: 'separator' },
       { kind: 'item', id: 'quit', label: TRAY_COPY.quit, enabled: true },
     ],

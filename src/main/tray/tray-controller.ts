@@ -1,7 +1,9 @@
 import type { Snapshot } from '../../core/scheduler';
 import { AUTOSTART_UNSUPPORTED, type AutostartPort, type AutostartState } from '../autostart/ports';
+import type { SoundPrefs } from '../../shared/sound';
 import type { SnapshotSender } from '../scheduler-controller';
-import { buildTrayMenu, type TrayItemId, type TrayMenuModel } from './tray-menu';
+import type { SoundPrefsPort } from '../sound/ports';
+import { buildTrayMenu, volumeOfItem, type TrayItemId, type TrayMenuModel } from './tray-menu';
 
 /** The part of Electron's `Tray` the controller uses. */
 export interface TrayPort {
@@ -20,6 +22,8 @@ export interface TrayActions {
 export interface TrayControllerOptions {
   /** Launch at login. Without it the menu has no such item. */
   readonly autostart?: AutostartPort;
+  /** Sound mute and volume. Without it the menu has no sound items. */
+  readonly sound?: SoundPrefsPort;
   readonly log?: (message: string) => void;
 }
 
@@ -57,7 +61,12 @@ export class TrayController implements SnapshotSender {
   }
 
   private render(snapshot: Snapshot): void {
-    const model = buildTrayMenu(snapshot, this.formatTime, this.currentAutostart());
+    const model = buildTrayMenu(
+      snapshot,
+      this.formatTime,
+      this.currentAutostart(),
+      this.options.sound?.get() ?? null,
+    );
     // Snapshots arrive every second during the warning and rest; only touch
     // the real tray when something visible changed.
     const key = JSON.stringify(model);
@@ -113,12 +122,27 @@ export class TrayController implements SnapshotSender {
         if (this.lastSnapshot === null) return;
         this.toggleAutostart();
         return;
+      case 'mute':
+        this.changeSound((prefs) => ({ ...prefs, muted: !prefs.muted }));
+        return;
+      case 'volume-low':
+      case 'volume-medium':
+      case 'volume-high':
+        this.changeSound((prefs) => ({ ...prefs, volume: volumeOfItem(id) ?? prefs.volume }));
+        return;
       case 'quit':
         this.actions.quit();
         return;
       case 'status':
         return;
     }
+  }
+
+  private changeSound(change: (prefs: SoundPrefs) => SoundPrefs): void {
+    const port = this.options.sound;
+    if (port === undefined || this.lastSnapshot === null) return;
+    port.set(change(port.get()));
+    this.render(this.lastSnapshot);
   }
 
   dispose(): void {

@@ -4,6 +4,8 @@ import type { EyerestApi } from '../shared/ipc';
 import { Overlay } from './components/Overlay';
 import './components/IntegratedDim.css';
 import { useSchedulerSnapshot } from './hooks/use-scheduler-snapshot';
+import { useSoundCues } from './hooks/use-sound-cues';
+import type { SoundPlayer } from './sound/audio-player';
 import { toOverlayViewModel } from './view-model';
 
 export interface AppProps {
@@ -17,6 +19,8 @@ export interface AppProps {
   readonly layout?: OverlayLayout;
   /** Draw dim and rest content in one window for native Wayland stacking. */
   readonly integratedDim?: boolean;
+  /** Plays the rest start and end cues. Omitted in tests and the gallery. */
+  readonly soundPlayer?: SoundPlayer;
 }
 
 /**
@@ -40,8 +44,9 @@ const integratedSurfaceStyle: CSSProperties = {
 };
 
 /** Connects the overlay to the main process through the preload bridge. */
-export function App({ api, layout = 'positioned', integratedDim = false }: AppProps) {
+export function App({ api, layout = 'positioned', integratedDim = false, soundPlayer }: AppProps) {
   const snapshot = useSchedulerSnapshot(api);
+  useSoundCues(api, soundPlayer);
   if (snapshot === null) return null;
 
   const viewModel = toOverlayViewModel(snapshot);

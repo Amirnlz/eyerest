@@ -106,6 +106,15 @@ Pause/Resume reminders, Quit). Pause stops the scheduler and hides the overlay a
 Resume starts a fresh cycle. A second launch exits immediately. On Linux the tray needs a
 StatusNotifier/AppIndicator host (GNOME needs the AppIndicator extension), otherwise no icon is shown.
 
+Sound cues: a soft chime when a rest starts and one when it runs out by itself (none after Skip or Postpone).
+The tray menu has a "Mute sounds" checkbox and a "Sound volume" submenu (Low 25%, Medium 50%, High 100%).
+Default is on at Medium. Choices persist in `preferences.json` next to `settings.json` (keys `soundMuted`,
+`soundVolume`; an invalid file is ignored and logged). Main pushes each cue to the overlay window, which plays it
+(`autoplayPolicy: no-user-gesture-required`); a missing file or refused playback is logged as `[sound]` and never
+affects a rest. The files are `resources/sounds/rest-start.ogg` and `rest-end.ogg` (see the README there for the
+rules and credits). Muting the cue does not mute other apps. Audio output is not verified on any OS yet, and the
+Linux tray host's support for checkbox and radio items is untested.
+
 Launch at login: a "Launch at login" checkbox in the tray menu, off by default, shown only in packaged builds
 (a dev run would register the bare Electron binary). The OS is the source of truth and nothing is stored in
 `settings.json`; the checkbox re-reads the OS after each click, so a refused change shows as unchecked and is

@@ -2,6 +2,7 @@ import { vi, type Mock } from 'vitest';
 import { DEFAULT_CONFIG, type RestConfig } from '../../src/core/config';
 import type { Snapshot } from '../../src/core/scheduler';
 import type { EyerestApi, SaveSettingsResult } from '../../src/shared/ipc';
+import type { PlayCue } from '../../src/shared/sound';
 
 export interface FakeApi extends EyerestApi {
   /** Resolves the pending `getSnapshot()` promise. */
@@ -11,6 +12,9 @@ export interface FakeApi extends EyerestApi {
   /** Simulates the main process pushing a snapshot. */
   push(snapshot: Snapshot): void;
   listenerCount(): number;
+  /** Simulates main pushing a sound cue. */
+  pushCue(cue: PlayCue): void;
+  cueListenerCount(): number;
   skip: Mock<() => void>;
   postpone: Mock<() => void>;
   closeSettings: Mock<() => void>;
@@ -20,6 +24,7 @@ export interface FakeApi extends EyerestApi {
 
 export function createFakeApi(): FakeApi {
   const listeners = new Set<(snapshot: Snapshot) => void>();
+  const cueListeners = new Set<(cue: PlayCue) => void>();
   let resolveSnapshot!: (snapshot: Snapshot) => void;
   let rejectSnapshot!: (error: unknown) => void;
   const initial = new Promise<Snapshot>((resolve, reject) => {
@@ -35,6 +40,12 @@ export function createFakeApi(): FakeApi {
         listeners.delete(listener);
       };
     },
+    onCue: (listener) => {
+      cueListeners.add(listener);
+      return () => {
+        cueListeners.delete(listener);
+      };
+    },
     skip: vi.fn<() => void>(),
     postpone: vi.fn<() => void>(),
     closeSettings: vi.fn<() => void>(),
@@ -48,6 +59,10 @@ export function createFakeApi(): FakeApi {
       for (const listener of [...listeners]) listener(snapshot);
     },
     listenerCount: () => listeners.size,
+    pushCue: (cue) => {
+      for (const listener of [...cueListeners]) listener(cue);
+    },
+    cueListenerCount: () => cueListeners.size,
   };
 }
 

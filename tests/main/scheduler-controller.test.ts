@@ -42,6 +42,9 @@ class FakeScheduler implements SchedulerPort {
   dispose() {
     this.calls.push('dispose');
   }
+  listenersForTest() {
+    return [...this.listeners];
+  }
   emit(snapshot: Snapshot) {
     this.snapshot = snapshot;
     for (const listener of [...this.listeners]) listener(snapshot, []);
@@ -62,7 +65,7 @@ describe('SchedulerController', () => {
 
     expect(scheduler.calls).toEqual(['subscribe', 'start']);
     expect(sender.send).toHaveBeenCalledTimes(1);
-    expect(sender.send).toHaveBeenCalledWith(WORKING);
+    expect(sender.send).toHaveBeenCalledWith(WORKING, []);
   });
 
   it('forwards every later snapshot to the sender', () => {
@@ -113,7 +116,7 @@ describe('SchedulerController', () => {
     controller.pause();
 
     expect(scheduler.calls.slice(-1)).toEqual(['stop']);
-    expect(sender.send).toHaveBeenCalledWith(IDLE);
+    expect(sender.send).toHaveBeenCalledWith(IDLE, []);
   });
 
   it('resume starts the scheduler again without subscribing twice', () => {
@@ -125,7 +128,7 @@ describe('SchedulerController', () => {
     controller.resume();
 
     expect(scheduler.calls).toEqual(['subscribe', 'start', 'stop', 'start']);
-    expect(sender.send).toHaveBeenCalledWith(WORKING);
+    expect(sender.send).toHaveBeenCalledWith(WORKING, []);
   });
 
   it('dispose unsubscribes, disposes the scheduler and stops forwarding', () => {
@@ -144,5 +147,18 @@ describe('SchedulerController', () => {
     const { scheduler, controller } = setup();
     expect(() => controller.dispose()).not.toThrow();
     expect(scheduler.calls).toEqual(['dispose']);
+  });
+});
+
+describe('SchedulerController events', () => {
+  it('forwards the engine events with each snapshot', () => {
+    const { scheduler, sender, controller } = setup();
+    controller.start();
+    sender.send.mockClear();
+
+    const events = [{ type: 'rest-completed', kind: 'eye' }] as const;
+    for (const listener of scheduler.listenersForTest()) listener(WORKING, events);
+
+    expect(sender.send).toHaveBeenCalledWith(WORKING, events);
   });
 });

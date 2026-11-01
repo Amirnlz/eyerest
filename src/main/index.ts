@@ -16,6 +16,10 @@ import { createElectronIdleSource } from './idle/electron-idle-source';
 import { OverlayWindowManager } from './overlay/overlay-window-manager';
 import { isNativeWayland, resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
+import { createBroadcastCueOutput } from './sound/cue-output';
+import { SoundCueSender } from './sound/sound-cue-sender';
+import { SOUND_PREFS_FILE_NAME } from './sound/sound-prefs';
+import { SoundPrefsStore } from './sound/sound-prefs-store';
 import { createMainRuntime, type MainRuntime } from './runtime';
 import { createElectronSettingsWindowFactory } from './settings/electron-settings-window';
 import { createNodeSettingsFs } from './settings/node-settings-fs';
@@ -116,6 +120,16 @@ void app.whenReady().then(() => {
     if (debug) console.info(`[settings] ${settings.status} ${settingsPath}`);
   }
 
+  // Sound choices (mute, volume) live in preferences.json; cues are pushed to the overlay renderer.
+  const getRendererTargets = () =>
+    BrowserWindow.getAllWindows().map((window) => window.webContents);
+  const soundPrefs = new SoundPrefsStore(
+    settingsFs,
+    join(app.getPath('userData'), SOUND_PREFS_FILE_NAME),
+    (message) => console.warn(`[sound] ${message}`),
+  );
+  const soundCues = new SoundCueSender(soundPrefs, createBroadcastCueOutput(getRendererTargets));
+
   // Settings window: opened from the tray menu, one at a time, same renderer bundle.
   settingsWindow = new SettingsWindowManager(
     createElectronSettingsWindowFactory({
@@ -155,6 +169,7 @@ void app.whenReady().then(() => {
         configHome: app.getPath('appData'),
       }),
       log: (message) => console.warn(`[autostart] ${message}`),
+      sound: soundPrefs,
     },
   );
 
@@ -170,9 +185,8 @@ void app.whenReady().then(() => {
       save: (overrides) => saveSettings(settingsFs, settingsPath, overrides),
     },
     ipcMain,
-    getTargets: () =>
-      BrowserWindow.getAllWindows().map((window) => window.webContents),
-    extraSenders: [overlay, dim, tray],
+    getTargets: getRendererTargets,
+    extraSenders: [overlay, dim, soundCues, tray],
   });
 
   dim.start();

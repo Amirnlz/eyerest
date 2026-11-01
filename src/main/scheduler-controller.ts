@@ -1,5 +1,6 @@
 import type { RestConfig } from '../core/config';
 import type { Listener, Snapshot } from '../core/scheduler';
+import type { EngineEvent } from '../core/state';
 
 /** The part of `RestScheduler` the controller uses. Lets tests inject a fake. */
 export interface SchedulerPort {
@@ -15,7 +16,8 @@ export interface SchedulerPort {
 
 /** Where snapshots go. In the app this broadcasts to renderer windows. */
 export interface SnapshotSender {
-  send(snapshot: Snapshot): void;
+  /** `events` are what the engine did to reach this snapshot; empty for a countdown-only update. */
+  send(snapshot: Snapshot, events?: readonly EngineEvent[]): void;
 }
 
 /**
@@ -33,7 +35,9 @@ export class SchedulerController {
   /** Subscribes first, then starts, so the initial `started` update is not missed. */
   start(): void {
     if (this.unsubscribe !== null) return;
-    this.unsubscribe = this.scheduler.subscribe((snapshot) => this.sender.send(snapshot));
+    this.unsubscribe = this.scheduler.subscribe((snapshot, events) =>
+      this.sender.send(snapshot, events),
+    );
     this.scheduler.start();
   }
 

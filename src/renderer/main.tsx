@@ -6,6 +6,8 @@ import { App } from './App';
 import { SettingsPage } from './components/SettingsPage';
 import { copy } from './copy';
 import { loadBundledFonts } from './fonts-bootstrap';
+import { createAudioPlayer, createBrowserAudio } from './sound/audio-player';
+import { SOUND_URLS } from './sound/sound-assets';
 import { createDomThemeController } from './theme';
 import { resolveView } from './view';
 
@@ -34,10 +36,15 @@ if (resolveView(window.location.search) === 'settings') {
   const requestedLayout = params.get('layout');
   const layout = isOverlayLayout(requestedLayout) ? requestedLayout : 'positioned';
   const integratedDim = params.get('integratedDim') === '1';
+  const soundPlayer = createAudioPlayer({
+    urls: SOUND_URLS,
+    createAudio: createBrowserAudio,
+    log: (message) => console.warn(`[sound] ${message}`),
+  });
 
   createRoot(container).render(
     <StrictMode>
-      <App api={api} layout={layout} integratedDim={integratedDim} />
+      <App api={api} layout={layout} integratedDim={integratedDim} soundPlayer={soundPlayer} />
     </StrictMode>,
   );
 }

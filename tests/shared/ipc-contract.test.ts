@@ -52,6 +52,7 @@ describe('IPC contract', () => {
     api.postpone();
     api.closeSettings();
     api.onSnapshot(() => {});
+    api.onCue(() => {});
 
     expect([...new Set(ipc.touched)].sort()).toEqual([...allChannels].sort());
   });

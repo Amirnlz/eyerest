@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TrayController } from '../../src/main/tray/tray-controller';
 import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
-import { FakeAutostart, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
+import { FakeAutostart, FakeSoundPrefs, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
 
 function setup() {
   const tray = new FakeTray();
@@ -239,5 +239,93 @@ describe('TrayController launch at login', () => {
     controller.dispose();
     controller.handle('autostart');
     expect(autostart.calls).toEqual([]);
+  });
+});
+
+
+describe('TrayController sound', () => {
+  function withSound(prefs = new FakeSoundPrefs()) {
+    const tray = new FakeTray();
+    const controller = new TrayController(tray, new FakeTrayActions(), (ms) => `T${ms}`, {
+      sound: prefs,
+    });
+    return { tray, controller, prefs };
+  }
+
+  const item = (tray: FakeTray, id: string) => {
+    for (const entry of tray.menu.items) {
+      if (entry.kind === 'item' && entry.id === id) return entry;
+      if (entry.kind === 'submenu') {
+        const child = entry.items.find((sub) => sub.kind === 'item' && sub.id === id);
+        if (child?.kind === 'item') return child;
+      }
+    }
+    return undefined;
+  };
+
+  it('has no sound items without a port', () => {
+    const { tray, controller } = setup();
+    controller.send(WORKING);
+    expect(item(tray, 'mute')).toBeUndefined();
+  });
+
+  it('shows the current choices', () => {
+    const { tray, controller } = withSound(new FakeSoundPrefs({ muted: true, volume: 'low' }));
+    controller.send(WORKING);
+    expect(item(tray, 'mute')?.checked).toBe(true);
+    expect(item(tray, 'volume-low')?.checked).toBe(true);
+    expect(item(tray, 'volume-high')?.checked).toBe(false);
+  });
+
+  it('Mute toggles mute, keeps the volume, and the menu shows it at once', () => {
+    const { tray, controller, prefs } = withSound(new FakeSoundPrefs({ muted: false, volume: 'high' }));
+    controller.send(WORKING);
+
+    tray.click('mute');
+    expect(prefs.changes).toEqual([{ muted: true, volume: 'high' }]);
+    expect(item(tray, 'mute')?.checked).toBe(true);
+
+    tray.click('mute');
+    expect(prefs.prefs).toEqual({ muted: false, volume: 'high' });
+    expect(item(tray, 'mute')?.checked).toBe(false);
+  });
+
+  it.each([
+    ['volume-low', 'low'],
+    ['volume-medium', 'medium'],
+    ['volume-high', 'high'],
+  ] as const)('%s sets the volume to %s and keeps mute', (id, volume) => {
+    const { tray, controller, prefs } = withSound(new FakeSoundPrefs({ muted: true, volume: 'medium' }));
+    controller.send(WORKING);
+
+    tray.click(id);
+
+    expect(prefs.prefs).toEqual({ muted: true, volume });
+    expect(item(tray, id)?.checked).toBe(true);
+  });
+
+  it('keeps the phase text after a change', () => {
+    const { tray, controller } = withSound();
+    controller.send(warning(10));
+    tray.click('mute');
+    expect(tray.labels[0]).toBe('Rest starting soon');
+  });
+
+  it('ignores a click before the first snapshot and after dispose', () => {
+    const early = withSound();
+    early.controller.handle('mute');
+    expect(early.prefs.changes).toEqual([]);
+
+    const late = withSound();
+    late.controller.send(WORKING);
+    late.controller.dispose();
+    late.controller.handle('mute');
+    expect(late.prefs.changes).toEqual([]);
+  });
+
+  it('does nothing for a sound click when no port is wired', () => {
+    const { controller } = setup();
+    controller.send(WORKING);
+    expect(() => controller.handle('mute')).not.toThrow();
   });
 });

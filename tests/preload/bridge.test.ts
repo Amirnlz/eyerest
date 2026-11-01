@@ -101,3 +101,51 @@ describe('createBridge', () => {
     expect(b).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('createBridge sound cues', () => {
+  it('delivers a valid pushed cue', () => {
+    const ipc = createFakeIpcRenderer();
+    const listener = vi.fn();
+    createBridge(ipc).onCue(listener);
+
+    ipc.push(IPC.playCue.channel, { cue: 'rest-start', gain: 0.5 });
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({ cue: 'rest-start', gain: 0.5 });
+  });
+
+  it.each([
+    ['null', null],
+    ['a string', 'rest-start'],
+    ['an unknown cue', { cue: 'boom', gain: 0.5 }],
+    ['no gain', { cue: 'rest-end' }],
+    ['a gain over 1', { cue: 'rest-end', gain: 2 }],
+    ['a negative gain', { cue: 'rest-end', gain: -0.1 }],
+    ['a NaN gain', { cue: 'rest-end', gain: Number.NaN }],
+    ['an array', ['rest-end', 1]],
+  ])('drops a malformed payload: %s', (_name, payload) => {
+    const ipc = createFakeIpcRenderer();
+    const listener = vi.fn();
+    createBridge(ipc).onCue(listener);
+
+    ipc.push(IPC.playCue.channel, payload);
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('never exposes the IPC event object', () => {
+    const ipc = createFakeIpcRenderer();
+    const listener = vi.fn();
+    createBridge(ipc).onCue(listener);
+    ipc.push(IPC.playCue.channel, { cue: 'rest-end', gain: 1 });
+    expect(listener.mock.calls[0]).toHaveLength(1);
+  });
+
+  it('unsubscribe removes the underlying listener', () => {
+    const ipc = createFakeIpcRenderer();
+    const off = createBridge(ipc).onCue(vi.fn());
+    expect(ipc.listenerCount(IPC.playCue.channel)).toBe(1);
+    off();
+    expect(ipc.listenerCount(IPC.playCue.channel)).toBe(0);
+  });
+});

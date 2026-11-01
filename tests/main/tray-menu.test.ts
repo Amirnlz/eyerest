@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TRAY_COPY, buildTrayMenu, statusText } from '../../src/main/tray/tray-menu';
+import { TRAY_COPY, buildTrayMenu, statusText, volumeOfItem } from '../../src/main/tray/tray-menu';
 import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
 
 const fmt = (epochMs: number) => `T${epochMs}`;
@@ -118,6 +118,85 @@ describe('buildTrayMenu launch at login', () => {
   it('is offered in every phase, including paused and away', () => {
     for (const snapshot of [IDLE, AWAY, warning(10), resting(10)]) {
       expect(item(buildTrayMenu(snapshot, fmt, { supported: true, enabled: true }))).toBeDefined();
+    }
+  });
+});
+
+describe('buildTrayMenu sound items', () => {
+  const find = (model: ReturnType<typeof buildTrayMenu>, id: string) =>
+    model.items.find((entry) => entry.kind === 'item' && entry.id === id);
+  const submenu = (model: ReturnType<typeof buildTrayMenu>) =>
+    model.items.find((entry) => entry.kind === 'submenu');
+
+  it('has no sound items unless the sound prefs are wired', () => {
+    const model = buildTrayMenu(WORKING, fmt);
+    expect(find(model, 'mute')).toBeUndefined();
+    expect(submenu(model)).toBeUndefined();
+  });
+
+  it.each([true, false])('has a mute checkbox reflecting muted=%s', (muted) => {
+    const model = buildTrayMenu(WORKING, fmt, undefined, { muted, volume: 'medium' });
+    expect(find(model, 'mute')).toEqual({
+      kind: 'item',
+      id: 'mute',
+      label: TRAY_COPY.muteSounds,
+      enabled: true,
+      checked: muted,
+    });
+  });
+
+  it('has a volume submenu of three radio items with exactly the current one checked', () => {
+    const model = buildTrayMenu(WORKING, fmt, undefined, { muted: false, volume: 'high' });
+    const menu = submenu(model);
+    expect(menu?.kind).toBe('submenu');
+    if (menu?.kind !== 'submenu') return;
+    expect(menu.label).toBe(TRAY_COPY.soundVolume);
+    expect(
+      menu.items.map((entry) =>
+        entry.kind === 'item' ? [entry.id, entry.label, entry.checked, entry.radio] : null,
+      ),
+    ).toEqual([
+      ['volume-low', 'Low', false, true],
+      ['volume-medium', 'Medium', false, true],
+      ['volume-high', 'High', true, true],
+    ]);
+  });
+
+  it('keeps the volume choice visible while muted', () => {
+    const model = buildTrayMenu(WORKING, fmt, undefined, { muted: true, volume: 'low' });
+    const menu = submenu(model);
+    const checked = menu?.kind === 'submenu'
+      ? menu.items.filter((entry) => entry.kind === 'item' && entry.checked)
+      : [];
+    expect(checked).toHaveLength(1);
+  });
+
+  it('sits after Launch at login and before the separator and Quit', () => {
+    const model = buildTrayMenu(WORKING, fmt, { supported: true, enabled: false }, {
+      muted: false,
+      volume: 'medium',
+    });
+    expect(
+      model.items.map((entry) =>
+        entry.kind === 'separator' ? '---' : entry.kind === 'submenu' ? 'volume' : entry.id,
+      ),
+    ).toEqual(['status', 'toggle', 'settings', 'autostart', 'mute', 'volume', '---', 'quit']);
+  });
+
+  it('is offered in every phase', () => {
+    for (const snapshot of [IDLE, AWAY, warning(10), resting(10)]) {
+      expect(find(buildTrayMenu(snapshot, fmt, undefined, { muted: false, volume: 'low' }), 'mute')).toBeDefined();
+    }
+  });
+});
+
+describe('volumeOfItem', () => {
+  it('maps the three volume ids and nothing else', () => {
+    expect(volumeOfItem('volume-low')).toBe('low');
+    expect(volumeOfItem('volume-medium')).toBe('medium');
+    expect(volumeOfItem('volume-high')).toBe('high');
+    for (const id of ['status', 'toggle', 'settings', 'autostart', 'mute', 'quit'] as const) {
+      expect(volumeOfItem(id)).toBeNull();
     }
   });
 });

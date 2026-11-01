@@ -42,4 +42,8 @@ Severity: `HIGH` blocks use or a release, `MEDIUM` degrades use, `LOW` polish or
 | I20 | MEDIUM | Autostart (4.3) | Nothing verified on a real OS: Windows Run key, macOS login item (unsigned build), Linux `.desktop` entry on GNOME, KDE and Xfce. Verify from an installed build (`npm run package`), not `npm run dev`. | NEEDS INFO (owner) |
 | I21 | LOW | Autostart (4.3) | No e2e: Playwright cannot click a native tray menu, and a dev run reports autostart as unsupported by design. Covered by logic tests for the adapters, the factory and the tray controller. | OPEN |
 | I22 | LOW | Autostart (4.3) | Linux `Exec` has no `--no-sandbox` or display flags. If the installed app needs them at login, the entry must carry them. | NEEDS INFO |
+| I23 | MEDIUM | Sound (4.5) | Audio output is not verified on any OS. The e2e test proves the page called `play()` and the browser accepted it, not that anything was audible. | NEEDS INFO (owner: run `npm run dev:fast`, wait for a rest) |
+| I24 | LOW | Sound (4.5) | The shipped `.ogg` files are synthesized placeholders. Replace with chosen CC0 files (see `resources/sounds/README.md`). | OPEN (owner) |
+| I25 | LOW | Sound (4.5) | Changing the volume in the tray plays no preview, so the new level is only heard at the next rest. | OPEN (candidate) |
+| I26 | LOW | Sound (4.5) | A rest that begins while the machine is asleep or locked still pushes a cue. Output follows the OS volume. | OPEN |
 

@@ -1,4 +1,6 @@
 import type { AutostartPort, AutostartState } from '../../src/main/autostart/ports';
+import type { SoundPrefsPort } from '../../src/main/sound/ports';
+import type { SoundPrefs } from '../../src/shared/sound';
 import type { SettingsFs } from '../../src/main/settings/settings';
 import type { TrayActions, TrayPort } from '../../src/main/tray/tray-controller';
 import type { TrayItemId, TrayMenuModel } from '../../src/main/tray/tray-menu';
@@ -101,5 +103,18 @@ export class FakeAutostart implements AutostartPort {
     this.calls.push(enabled);
     if (this.setError) throw this.setError;
     this.state = { supported: true, enabled };
+  }
+}
+
+/** In-memory sound prefs that records every change. */
+export class FakeSoundPrefs implements SoundPrefsPort {
+  readonly changes: SoundPrefs[] = [];
+  constructor(public prefs: SoundPrefs = { muted: false, volume: 'medium' }) {}
+  get(): SoundPrefs {
+    return this.prefs;
+  }
+  set(next: SoundPrefs): void {
+    this.changes.push(next);
+    this.prefs = next;
   }
 }

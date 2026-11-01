@@ -6,6 +6,7 @@ import {
   type IpcRendererLike,
   type SaveSettingsResult,
 } from '../shared/ipc';
+import { parsePlayCue } from '../shared/sound';
 
 /**
  * Builds the API exposed to the renderer. Pure with respect to Electron:
@@ -26,6 +27,15 @@ export function createBridge(ipc: IpcRendererLike): EyerestApi {
       const handler = (_event: unknown, snapshot: unknown) => listener(snapshot as Snapshot);
       ipc.on(IPC.snapshot.channel, handler);
       return () => ipc.removeListener(IPC.snapshot.channel, handler);
+    },
+
+    onCue(listener) {
+      const handler = (_event: unknown, payload: unknown) => {
+        const cue = parsePlayCue(payload);
+        if (cue !== null) listener(cue);
+      };
+      ipc.on(IPC.playCue.channel, handler);
+      return () => ipc.removeListener(IPC.playCue.channel, handler);
     },
 
     skip: () => ipc.send(IPC.skip.channel),

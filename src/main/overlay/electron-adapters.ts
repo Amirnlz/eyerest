@@ -50,6 +50,8 @@ export function createElectronWindowFactory(
           contextIsolation: true,
           nodeIntegration: false,
           sandbox: true,
+          // The window never has focus or a click, but it must still play the rest cues.
+          autoplayPolicy: 'no-user-gesture-required',
         },
       });
 

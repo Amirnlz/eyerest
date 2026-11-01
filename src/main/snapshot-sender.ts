@@ -17,10 +17,10 @@ export function createCompositeSender(
     console.error('[composite-sender] sender failed', error),
 ): SnapshotSender {
   return {
-    send(snapshot) {
+    send(snapshot, events) {
       for (const sender of senders) {
         try {
-          sender.send(snapshot);
+          sender.send(snapshot, events);
         } catch (error) {
           onError(error);
         }

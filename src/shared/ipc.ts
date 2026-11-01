@@ -1,5 +1,6 @@
 import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
+import type { PlayCue } from './sound';
 
 /**
  * Single source of truth for IPC between main, preload and renderer.
@@ -20,6 +21,7 @@ export const IPC = {
   postpone: { channel: 'eyerest:postpone', kind: 'send' },
   closeSettings: { channel: 'eyerest:close-settings', kind: 'send' },
   snapshot: { channel: 'eyerest:snapshot', kind: 'push' },
+  playCue: { channel: 'eyerest:play-cue', kind: 'push' },
 } as const satisfies Record<string, { channel: string; kind: IpcKind }>;
 
 export type IpcName = keyof typeof IPC;
@@ -55,6 +57,8 @@ export interface EyerestApi {
   saveSettings(settings: RestConfig): Promise<SaveSettingsResult>;
   /** Subscribes to snapshot pushes. Returns an unsubscribe function. */
   onSnapshot(listener: (snapshot: Snapshot) => void): () => void;
+  /** Subscribes to sound cues pushed by main. Payloads are validated; malformed ones are dropped. */
+  onCue(listener: (cue: PlayCue) => void): () => void;
   /** User pressed Skip. */
   skip(): void;
   /** User pressed Postpone. */

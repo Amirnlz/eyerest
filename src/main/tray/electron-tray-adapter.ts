@@ -2,6 +2,7 @@ import { Menu, Tray, nativeImage, nativeTheme, type MenuItemConstructorOptions }
 import { join } from 'node:path';
 import { selectTrayIconFile } from './tray-icon';
 import type { TrayPort } from './tray-controller';
+import type { TrayMenuItem } from './tray-menu';
 
 export interface ElectronTrayOptions {
   /** Folder holding the tray icon files (see `trayIconDir`). */
@@ -35,16 +36,23 @@ export function createElectronTrayPort(options: ElectronTrayOptions): TrayPort {
 
   return {
     setMenu(model, onSelect) {
-      const template: MenuItemConstructorOptions[] = model.items.map((item) =>
-        item.kind === 'separator'
-          ? { type: 'separator' }
-          : {
-              label: item.label,
-              enabled: item.enabled,
-              click: () => onSelect(item.id),
-              ...(item.checked === undefined ? {} : { type: 'checkbox' as const, checked: item.checked }),
-            },
-      );
+      const toTemplate = (items: readonly TrayMenuItem[]): MenuItemConstructorOptions[] =>
+        items.map((item): MenuItemConstructorOptions => {
+          if (item.kind === 'separator') return { type: 'separator' };
+          if (item.kind === 'submenu') return { label: item.label, submenu: toTemplate(item.items) };
+          return {
+            label: item.label,
+            enabled: item.enabled,
+            click: () => onSelect(item.id),
+            ...(item.checked === undefined
+              ? {}
+              : {
+                  type: item.radio === true ? ('radio' as const) : ('checkbox' as const),
+                  checked: item.checked,
+                }),
+          };
+        });
+      const template = toTemplate(model.items);
       tray.setToolTip(model.tooltip);
       tray.setContextMenu(Menu.buildFromTemplate(template));
     },
