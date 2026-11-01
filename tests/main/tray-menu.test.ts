@@ -105,7 +105,7 @@ describe('buildTrayMenu launch at login', () => {
 
   it('sits right after Settings and before the separator and Quit', () => {
     const model = buildTrayMenu(WORKING, fmt, { supported: true, enabled: false });
-    expect(model.items.map((entry) => (entry.kind === 'separator' ? '---' : entry.id))).toEqual([
+    expect(model.items.map((entry) => (entry.kind === 'separator' ? '---' : entry.kind === 'item' ? entry.id : entry.label))).toEqual([
       'status',
       'toggle',
       'settings',

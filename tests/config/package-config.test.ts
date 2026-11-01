@@ -120,7 +120,7 @@ describe('CI workflow', () => {
   });
 
   it('uploads installers and fails if there are none', () => {
-    expect(workflow).toContain('actions/upload-artifact@v4');
+    expect(workflow).toContain('actions/upload-artifact@v5');
     expect(workflow).toContain('if-no-files-found: error');
     for (const extension of ['AppImage', 'deb', 'exe', 'dmg']) {
       expect(workflow).toContain(`release/*.${extension}`);
@@ -128,6 +128,6 @@ describe('CI workflow', () => {
   });
 
   it('uses the Node version the project requires', () => {
-    expect(workflow).toContain('node-version: 22');
+    expect(workflow).toContain('node-version: 24');
   });
 });

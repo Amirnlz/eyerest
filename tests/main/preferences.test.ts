@@ -20,6 +20,7 @@ describe('parsePreferences', () => {
     expect(parsePreferences('{"soundMuted":true}').prefs).toEqual({
       sound: { muted: true, volume: 'medium' },
       theme: 'system',
+      exercises: true,
     });
     expect(parsePreferences('{}').prefs).toEqual(DEFAULT_PREFERENCES);
     expect(parsePreferences('{"theme":"light"}').prefs.sound).toEqual(DEFAULT_PREFERENCES.sound);
@@ -29,6 +30,7 @@ describe('parsePreferences', () => {
     expect(DEFAULT_PREFERENCES).toEqual({
       sound: { muted: false, volume: 'medium' },
       theme: 'system',
+      exercises: true,
     });
   });
 
@@ -126,6 +128,7 @@ describe('PreferencesStore', () => {
     expect(setup('{"soundMuted":true,"soundVolume":"low"}').store.get()).toEqual({
       sound: { muted: true, volume: 'low' },
       theme: 'system',
+      exercises: true,
     });
   });
 
@@ -174,6 +177,7 @@ describe('PreferencesStore', () => {
     expect(new PreferencesStore(fs, PATH).get()).toEqual({
       sound: { muted: true, volume: 'low' },
       theme: 'dark',
+      exercises: true,
     });
   });
 

@@ -185,7 +185,6 @@ describe('createBridge theme', () => {
   });
 });
 
-
 describe('createBridge exercises', () => {
   it.each([true, false])('delivers a pushed %s', (enabled) => {
     const ipc = createFakeIpcRenderer();

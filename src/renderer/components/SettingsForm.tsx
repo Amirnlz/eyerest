@@ -122,7 +122,7 @@ export function SettingsForm({ initial, onSave, onClose }: SettingsFormProps) {
                 label={text.label}
                 hint={text.hint}
                 unit={copy.settings.range(min, max, text.unit)}
-                maxLength={String(max).length}
+                maxLength={String(max).length + 1}
                 value={values[key]}
                 error={visible ? errors[key] : undefined}
                 readOnly={saving}

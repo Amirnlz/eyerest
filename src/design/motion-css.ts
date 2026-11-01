@@ -6,8 +6,10 @@ import {
   effectUnits,
   effects,
   reducedEffects,
+  type DurationName,
+  type EasingName,
+  type EffectName,
 } from './motion';
-import type { DurationName, EasingName, EffectName } from './motion';
 
 const KEBAB: Readonly<Record<EffectName, string>> = {
   pressScale: 'press-scale',

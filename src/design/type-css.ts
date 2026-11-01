@@ -4,8 +4,9 @@ import {
   fontWeights,
   typeRoleNames,
   typeRoles,
+  type FontFamilyName,
+  type TypeRoleName,
 } from './typography';
-import type { FontFamilyName, TypeRoleName } from './typography';
 
 export type TypeProperty =
   | 'size'

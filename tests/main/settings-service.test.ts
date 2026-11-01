@@ -20,11 +20,11 @@ function setup(
     options.withStorage === false
       ? undefined
       : {
-          save: (overrides: Partial<RestConfig>) => {
-            if (options.saveError) throw options.saveError;
-            saved.push(overrides);
-          },
-        };
+        save: (overrides: Partial<RestConfig>) => {
+          if (options.saveError) throw options.saveError;
+          saved.push(overrides);
+        },
+      };
   const service = new SettingsService({
     env: options.env ?? {},
     initialOverrides: options.initialOverrides,

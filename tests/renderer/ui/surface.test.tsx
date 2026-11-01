@@ -4,11 +4,12 @@ import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { elevationNames } from '../../../src/design/elevation';
-import { Surface, surfaceClassName } from '../../../src/renderer/ui';
-import type {
-  SurfaceElevation,
-  SurfacePadding,
-  SurfaceRadius,
+import {
+  Surface,
+  surfaceClassName,
+  type SurfaceElevation,
+  type SurfacePadding,
+  type SurfaceRadius,
 } from '../../../src/renderer/ui';
 
 const elevations: readonly SurfaceElevation[] = ['flat', ...elevationNames];

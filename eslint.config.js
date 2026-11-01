@@ -161,6 +161,13 @@ export default tseslint.config(
     files: ['**/*.css'],
     plugins: { css },
     language: 'css/css',
-    rules: css.configs.recommended.rules,
+    rules: {
+      ...css.configs.recommended.rules,
+      // Design tokens are generated from TypeScript, so this parser cannot resolve --er-*.
+      'css/no-invalid-properties': 'off',
+      // Keep compatibility decisions in the app's browser support policy, not the plugin's
+      // bundled Baseline snapshot.
+      'css/use-baseline': 'off',
+    },
   },
 );

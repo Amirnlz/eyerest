@@ -5,8 +5,7 @@ import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Button, buttonClassName } from '../../../src/renderer/ui';
-import type { ButtonSize, ButtonVariant } from '../../../src/renderer/ui';
+import { Button, buttonClassName, type ButtonSize, type ButtonVariant } from '../../../src/renderer/ui';
 
 const variants: readonly ButtonVariant[] = ['primary', 'secondary', 'quiet'];
 const sizes: readonly ButtonSize[] = ['sm', 'md'];

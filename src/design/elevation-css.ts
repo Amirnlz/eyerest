@@ -1,6 +1,5 @@
 import { CSS_PREFIX, cssVarName } from './css';
-import { elevationNames, elevations } from './elevation';
-import type { Elevation, ElevationName } from './elevation';
+import { elevationNames, elevations, type Elevation, type ElevationName } from './elevation';
 import { themedBlocks } from './theme-scope';
 
 export function elevationVar(name: ElevationName | 'flat'): string {

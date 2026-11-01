@@ -323,6 +323,7 @@ function SettingsFormSample() {
         <SettingsForm
           initial={DEFAULT_CONFIG}
           onSave={(settings) => Promise.resolve({ ok: true, settings })}
+          onClose={() => {}}
         />
       </div>
     </Section>

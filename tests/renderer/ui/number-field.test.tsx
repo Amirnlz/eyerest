@@ -195,15 +195,24 @@ describe('NumberField', () => {
   });
 
   it('is skipped by Tab when disabled and reachable by Tab otherwise', async () => {
-    const { rerender } = render(
+    const { unmount } = render(
       <NumberField label="Eye rest" value="20" onValueChange={() => undefined} />,
     );
     await userEvent.tab();
     expect(screen.getByRole('textbox')).toHaveFocus();
 
-    rerender(<NumberField label="Eye rest" value="20" onValueChange={() => undefined} disabled />);
+    unmount();
+    render(
+      <>
+        <button type="button">Before</button>
+        <NumberField label="Eye rest" value="20" onValueChange={() => undefined} disabled />
+        <button type="button">After</button>
+      </>,
+    );
     await userEvent.tab();
-    expect(screen.getByRole('textbox')).not.toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Before' })).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
   });
 
   it('can be focused by clicking its label', async () => {

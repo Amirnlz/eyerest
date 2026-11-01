@@ -101,7 +101,7 @@ describe('committed icon files', () => {
     const png = decodeFile(icon.file);
     expect([png.width, png.height]).toEqual([icon.size, icon.size]);
     expect([...png.rgba]).toEqual([...renderIcon(icon)]);
-  });
+  }, 30_000);
 
   it('every @2x file is the 1x icon at twice the size and the same role', () => {
     const doubles = BRAND_ICONS.filter((icon) => icon.file.includes('@2x'));

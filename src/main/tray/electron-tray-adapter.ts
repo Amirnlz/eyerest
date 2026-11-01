@@ -47,9 +47,9 @@ export function createElectronTrayPort(options: ElectronTrayOptions): TrayPort {
             ...(item.checked === undefined
               ? {}
               : {
-                  type: item.radio === true ? ('radio' as const) : ('checkbox' as const),
-                  checked: item.checked,
-                }),
+                type: item.radio === true ? ('radio' as const) : ('checkbox' as const),
+                checked: item.checked,
+              }),
           };
         });
       const template = toTemplate(model.items);

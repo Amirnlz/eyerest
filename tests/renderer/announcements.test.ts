@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { announcementFor, restMilestones } from '../../src/renderer/announcements';
 import { copy } from '../../src/renderer/copy';
-import type { OverlayViewModel } from '../../src/renderer/view-model';
-import { HIDDEN_VIEW_MODEL } from '../../src/renderer/view-model';
+import { HIDDEN_VIEW_MODEL, type OverlayViewModel } from '../../src/renderer/view-model';
 
 const warning = (seconds: number): OverlayViewModel => ({
   mode: 'warning',

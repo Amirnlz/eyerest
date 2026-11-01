@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType } from 'react';
+import { createElement, type ComponentPropsWithoutRef, type ElementType } from 'react';
 import type { TypeRoleName } from '../../design/typography';
 import './Text.css';
 
@@ -17,16 +17,24 @@ export type TextElement =
   | 'h5'
   | 'h6';
 
-export interface TextProps extends Omit<
-  ComponentPropsWithoutRef<'p'>,
-  'className'
-> {
+interface TextOptions {
   /** A role from the type scale. Not an ARIA role. */
   readonly variant?: TextVariant;
   readonly tone?: TextTone;
   /** Element to render. Choose headings by document structure, not by size. */
   readonly as?: TextElement;
 }
+
+type TextElementProps =
+  | { readonly as?: undefined } & Omit<ComponentPropsWithoutRef<'p'>, 'className'>
+  | {
+    [Element in TextElement]: { readonly as: Element } & Omit<
+      ComponentPropsWithoutRef<Element>,
+        'as' | 'className'
+    >;
+  }[TextElement];
+
+export type TextProps = TextOptions & TextElementProps;
 
 /** Block roles default to `p`, inline roles to `span`. Headings are always explicit. */
 export const defaultElement: Readonly<Record<TextVariant, TextElement>> = {
@@ -51,5 +59,8 @@ export function Text({
   // `ElementType`, not the `TextElement` union: a union that includes `label` makes TypeScript
   // demand label-only props from props typed for `<p>` (V10).
   const Element: ElementType = as ?? defaultElement[variant];
-  return <Element {...props} className={textClassName(variant, tone)} />;
+  return createElement(Element, {
+    ...props,
+    className: textClassName(variant, tone),
+  } as never);
 }

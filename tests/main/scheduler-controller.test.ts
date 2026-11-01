@@ -77,7 +77,7 @@ describe('SchedulerController', () => {
     scheduler.emit(resting(19));
 
     expect(sender.send).toHaveBeenCalledTimes(2);
-    expect(sender.send).toHaveBeenLastCalledWith(resting(19));
+    expect(sender.send).toHaveBeenLastCalledWith(resting(19), []);
   });
 
   it('start() twice does not subscribe or start twice', () => {

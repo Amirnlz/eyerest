@@ -242,7 +242,6 @@ describe('TrayController launch at login', () => {
   });
 });
 
-
 describe('TrayController sound', () => {
   function withSound(prefs = new FakeSoundPrefs()) {
     const tray = new FakeTray();
@@ -329,7 +328,6 @@ describe('TrayController sound', () => {
     expect(() => controller.handle('mute')).not.toThrow();
   });
 });
-
 
 describe('TrayController theme', () => {
   function withTheme(theme = new FakeThemePort()) {

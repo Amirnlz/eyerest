@@ -69,8 +69,8 @@ describe('SettingsForm rendering', () => {
 
   it('limits how many digits can be typed to the digits of the largest allowed number', () => {
     const { field } = setup();
-    expect(field('Work interval')).toHaveAttribute('maxlength', '2');
-    expect(field('Long rest every')).toHaveAttribute('maxlength', '1');
+    expect(field('Work interval')).toHaveAttribute('maxlength', '3');
+    expect(field('Long rest every')).toHaveAttribute('maxlength', '2');
   });
 
   it('shows values saved earlier', () => {

@@ -5,8 +5,8 @@ import {
   palette,
   resolveToken,
   themes,
+  type ThemeName,
 } from '../../src/design/tokens';
-import type { ThemeName } from '../../src/design/tokens';
 
 const themeNames: readonly ThemeName[] = ['light', 'dark'];
 

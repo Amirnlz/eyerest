@@ -80,18 +80,18 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
     deps.idle === undefined || deps.env['EYEREST_IDLE'] === '0'
       ? null
       : new IdleMonitor(
-          deps.idle.source,
-          scheduler,
-          deps.schedulerOptions?.clock ?? systemClock,
-          deps.idle.ticker ?? systemTicker,
-          {
-            config: createIdleConfig({
-              ...(deps.env['EYEREST_FAST'] === '1' ? { thresholdMs: 3_000 } : {}),
-              ...deps.idle.config,
-            }),
-            log: deps.idle.log,
-          },
-        );
+        deps.idle.source,
+        scheduler,
+        deps.schedulerOptions?.clock ?? systemClock,
+        deps.idle.ticker ?? systemTicker,
+        {
+          config: createIdleConfig({
+            ...(deps.env['EYEREST_FAST'] === '1' ? { thresholdMs: 3_000 } : {}),
+            ...deps.idle.config,
+          }),
+          log: deps.idle.log,
+        },
+      );
   const settings = new SettingsService({
     env: deps.env,
     initialOverrides: deps.settingsOverrides,

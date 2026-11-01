@@ -33,8 +33,11 @@ describe('ExerciseCue.css', () => {
   });
 
   it('has a forced-colors block and no raw px, ms, colors or easings', () => {
+    const withoutEasingTokens = css.replace(/var\(--er-ease-[\w-]+\)/g, 'var(--easing-token)');
     expect(css).toMatch(/@media \(forced-colors: active\)/);
     expect(css).not.toMatch(/\d+(\.\d+)?(px|ms)\b/);
-    expect(css).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|cubic-bezier|\bease(-in|-out|-in-out)?\b/i);
+    expect(withoutEasingTokens).not.toMatch(
+      /#[0-9a-f]{3,8}\b|rgba?\(|cubic-bezier|\bease(-in|-out|-in-out)?\b/i,
+    );
   });
 });

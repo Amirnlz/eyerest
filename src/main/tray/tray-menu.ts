@@ -159,28 +159,28 @@ export function buildTrayMenu(
       { kind: 'item', id: 'settings', label: TRAY_COPY.settings, enabled: true },
       ...(autostart.supported
         ? [
-            {
-              kind: 'item',
-              id: 'autostart',
-              label: TRAY_COPY.launchAtLogin,
-              enabled: true,
-              checked: autostart.enabled,
-            } as const,
-          ]
+          {
+            kind: 'item',
+            id: 'autostart',
+            label: TRAY_COPY.launchAtLogin,
+            enabled: true,
+            checked: autostart.enabled,
+          } as const,
+        ]
         : []),
       ...(sound === null ? [] : soundItems(sound)),
       ...(theme === null ? [] : [themeMenu(theme)]),
       ...(exercises === null
         ? []
         : [
-            {
-              kind: 'item',
-              id: 'exercises',
-              label: TRAY_COPY.eyeExercises,
-              enabled: true,
-              checked: exercises,
-            } as const,
-          ]),
+          {
+            kind: 'item',
+            id: 'exercises',
+            label: TRAY_COPY.eyeExercises,
+            enabled: true,
+            checked: exercises,
+          } as const,
+        ]),
       { kind: 'separator' },
       { kind: 'item', id: 'quit', label: TRAY_COPY.quit, enabled: true },
     ],

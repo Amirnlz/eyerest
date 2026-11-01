@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '../../src/design/color';
-import { contrastPairs, resolveToken, themes } from '../../src/design/tokens';
-import type { ThemeName } from '../../src/design/tokens';
+import { contrastPairs, resolveToken, themes, type ThemeName } from '../../src/design/tokens';
 
 describe('contrastRatio', () => {
   it('is 21 for black on white and 1 for identical colors', () => {

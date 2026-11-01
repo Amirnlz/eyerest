@@ -1,6 +1,5 @@
 import { themedBlocks } from './theme-scope';
-import { colorTokenNames, resolveToken, themes } from './tokens';
-import type { ColorTokenName, ThemeName } from './tokens';
+import { colorTokenNames, resolveToken, themes, type ColorTokenName, type ThemeName } from './tokens';
 
 export const CSS_PREFIX = 'er';
 
