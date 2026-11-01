@@ -20,6 +20,8 @@ import { createBroadcastCueOutput } from './sound/cue-output';
 import { SoundCueSender } from './sound/sound-cue-sender';
 import { PREFERENCES_FILE_NAME } from './preferences/preferences';
 import { PreferencesStore, soundPrefsView } from './preferences/preferences-store';
+import { createBroadcastExercisesOutput } from './exercises/exercises-output';
+import { ExercisesService } from './exercises/exercises-service';
 import { createBroadcastThemeOutput } from './theme/theme-output';
 import { ThemeService } from './theme/theme-service';
 import { createMainRuntime, type MainRuntime } from './runtime';
@@ -77,7 +79,7 @@ void app.whenReady().then(() => {
       `gpu=${startup.disableHardwareAcceleration ? 'off' : 'default'} debug=${debug}`,
   );
 
-  // Person-level choices (sound, theme) live in preferences.json. Created first: the overlay and
+  // Person-level choices (sound, theme, exercises) live in preferences.json. Created first: the overlay and
   // settings windows read the theme choice when they open. Changes are pushed to open windows.
   const settingsFs = createNodeSettingsFs();
   const getRendererTargets = () =>
@@ -89,6 +91,10 @@ void app.whenReady().then(() => {
   );
   const soundPrefs = soundPrefsView(preferences);
   const theme = new ThemeService(preferences, createBroadcastThemeOutput(getRendererTargets));
+  const exercises = new ExercisesService(
+    preferences,
+    createBroadcastExercisesOutput(getRendererTargets),
+  );
   const soundCues = new SoundCueSender(soundPrefs, createBroadcastCueOutput(getRendererTargets));
 
   overlay = new OverlayWindowManager(
@@ -100,6 +106,7 @@ void app.whenReady().then(() => {
       layout,
       integratedDim,
       getTheme: () => theme.get(),
+      getExercises: () => exercises.get(),
     }),
     createElectronDisplayPort(screen),
     {
@@ -178,6 +185,7 @@ void app.whenReady().then(() => {
       log: (message) => console.warn(`[autostart] ${message}`),
       sound: soundPrefs,
       theme,
+      exercises,
     },
   );
 

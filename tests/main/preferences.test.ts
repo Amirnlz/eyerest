@@ -10,7 +10,7 @@ import { FakeSettingsFs } from '../helpers/fake-lifecycle';
 describe('parsePreferences', () => {
   it('reads every key', () => {
     expect(parsePreferences('{"soundMuted":true,"soundVolume":"high","theme":"dark"}')).toEqual({
-      prefs: { sound: { muted: true, volume: 'high' }, theme: 'dark' },
+      prefs: { sound: { muted: true, volume: 'high' }, theme: 'dark', exercises: true },
       status: 'loaded',
       issues: [],
     });
@@ -61,7 +61,11 @@ describe('parsePreferences', () => {
   });
 
   it('round-trips through serialize', () => {
-    const prefs = { sound: { muted: true, volume: 'low' }, theme: 'light' } as const;
+    const prefs = {
+      sound: { muted: true, volume: 'low' },
+      theme: 'light',
+      exercises: false,
+    } as const;
     expect(parsePreferences(serializePreferences(prefs)).prefs).toEqual(prefs);
   });
 
@@ -70,6 +74,33 @@ describe('parsePreferences', () => {
       soundMuted: false,
       soundVolume: 'medium',
       theme: 'system',
+      exercises: true,
+    });
+  });
+});
+
+describe('exercises preference', () => {
+  it('is on by default and when the key is missing', () => {
+    expect(DEFAULT_PREFERENCES.exercises).toBe(true);
+    expect(parsePreferences('{"theme":"dark"}').prefs.exercises).toBe(true);
+  });
+
+  it.each([true, false])('reads %s', (value) => {
+    const load = parsePreferences(JSON.stringify({ exercises: value }));
+    expect(load.status).toBe('loaded');
+    expect(load.prefs.exercises).toBe(value);
+  });
+
+  it.each(['"yes"', '1', 'null', '"false"'])('rejects the whole file for %s', (raw) => {
+    const load = parsePreferences(`{"exercises":${raw},"theme":"dark"}`);
+    expect(load.status).toBe('invalid');
+    expect(load.prefs).toEqual(DEFAULT_PREFERENCES);
+    expect(load.issues[0]).toContain('exercises');
+  });
+
+  it('is written under the exercises key', () => {
+    expect(JSON.parse(serializePreferences({ ...DEFAULT_PREFERENCES, exercises: false }))).toMatchObject({
+      exercises: false,
     });
   });
 });
@@ -130,10 +161,10 @@ describe('PreferencesStore', () => {
   it('a change to one part keeps the other part', () => {
     const { store } = setup('{"soundMuted":true,"soundVolume":"high"}');
     store.update({ theme: 'light' });
-    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'light' });
+    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'light', exercises: true });
 
     store.update({ sound: { muted: false, volume: 'low' } });
-    expect(store.get()).toEqual({ sound: { muted: false, volume: 'low' }, theme: 'light' });
+    expect(store.get()).toEqual({ sound: { muted: false, volume: 'low' }, theme: 'light', exercises: true });
   });
 
   it('both parts survive a restart', () => {
@@ -168,7 +199,7 @@ describe('soundPrefsView', () => {
     expect(view.get()).toEqual({ muted: false, volume: 'medium' });
     view.set({ muted: true, volume: 'high' });
 
-    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'dark' });
+    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'dark', exercises: true });
     expect(view.get()).toEqual({ muted: true, volume: 'high' });
   });
 

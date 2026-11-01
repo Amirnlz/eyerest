@@ -3,10 +3,12 @@ import { OVERLAY_MARGIN, OVERLAY_SIZE, type OverlayLayout } from '../shared/over
 import type { EyerestApi } from '../shared/ipc';
 import { Overlay } from './components/Overlay';
 import './components/IntegratedDim.css';
+import { useExercisesEnabled } from './hooks/use-exercises-enabled';
+import { useRestTotal } from './hooks/use-rest-total';
 import { useSchedulerSnapshot } from './hooks/use-scheduler-snapshot';
 import { useSoundCues } from './hooks/use-sound-cues';
 import type { SoundPlayer } from './sound/audio-player';
-import { toOverlayViewModel } from './view-model';
+import { HIDDEN_VIEW_MODEL, toOverlayViewModel, withExercise } from './view-model';
 
 export interface AppProps {
   readonly api: EyerestApi;
@@ -19,6 +21,8 @@ export interface AppProps {
   readonly layout?: OverlayLayout;
   /** Draw dim and rest content in one window for native Wayland stacking. */
   readonly integratedDim?: boolean;
+  /** Guided eye exercises on at launch. Main passes it in the URL; later changes arrive as pushes. */
+  readonly initialExercises?: boolean;
   /** Plays the rest start and end cues. Omitted in tests and the gallery. */
   readonly soundPlayer?: SoundPlayer;
 }
@@ -44,12 +48,21 @@ const integratedSurfaceStyle: CSSProperties = {
 };
 
 /** Connects the overlay to the main process through the preload bridge. */
-export function App({ api, layout = 'positioned', integratedDim = false, soundPlayer }: AppProps) {
+export function App({
+  api,
+  layout = 'positioned',
+  integratedDim = false,
+  initialExercises = true,
+  soundPlayer,
+}: AppProps) {
   const snapshot = useSchedulerSnapshot(api);
   useSoundCues(api, soundPlayer);
-  if (snapshot === null) return null;
+  const exercisesEnabled = useExercisesEnabled(api, initialExercises);
 
-  const viewModel = toOverlayViewModel(snapshot);
+  // Hooks above and below run on every render, before any early return.
+  const base = snapshot === null ? HIDDEN_VIEW_MODEL : toOverlayViewModel(snapshot);
+  const totalSeconds = useRestTotal(base);
+  const viewModel = withExercise(base, { enabled: exercisesEnabled, totalSeconds });
   if (viewModel.mode === 'hidden') return null;
 
   const overlay = (

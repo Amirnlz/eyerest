@@ -7,7 +7,14 @@ import { openGallery, themeNames } from './gallery-helpers';
  * clip it, so the fix is a larger OVERLAY_SIZE or tighter content, never a hidden overflow.
  */
 
-const frames = ['warning', 'eye-rest', 'long-rest'] as const;
+const frames = [
+  'warning',
+  'eye-rest',
+  'exercise-look-far',
+  'exercise-roll',
+  'exercise-blink',
+  'long-rest',
+] as const;
 
 for (const theme of themeNames) {
   for (const id of frames) {

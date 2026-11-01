@@ -47,6 +47,14 @@ export function createBridge(ipc: IpcRendererLike): EyerestApi {
       return () => ipc.removeListener(IPC.theme.channel, handler);
     },
 
+    onExercises(listener) {
+      const handler = (_event: unknown, payload: unknown) => {
+        if (typeof payload === 'boolean') listener(payload);
+      };
+      ipc.on(IPC.exercises.channel, handler);
+      return () => ipc.removeListener(IPC.exercises.channel, handler);
+    },
+
     skip: () => ipc.send(IPC.skip.channel),
     postpone: () => ipc.send(IPC.postpone.channel),
     closeSettings: () => ipc.send(IPC.closeSettings.channel),

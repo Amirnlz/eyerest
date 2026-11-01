@@ -1,6 +1,7 @@
 import type { AutostartPort, AutostartState } from '../../src/main/autostart/ports';
 import type { SoundPrefsPort } from '../../src/main/sound/ports';
 import type { ThemePort } from '../../src/main/theme/ports';
+import type { ExercisesPort } from '../../src/main/exercises/ports';
 import type { SoundPrefs } from '../../src/shared/sound';
 import type { ThemePreference } from '../../src/shared/theme';
 import type { SettingsFs } from '../../src/main/settings/settings';
@@ -131,5 +132,17 @@ export class FakeThemePort implements ThemePort {
   set(next: ThemePreference): void {
     this.changes.push(next);
     this.preference = next;
+  }
+}
+
+export class FakeExercisesPort implements ExercisesPort {
+  readonly changes: boolean[] = [];
+  constructor(public enabled = true) {}
+  get(): boolean {
+    return this.enabled;
+  }
+  set(next: boolean): void {
+    this.changes.push(next);
+    this.enabled = next;
   }
 }

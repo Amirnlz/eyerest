@@ -113,6 +113,14 @@ tray icon stay with the OS theme on purpose (the tray icon must contrast with th
 An unknown value in the file rejects the whole file (then sound and theme both fall back to defaults) and is
 logged as `[preferences]`.
 
+Guided eye exercises: during the 20 s eye rest the message becomes three prompts, one third of the rest each:
+look far away, roll your eyes, blink. A small looping picture sits beside the text and stops under the OS
+"reduce motion" setting (the still picture stays). Each new prompt is read out once by a screen reader. The 10 min
+long rest keeps its static message. An "Eye exercises" checkbox in the tray turns them off (on by default; key
+`exercises` in `preferences.json`, passed in the URL as `?exercises=` and pushed on change). The renderer works
+the step out from the countdown it already receives, so core and the scheduler are unchanged. Not verified on a
+real display yet, and the looping motion has no automated visual check.
+
 Sound cues: a soft chime when a rest starts and one when it runs out by itself (none after Skip or Postpone).
 The tray menu has a "Mute sounds" checkbox and a "Sound volume" submenu (Low 25%, Medium 50%, High 100%).
 Default is on at Medium. Choices persist in `preferences.json` next to `settings.json` (keys `soundMuted`,

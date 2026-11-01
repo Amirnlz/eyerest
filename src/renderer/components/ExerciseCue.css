@@ -1,0 +1,112 @@
+/*
+ * Exercise cue (4.6). Tokens only. One shape per exercise, picked by the modifier class:
+ *   look-far  a ring that grows outward, like focus moving away
+ *   roll      a dot that circles the eye
+ *   blink     the eye closing and opening
+ * Every animation is a loop that runs only under `prefers-reduced-motion: no-preference`. Without
+ * it the still picture stays, so the cue never depends on motion. Looping keyframes are right here:
+ * the cue is not interactive state, it never reverses mid-flight, and the step changes by remount.
+ */
+
+.er-exercise-cue {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--er-space-12);
+  block-size: var(--er-space-12);
+  color: var(--er-color-text-secondary);
+}
+
+.er-exercise-cue__ring,
+.er-exercise-cue__orbit {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+.er-exercise-cue__ring {
+  box-sizing: border-box;
+  border: var(--er-stroke-hairline) solid var(--er-color-border-strong);
+  border-radius: 50%;
+  scale: 0.8;
+}
+
+.er-exercise-cue__dot {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  inline-size: var(--er-space-2);
+  block-size: var(--er-space-2);
+  margin-inline-start: calc(var(--er-space-1) * -1);
+  border-radius: 50%;
+  background-color: var(--er-color-accent);
+}
+
+.er-exercise-cue--look-far .er-exercise-cue__ring,
+.er-exercise-cue--roll .er-exercise-cue__orbit {
+  display: block;
+}
+
+.er-exercise-cue__eye {
+  display: grid;
+  place-items: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .er-exercise-cue--look-far .er-exercise-cue__ring {
+    animation: er-cue-grow calc(var(--er-duration-tick) * 3) var(--er-ease-out) infinite;
+  }
+
+  .er-exercise-cue--roll .er-exercise-cue__orbit {
+    animation: er-cue-orbit calc(var(--er-duration-tick) * 2) var(--er-ease-linear) infinite;
+  }
+
+  .er-exercise-cue--blink .er-exercise-cue__eye {
+    animation: er-cue-blink calc(var(--er-duration-tick) * 2) var(--er-ease-standard) infinite;
+  }
+}
+
+@keyframes er-cue-grow {
+  from {
+    opacity: 1;
+    scale: 0.6;
+  }
+
+  to {
+    opacity: 0;
+    scale: 1.1;
+  }
+}
+
+@keyframes er-cue-orbit {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes er-cue-blink {
+  0%,
+  80%,
+  100% {
+    scale: 1 1;
+  }
+
+  90% {
+    scale: 1 0.1;
+  }
+}
+
+@media (forced-colors: active) {
+  .er-exercise-cue {
+    color: CanvasText;
+  }
+
+  .er-exercise-cue__ring {
+    border-color: CanvasText;
+  }
+
+  .er-exercise-cue__dot {
+    background-color: Highlight;
+  }
+}

@@ -85,6 +85,7 @@ Known platform risks (we handle them in the step that owns them):
 | 4.3 | Launch at login: tray checkbox, per-OS autostart | IN REVIEW (branch `feat/4.3-launch-at-login`) |
 | 4.5 | Sound cues: start and end chimes, tray mute and volume | IN REVIEW (branch `feat/4.5-sound-cues`) |
 | 4.13 | Theme setting: System, Light, Dark in the tray, stored in main | IN REVIEW (branch `feat/4.13-theme-setting`) |
+| 4.6 | Guided eye exercises: look far, roll, blink during the 20 s rest; tray checkbox | IN REVIEW (branch `feat/4.6-guided-eye-exercises`) |
 | 4.x | Feature backlog (chosen together) | TODO |
 
 ---

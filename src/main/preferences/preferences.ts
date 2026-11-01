@@ -16,11 +16,14 @@ export const PREFERENCES_FILE_NAME = 'preferences.json';
 export interface Preferences {
   readonly sound: SoundPrefs;
   readonly theme: ThemePreference;
+  /** Guided eye exercises during the 20 s rest. */
+  readonly exercises: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = Object.freeze({
   sound: DEFAULT_SOUND_PREFS,
   theme: DEFAULT_THEME_PREFERENCE,
+  exercises: true,
 });
 
 export interface PreferencesLoad {
@@ -49,6 +52,7 @@ export function parsePreferences(text: string): PreferencesLoad {
   let muted = DEFAULT_SOUND_PREFS.muted;
   let volume = DEFAULT_SOUND_PREFS.volume;
   let theme = DEFAULT_THEME_PREFERENCE;
+  let exercises = DEFAULT_PREFERENCES.exercises;
   const issues: string[] = [];
   for (const [key, value] of Object.entries(parsed)) {
     if (key === 'soundMuted') {
@@ -62,11 +66,14 @@ export function parsePreferences(text: string): PreferencesLoad {
         return invalid(`theme must be one of ${themePreferences.map((name) => `"${name}"`).join(', ')}`);
       }
       theme = value;
+    } else if (key === 'exercises') {
+      if (typeof value !== 'boolean') return invalid('exercises must be true or false');
+      exercises = value;
     } else {
       issues.push(`ignored unknown preference "${key}"`);
     }
   }
-  return { prefs: { sound: { muted, volume }, theme }, status: 'loaded', issues };
+  return { prefs: { sound: { muted, volume }, theme, exercises }, status: 'loaded', issues };
 }
 
 export function serializePreferences(prefs: Preferences): string {
@@ -74,6 +81,7 @@ export function serializePreferences(prefs: Preferences): string {
     soundMuted: prefs.sound.muted,
     soundVolume: prefs.sound.volume,
     theme: prefs.theme,
+    exercises: prefs.exercises,
   };
   return `${JSON.stringify(file, null, 2)}\n`;
 }

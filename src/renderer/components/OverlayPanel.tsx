@@ -7,6 +7,10 @@ export interface OverlayPanelProps {
   readonly message: string;
   /** Whole seconds left, shown by `Countdown`. */
   readonly seconds: number;
+  /** A small picture beside the text, such as the exercise cue. Decorative: hide it from assistive tech. */
+  readonly visual?: ReactNode;
+  /** Changing it remounts the message, so its entrance runs again for each guided step. */
+  readonly messageKey?: string;
   /** Actions shown beside the countdown. Omit for an informational panel. */
   readonly children?: ReactNode;
 }
@@ -26,22 +30,36 @@ export function chunkClassName(index: ChunkIndex): string {
  * optional action group. Built from design-system primitives only. All text arrives as props, so
  * wording stays in `copy.ts`.
  */
-export function OverlayPanel({ title, message, seconds, children }: OverlayPanelProps) {
+export function OverlayPanel({
+  title,
+  message,
+  seconds,
+  visual,
+  messageKey,
+  children,
+}: OverlayPanelProps) {
   const titleId = useId();
 
   return (
     <div className="er-overlay-panel">
       <Surface as="section" aria-labelledby={titleId}>
         <div className="er-overlay-panel__body">
-          <div className="er-overlay-panel__text">
-            <div className={chunkClassName(0)}>
-              <Text as="h2" id={titleId} variant="title">
-                {title}
-              </Text>
+          <div className="er-overlay-panel__content">
+            <div className="er-overlay-panel__text">
+              <div className={chunkClassName(0)}>
+                <Text as="h2" id={titleId} variant="title">
+                  {title}
+                </Text>
+              </div>
+              <div key={messageKey} className={chunkClassName(1)}>
+                <Text tone="secondary">{message}</Text>
+              </div>
             </div>
-            <div className={chunkClassName(1)}>
-              <Text tone="secondary">{message}</Text>
-            </div>
+            {visual === undefined ? null : (
+              <div key={messageKey} className={chunkClassName(1)}>
+                {visual}
+              </div>
+            )}
           </div>
           <div className={`er-overlay-panel__footer ${chunkClassName(2)}`}>
             <Countdown seconds={seconds} />

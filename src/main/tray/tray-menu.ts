@@ -23,6 +23,7 @@ export const TRAY_COPY = {
   volume: { low: 'Low', medium: 'Medium', high: 'High' } satisfies Record<SoundVolume, string>,
   theme: 'Theme',
   themeNames: { system: 'System', light: 'Light', dark: 'Dark' } satisfies Record<ThemePreference, string>,
+  eyeExercises: 'Eye exercises',
   quit: 'Quit',
   nextRest: (time: string) => `Next rest at ${time}`,
 } as const;
@@ -38,6 +39,7 @@ export type TrayItemId =
   | 'mute'
   | VolumeItemId
   | ThemeItemId
+  | 'exercises'
   | 'quit';
 
 /** The theme a tray item id stands for, or null for any other id. */
@@ -135,7 +137,7 @@ function themeMenu(theme: ThemePreference): TrayMenuItem {
 
 /**
  * Menu per scheduler state: status, Pause or Resume, Settings, Launch at login (when supported),
- * sound mute and volume and Theme (when wired), Quit. The scheduler is idle exactly when reminders are
+ * sound mute and volume, Theme and Eye exercises (when wired), Quit. The scheduler is idle exactly when reminders are
  * paused (it starts at launch), so idle shows Resume and every other phase
  * shows Pause.
  */
@@ -145,6 +147,7 @@ export function buildTrayMenu(
   autostart: AutostartState = AUTOSTART_UNSUPPORTED,
   sound: SoundPrefs | null = null,
   theme: ThemePreference | null = null,
+  exercises: boolean | null = null,
 ): TrayMenuModel {
   const status = statusText(snapshot, formatTime);
   const paused = snapshot.state.phase === 'idle';
@@ -167,6 +170,17 @@ export function buildTrayMenu(
         : []),
       ...(sound === null ? [] : soundItems(sound)),
       ...(theme === null ? [] : [themeMenu(theme)]),
+      ...(exercises === null
+        ? []
+        : [
+            {
+              kind: 'item',
+              id: 'exercises',
+              label: TRAY_COPY.eyeExercises,
+              enabled: true,
+              checked: exercises,
+            } as const,
+          ]),
       { kind: 'separator' },
       { kind: 'item', id: 'quit', label: TRAY_COPY.quit, enabled: true },
     ],

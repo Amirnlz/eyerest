@@ -39,6 +39,8 @@ if (resolveView(window.location.search) === 'settings') {
   const requestedLayout = params.get('layout');
   const layout = isOverlayLayout(requestedLayout) ? requestedLayout : 'positioned';
   const integratedDim = params.get('integratedDim') === '1';
+  // Guided exercises are on unless main passes `?exercises=0`.
+  const initialExercises = params.get('exercises') !== '0';
   const soundPlayer = createAudioPlayer({
     urls: SOUND_URLS,
     createAudio: createBrowserAudio,
@@ -47,7 +49,13 @@ if (resolveView(window.location.search) === 'settings') {
 
   createRoot(container).render(
     <StrictMode>
-      <App api={api} layout={layout} integratedDim={integratedDim} soundPlayer={soundPlayer} />
+      <App
+        api={api}
+        layout={layout}
+        integratedDim={integratedDim}
+        initialExercises={initialExercises}
+        soundPlayer={soundPlayer}
+      />
     </StrictMode>,
   );
 }

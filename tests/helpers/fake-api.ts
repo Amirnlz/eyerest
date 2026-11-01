@@ -19,6 +19,9 @@ export interface FakeApi extends EyerestApi {
   /** Simulates main pushing a theme choice. */
   pushTheme(preference: ThemePreference): void;
   themeListenerCount(): number;
+  /** Simulates main pushing the exercises switch. */
+  pushExercises(enabled: boolean): void;
+  exercisesListenerCount(): number;
   skip: Mock<() => void>;
   postpone: Mock<() => void>;
   closeSettings: Mock<() => void>;
@@ -30,6 +33,7 @@ export function createFakeApi(): FakeApi {
   const listeners = new Set<(snapshot: Snapshot) => void>();
   const cueListeners = new Set<(cue: PlayCue) => void>();
   const themeListeners = new Set<(preference: ThemePreference) => void>();
+  const exercisesListeners = new Set<(enabled: boolean) => void>();
   let resolveSnapshot!: (snapshot: Snapshot) => void;
   let rejectSnapshot!: (error: unknown) => void;
   const initial = new Promise<Snapshot>((resolve, reject) => {
@@ -57,6 +61,12 @@ export function createFakeApi(): FakeApi {
         themeListeners.delete(listener);
       };
     },
+    onExercises: (listener) => {
+      exercisesListeners.add(listener);
+      return () => {
+        exercisesListeners.delete(listener);
+      };
+    },
     skip: vi.fn<() => void>(),
     postpone: vi.fn<() => void>(),
     closeSettings: vi.fn<() => void>(),
@@ -78,6 +88,10 @@ export function createFakeApi(): FakeApi {
       for (const listener of [...themeListeners]) listener(preference);
     },
     themeListenerCount: () => themeListeners.size,
+    pushExercises: (enabled) => {
+      for (const listener of [...exercisesListeners]) listener(enabled);
+    },
+    exercisesListenerCount: () => exercisesListeners.size,
   };
 }
 

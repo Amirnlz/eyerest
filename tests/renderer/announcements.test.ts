@@ -91,3 +91,33 @@ describe('announcementFor: A2, never every second', () => {
     }
   });
 });
+
+describe('announcementFor: guided exercises', () => {
+  const withExercise = (seconds: number, id: 'look-far' | 'roll' | 'blink'): OverlayViewModel => ({
+    ...(rest('eye', seconds) as Extract<OverlayViewModel, { mode: 'rest' }>),
+    exercise: { id, ...copy.exercises[id] },
+  });
+
+  it('reads the prompt once when the exercise changes', () => {
+    expect(announcementFor(withExercise(14, 'roll'), withExercise(20, 'look-far'))).toBe(
+      copy.exercises.roll.prompt,
+    );
+    expect(announcementFor(withExercise(6, 'blink'), withExercise(14, 'roll'))).toBe(
+      copy.exercises.blink.prompt,
+    );
+  });
+
+  it('stays silent while the exercise stays the same', () => {
+    expect(announcementFor(withExercise(18, 'look-far'), withExercise(19, 'look-far'))).toBeNull();
+  });
+
+  it('adds the first prompt to the rest start announcement', () => {
+    expect(announcementFor(withExercise(20, 'look-far'), warning(1))).toBe(
+      `Rest your eyes for 20 seconds. ${copy.exercises['look-far'].prompt}`,
+    );
+  });
+
+  it('stays silent for a rest without exercises', () => {
+    expect(announcementFor(rest('eye', 13), rest('eye', 14))).toBeNull();
+  });
+});

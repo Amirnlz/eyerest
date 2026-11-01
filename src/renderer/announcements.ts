@@ -17,6 +17,8 @@ export const restMilestones: Readonly<Record<RestKind, readonly number[]>> = {
  * or `null` for silence (rule A2: milestones only, never every second).
  *
  * - Entering the warning or the rest announces it once.
+ * - Entering an eye rest with a guided exercise adds its prompt; each later exercise announces
+ *   its prompt once.
  * - During a rest, crossing a milestone announces the time actually left. A crossing, not an
  *   equality, so a skipped tick after sleep or throttling cannot swallow it.
  */
@@ -27,9 +29,14 @@ export function announcementFor(
   if (current.mode === 'hidden') return null;
 
   if (previous === null || previous.mode !== current.mode) {
-    return current.mode === 'warning'
-      ? copy.announcements.warning(spokenDuration(current.seconds))
-      : copy.announcements.restStart(current.title, spokenDuration(current.seconds));
+    if (current.mode === 'warning') {
+      return copy.announcements.warning(spokenDuration(current.seconds));
+    }
+    const start = copy.announcements.restStart(current.title, spokenDuration(current.seconds));
+    // The first guided exercise is part of the start, so it is read once with it.
+    return current.exercise === undefined
+      ? start
+      : `${start} ${copy.announcements.exercise(current.exercise.prompt)}`;
   }
 
   if (current.mode === 'rest' && previous.mode === 'rest') {
@@ -37,6 +44,12 @@ export function announcementFor(
       (milestone) => previous.seconds > milestone && current.seconds <= milestone,
     );
     if (crossed) return copy.announcements.restEnding(spokenDuration(current.seconds));
+
+    // Each later exercise is read out once, when it appears.
+    const exercise = current.exercise;
+    if (exercise !== undefined && previous.exercise?.id !== exercise.id) {
+      return copy.announcements.exercise(exercise.prompt);
+    }
   }
 
   return null;

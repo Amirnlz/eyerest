@@ -23,6 +23,8 @@ export interface ElectronWindowFactoryOptions {
   readonly integratedDim?: boolean;
   /** The theme choice when the window is created. Later changes arrive as pushes. */
   readonly getTheme?: () => ThemePreference;
+  /** Guided exercises on or off when the window is created. Later changes arrive as pushes. */
+  readonly getExercises?: () => boolean;
 }
 
 export function createElectronWindowFactory(
@@ -93,6 +95,7 @@ export function createElectronWindowFactory(
         options.layout,
         options.integratedDim,
         options.getTheme?.(),
+        options.getExercises?.(),
       );
 
       return {
@@ -110,8 +113,8 @@ export function createElectronWindowFactory(
 }
 
 /**
- * The layout and the theme choice are passed to the renderer as `?layout=` and `?theme=` query
- * parameters, so the first paint already has the right theme.
+ * The layout and the theme choice are passed to the renderer as `?layout=`, `?theme=` and
+ * `?exercises=` query parameters, so the first paint is already right.
  */
 function loadRenderer(
   window: BrowserWindow,
@@ -119,16 +122,18 @@ function loadRenderer(
   layout: OverlayLayout,
   integratedDim = false,
   theme: ThemePreference = DEFAULT_THEME_PREFERENCE,
+  exercises = true,
 ): void {
   if (target.kind === 'url') {
     const url = new URL(target.url);
     url.searchParams.set('layout', layout);
     url.searchParams.set('theme', theme);
+    url.searchParams.set('exercises', exercises ? '1' : '0');
     if (integratedDim) url.searchParams.set('integratedDim', '1');
     void window.loadURL(url.toString());
   } else {
     void window.loadFile(target.path, {
-      query: { layout, theme, ...(integratedDim ? { integratedDim: '1' } : {}) },
+      query: { layout, theme, exercises: exercises ? '1' : '0', ...(integratedDim ? { integratedDim: '1' } : {}) },
     });
   }
 }

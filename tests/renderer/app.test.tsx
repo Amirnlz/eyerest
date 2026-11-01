@@ -170,4 +170,96 @@ describe('App', () => {
       expect(container.firstElementChild).not.toHaveAttribute('style');
     });
   });
+
+  describe('guided exercises', () => {
+    const prompt = (id: 'look-far' | 'roll' | 'blink') => copy.exercises[id].prompt;
+
+    it('walks through the three exercises during a 20 s eye rest', () => {
+      const api = createFakeApi();
+      render(<App api={api} />);
+
+      act(() => api.push(resting(20)));
+      expect(screen.getByText(prompt('look-far'))).toBeInTheDocument();
+      expect(screen.queryByText(copy.rest.eye.message)).not.toBeInTheDocument();
+
+      act(() => api.push(resting(13)));
+      expect(screen.getByText(prompt('roll'))).toBeInTheDocument();
+      expect(screen.queryByText(prompt('look-far'))).not.toBeInTheDocument();
+
+      act(() => api.push(resting(6)));
+      expect(screen.getByText(prompt('blink'))).toBeInTheDocument();
+    });
+
+    it('keeps Skip, Postpone and the countdown beside the exercise', () => {
+      const api = createFakeApi();
+      render(<App api={api} />);
+      act(() => api.push(resting(20)));
+      expect(screen.getByRole('timer')).toHaveTextContent('20');
+      expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Postpone' })).toBeInTheDocument();
+    });
+
+    it('keeps the static message for a long rest', () => {
+      const api = createFakeApi();
+      render(<App api={api} />);
+      act(() => api.push(resting(600, 'long')));
+      expect(screen.getByText(copy.rest.long.message)).toBeInTheDocument();
+    });
+
+    it('keeps the static message when started off', () => {
+      const api = createFakeApi();
+      render(<App api={api} initialExercises={false} />);
+      act(() => api.push(resting(20)));
+      expect(screen.getByText(copy.rest.eye.message)).toBeInTheDocument();
+    });
+
+    it('switches live when the tray pushes a change, even mid-rest', () => {
+      const api = createFakeApi();
+      render(<App api={api} />);
+      act(() => api.push(resting(14)));
+      expect(screen.getByText(prompt('roll'))).toBeInTheDocument();
+
+      act(() => api.pushExercises(false));
+      expect(screen.getByText(copy.rest.eye.message)).toBeInTheDocument();
+
+      act(() => api.pushExercises(true));
+      expect(screen.getByText(prompt('roll'))).toBeInTheDocument();
+    });
+
+    it('starts a new rest at the first exercise', () => {
+      const api = createFakeApi();
+      render(<App api={api} />);
+      act(() => api.push(resting(20)));
+      act(() => api.push(resting(3)));
+      expect(screen.getByText(prompt('blink'))).toBeInTheDocument();
+
+      act(() => api.push(WORKING));
+      act(() => api.push(resting(20)));
+      expect(screen.getByText(prompt('look-far'))).toBeInTheDocument();
+    });
+
+    it('hides the picture from assistive tech and announces each step once', () => {
+      const api = createFakeApi();
+      const { container } = render(<App api={api} />);
+      act(() => api.push(resting(20)));
+      expect(container.querySelector('.er-exercise-cue')).toHaveAttribute('aria-hidden', 'true');
+      expect(screen.getByRole('status')).toHaveTextContent(prompt('look-far'));
+
+      act(() => api.push(resting(13)));
+      expect(screen.getByRole('status')).toHaveTextContent(prompt('roll'));
+    });
+
+    it('fits a short rest (fast mode): 5 s shows all three in order', () => {
+      const api = createFakeApi();
+      render(<App api={api} />);
+      const seen: string[] = [];
+      for (const left of [5, 4, 3, 2, 1]) {
+        act(() => api.push(resting(left)));
+        for (const id of ['look-far', 'roll', 'blink'] as const) {
+          if (screen.queryByText(prompt(id)) !== null && !seen.includes(id)) seen.push(id);
+        }
+      }
+      expect(seen).toEqual(['look-far', 'roll', 'blink']);
+    });
+  });
 });

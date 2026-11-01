@@ -185,3 +185,35 @@ describe('createBridge theme', () => {
   });
 });
 
+
+describe('createBridge exercises', () => {
+  it.each([true, false])('delivers a pushed %s', (enabled) => {
+    const ipc = createFakeIpcRenderer();
+    const listener = vi.fn();
+    createBridge(ipc).onExercises(listener);
+    ipc.push(IPC.exercises.channel, enabled);
+    expect(listener).toHaveBeenCalledWith(enabled);
+  });
+
+  it.each([undefined, null, 'true', 'false', 0, 1, {}, [true]])(
+    'drops a non-boolean payload: %j',
+    (payload) => {
+      const ipc = createFakeIpcRenderer();
+      const listener = vi.fn();
+      createBridge(ipc).onExercises(listener);
+      ipc.push(IPC.exercises.channel, payload);
+      expect(listener).not.toHaveBeenCalled();
+    },
+  );
+
+  it('never exposes the IPC event object, and unsubscribe removes the listener', () => {
+    const ipc = createFakeIpcRenderer();
+    const listener = vi.fn();
+    const off = createBridge(ipc).onExercises(listener);
+    ipc.push(IPC.exercises.channel, true);
+    expect(listener.mock.calls[0]).toHaveLength(1);
+    expect(ipc.listenerCount(IPC.exercises.channel)).toBe(1);
+    off();
+    expect(ipc.listenerCount(IPC.exercises.channel)).toBe(0);
+  });
+});

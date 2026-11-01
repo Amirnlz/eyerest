@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TrayController } from '../../src/main/tray/tray-controller';
 import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
-import { FakeAutostart, FakeSoundPrefs, FakeThemePort, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
+import { FakeAutostart, FakeExercisesPort, FakeSoundPrefs, FakeThemePort, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
 
 function setup() {
   const tray = new FakeTray();
@@ -394,5 +394,59 @@ describe('TrayController theme', () => {
     const bare = setup();
     bare.controller.send(WORKING);
     expect(() => bare.controller.handle('theme-dark')).not.toThrow();
+  });
+});
+
+describe('TrayController eye exercises', () => {
+  function withExercises(exercises = new FakeExercisesPort()) {
+    const tray = new FakeTray();
+    const controller = new TrayController(tray, new FakeTrayActions(), (ms) => `T${ms}`, {
+      exercises,
+    });
+    return { tray, controller, exercises };
+  }
+
+  const item = (tray: FakeTray) =>
+    tray.menu.items.find((entry) => entry.kind === 'item' && entry.id === 'exercises');
+
+  it('has no item without a port', () => {
+    const { tray, controller } = setup();
+    controller.send(WORKING);
+    expect(item(tray)).toBeUndefined();
+  });
+
+  it('shows the current choice', () => {
+    const { tray, controller } = withExercises(new FakeExercisesPort(false));
+    controller.send(WORKING);
+    expect(item(tray)).toMatchObject({ checked: false });
+  });
+
+  it('a click flips the switch and the checkbox follows at once', () => {
+    const { tray, controller, exercises } = withExercises();
+    controller.send(WORKING);
+
+    tray.click('exercises');
+    expect(exercises.changes).toEqual([false]);
+    expect(item(tray)).toMatchObject({ checked: false });
+
+    tray.click('exercises');
+    expect(exercises.changes).toEqual([false, true]);
+    expect(item(tray)).toMatchObject({ checked: true });
+  });
+
+  it('ignores a click before the first snapshot, after dispose, and with no port', () => {
+    const early = withExercises();
+    early.controller.handle('exercises');
+    expect(early.exercises.changes).toEqual([]);
+
+    const late = withExercises();
+    late.controller.send(WORKING);
+    late.controller.dispose();
+    late.controller.handle('exercises');
+    expect(late.exercises.changes).toEqual([]);
+
+    const bare = setup();
+    bare.controller.send(WORKING);
+    expect(() => bare.controller.handle('exercises')).not.toThrow();
   });
 });

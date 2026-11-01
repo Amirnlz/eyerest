@@ -269,3 +269,31 @@ describe('themeOfItem', () => {
     }
   });
 });
+
+describe('buildTrayMenu eye exercises item', () => {
+  const find = (model: ReturnType<typeof buildTrayMenu>) =>
+    model.items.find((entry) => entry.kind === 'item' && entry.id === 'exercises');
+
+  it('is absent unless wired', () => {
+    expect(find(buildTrayMenu(WORKING, fmt))).toBeUndefined();
+  });
+
+  it.each([true, false])('is a checkbox that is checked=%s', (enabled) => {
+    const model = buildTrayMenu(WORKING, fmt, undefined, null, null, enabled);
+    expect(find(model)).toEqual({
+      kind: 'item',
+      id: 'exercises',
+      label: 'Eye exercises',
+      enabled: true,
+      checked: enabled,
+    });
+  });
+
+  it('sits after Theme and before the separator', () => {
+    const model = buildTrayMenu(WORKING, fmt, undefined, null, 'system', true);
+    const ids = model.items.map((entry) =>
+      entry.kind === 'separator' ? '---' : entry.kind === 'submenu' ? entry.label : entry.id,
+    );
+    expect(ids).toEqual(['status', 'toggle', 'settings', 'Theme', 'exercises', '---', 'quit']);
+  });
+});

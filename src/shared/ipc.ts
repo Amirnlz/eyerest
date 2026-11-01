@@ -24,6 +24,7 @@ export const IPC = {
   snapshot: { channel: 'eyerest:snapshot', kind: 'push' },
   playCue: { channel: 'eyerest:play-cue', kind: 'push' },
   theme: { channel: 'eyerest:theme', kind: 'push' },
+  exercises: { channel: 'eyerest:exercises', kind: 'push' },
 } as const satisfies Record<string, { channel: string; kind: IpcKind }>;
 
 export type IpcName = keyof typeof IPC;
@@ -63,6 +64,8 @@ export interface EyerestApi {
   onCue(listener: (cue: PlayCue) => void): () => void;
   /** Subscribes to theme changes made in the tray. Unknown values are dropped. */
   onTheme(listener: (preference: ThemePreference) => void): () => void;
+  /** Subscribes to the tray's guided-exercises switch. Non-boolean payloads are dropped. */
+  onExercises(listener: (enabled: boolean) => void): () => void;
   /** User pressed Skip. */
   skip(): void;
   /** User pressed Postpone. */

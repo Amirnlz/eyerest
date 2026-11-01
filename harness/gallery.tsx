@@ -11,7 +11,7 @@ import './gallery.css';
 import type { Snapshot } from '../src/core/scheduler';
 import { loadBundledFonts } from '../src/renderer/fonts-bootstrap';
 import { Overlay } from '../src/renderer/components/Overlay';
-import { toOverlayViewModel } from '../src/renderer/view-model';
+import { toOverlayViewModel, withExercise } from '../src/renderer/view-model';
 import {
   createDomThemeController,
   isThemePreference,
@@ -226,7 +226,17 @@ function Photos() {
   );
 }
 
-const frames: readonly { readonly id: string; readonly snapshot: Snapshot }[] = [
+const eyeRest = (secondsRemaining: number): Snapshot => ({
+  state: { phase: 'resting', kind: 'eye', endsAt: 0, restsDone: 0 },
+  secondsRemaining,
+});
+
+const frames: readonly {
+  readonly id: string;
+  readonly snapshot: Snapshot;
+  /** Guided exercise on, for a 20 s rest. */
+  readonly exercise?: true;
+}[] = [
   {
     id: 'warning',
     snapshot: { state: { phase: 'warning', restAt: 0, restsDone: 0 }, secondsRemaining: 15 },
@@ -235,6 +245,9 @@ const frames: readonly { readonly id: string; readonly snapshot: Snapshot }[] = 
     id: 'eye-rest',
     snapshot: { state: { phase: 'resting', kind: 'eye', endsAt: 0, restsDone: 0 }, secondsRemaining: 20 },
   },
+  { id: 'exercise-look-far', snapshot: eyeRest(20), exercise: true },
+  { id: 'exercise-roll', snapshot: eyeRest(13), exercise: true },
+  { id: 'exercise-blink', snapshot: eyeRest(6), exercise: true },
   {
     id: 'long-rest',
     snapshot: { state: { phase: 'resting', kind: 'long', endsAt: 0, restsDone: 2 }, secondsRemaining: 600 },
@@ -246,14 +259,21 @@ function Overlays() {
   return (
     <Section id="overlay" title="Overlay at window size">
       <div className="gallery__row">
-        {frames.map(({ id, snapshot }) => (
+        {frames.map(({ id, snapshot, exercise }) => (
           <div
             className="gallery__frame"
             data-testid={`frame-${id}`}
             key={id}
             style={{ inlineSize: OVERLAY_SIZE.width, blockSize: OVERLAY_SIZE.height }}
           >
-            <Overlay viewModel={toOverlayViewModel(snapshot)} onSkip={() => undefined} onPostpone={() => undefined} />
+            <Overlay
+              viewModel={withExercise(toOverlayViewModel(snapshot), {
+                enabled: exercise === true,
+                totalSeconds: 20,
+              })}
+              onSkip={() => undefined}
+              onPostpone={() => undefined}
+            />
           </div>
         ))}
       </div>

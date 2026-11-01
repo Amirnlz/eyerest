@@ -18,6 +18,12 @@ export const copy = {
       message: 'Stand up, stretch and rest away from the screen.',
     },
   },
+  /** Guided eye exercises, shown in place of the static message during an eye rest. */
+  exercises: {
+    'look-far': { name: 'Look far away', prompt: 'Look at something far away.' },
+    roll: { name: 'Roll your eyes', prompt: 'Slowly roll your eyes in a circle.' },
+    blink: { name: 'Blink', prompt: 'Blink gently and often.' },
+  },
   actions: {
     skip: 'Skip',
     postpone: 'Postpone',
@@ -87,6 +93,7 @@ export const copy = {
   announcements: {
     warning: (duration: string) => `Eye rest starts in ${duration}.`,
     restStart: (title: string, duration: string) => `${title} for ${duration}.`,
+    exercise: (prompt: string) => prompt,
     restEnding: (duration: string) => `${duration} left.`,
   },
   /** Unit words for spoken durations. The plural is an "s" suffix, which is English only. */

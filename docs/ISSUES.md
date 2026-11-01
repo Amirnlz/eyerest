@@ -50,4 +50,7 @@ Severity: `HIGH` blocks use or a release, `MEDIUM` degrades use, `LOW` polish or
 | I28 | LOW | Theme (4.13) | A theme change pushed while a window is still loading is lost: the window keeps the value from its URL. Needs a read-back at boot if it ever shows up. | OPEN |
 | I29 | LOW | Preferences | One invalid value in `preferences.json` resets every preference, not only the bad one. Same rule as `settings.json`. | OPEN (candidate) |
 | I30 | LOW | Theme (4.13) | The Theme choice is not in the settings window. It is a tray entry only, as the roadmap row says. | DEFERRED |
-
+| I31 | LOW | Tray | `buildTrayMenu` takes its optional parts as positional parameters (autostart, sound, theme, exercises). A sixth one is a smell: next addition should move them into one options object. | OPEN (candidate) |
+| I32 | MEDIUM | Exercises (4.6) | Not verified on any OS display: panel layout with the cue, the loop motion, and the tray checkbox. The gallery overflow check covers the three steps at 360 by 240. | NEEDS INFO (owner: `npm run dev:fast`, watch a rest) |
+| I33 | LOW | Exercises (4.6) | The rest length is learned from the first countdown value the overlay sees. If the overlay window is recreated mid-rest (renderer crash), the remaining time is taken as the total and the steps compress. Fix would need the total in the snapshot (shared contract change). | OPEN |
+| I34 | LOW | Exercises (4.6) | The prompts and the picture are fixed: no per-exercise duration, no setting for which exercises run. | DEFERRED (candidate) |

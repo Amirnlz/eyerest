@@ -1,6 +1,7 @@
 import type { Snapshot } from '../core/scheduler';
 import type { RestKind } from '../core/state';
 import { copy } from './copy';
+import { exerciseAt, type ExerciseId } from './exercise/exercises';
 import { formatCountdown } from './format-countdown';
 
 export interface HiddenViewModel {
@@ -16,6 +17,13 @@ export interface WarningViewModel {
   readonly countdown: string;
 }
 
+/** The guided exercise showing now. It replaces the static message of an eye rest. */
+export interface RestExercise {
+  readonly id: ExerciseId;
+  readonly name: string;
+  readonly prompt: string;
+}
+
 export interface RestViewModel {
   readonly mode: 'rest';
   readonly kind: RestKind;
@@ -26,6 +34,8 @@ export interface RestViewModel {
   readonly countdown: string;
   readonly skipLabel: string;
   readonly postponeLabel: string;
+  /** Set by `withExercise`. Absent for a long rest, or when exercises are off. */
+  readonly exercise?: RestExercise;
 }
 
 export type OverlayViewModel = HiddenViewModel | WarningViewModel | RestViewModel;
@@ -68,4 +78,23 @@ export function toOverlayViewModel(snapshot: Snapshot): OverlayViewModel {
     case 'working':
       return HIDDEN_VIEW_MODEL;
   }
+}
+
+export interface ExerciseOptions {
+  /** The person's choice. Off keeps today's static message. */
+  readonly enabled: boolean;
+  /** Whole seconds in the whole rest, as first seen when it began. */
+  readonly totalSeconds: number;
+}
+
+/**
+ * Adds the current guided exercise to an eye rest. A long rest keeps its static message: the
+ * advice there is to stand up and stretch. Any other mode, and a disabled setting, pass through
+ * untouched (same object), so a view model only changes when an exercise really applies.
+ */
+export function withExercise(viewModel: OverlayViewModel, options: ExerciseOptions): OverlayViewModel {
+  if (!options.enabled || viewModel.mode !== 'rest' || viewModel.kind !== 'eye') return viewModel;
+  const id = exerciseAt(viewModel.seconds, options.totalSeconds);
+  const text = copy.exercises[id];
+  return { ...viewModel, exercise: { id, name: text.name, prompt: text.prompt } };
 }
