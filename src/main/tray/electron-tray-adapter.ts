@@ -38,7 +38,12 @@ export function createElectronTrayPort(options: ElectronTrayOptions): TrayPort {
       const template: MenuItemConstructorOptions[] = model.items.map((item) =>
         item.kind === 'separator'
           ? { type: 'separator' }
-          : { label: item.label, enabled: item.enabled, click: () => onSelect(item.id) },
+          : {
+              label: item.label,
+              enabled: item.enabled,
+              click: () => onSelect(item.id),
+              ...(item.checked === undefined ? {} : { type: 'checkbox' as const, checked: item.checked }),
+            },
       );
       tray.setToolTip(model.tooltip);
       tray.setContextMenu(Menu.buildFromTemplate(template));

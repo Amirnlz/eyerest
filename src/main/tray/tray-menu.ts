@@ -1,4 +1,5 @@
 import type { Snapshot } from '../../core/scheduler';
+import { AUTOSTART_UNSUPPORTED, type AutostartState } from '../autostart/ports';
 
 /**
  * Tray copy. English only until localization (Phase 4); kept in one object so
@@ -14,14 +15,22 @@ export const TRAY_COPY = {
   pause: 'Pause reminders',
   resume: 'Resume reminders',
   settings: 'Settings',
+  launchAtLogin: 'Launch at login',
   quit: 'Quit',
   nextRest: (time: string) => `Next rest at ${time}`,
 } as const;
 
-export type TrayItemId = 'status' | 'toggle' | 'settings' | 'quit';
+export type TrayItemId = 'status' | 'toggle' | 'settings' | 'autostart' | 'quit';
 
 export type TrayMenuItem =
-  | { readonly kind: 'item'; readonly id: TrayItemId; readonly label: string; readonly enabled: boolean }
+  | {
+      readonly kind: 'item';
+      readonly id: TrayItemId;
+      readonly label: string;
+      readonly enabled: boolean;
+      /** Present only on checkbox items. */
+      readonly checked?: boolean;
+    }
   | { readonly kind: 'separator' };
 
 /** Everything the tray shows, as plain data. The Electron adapter only renders it. */
@@ -51,13 +60,14 @@ export function statusText(snapshot: Snapshot, formatTime: (epochMs: number) => 
 }
 
 /**
- * Menu per scheduler state: status, Pause or Resume, Settings, Quit. The scheduler is idle exactly when reminders are
+ * Menu per scheduler state: status, Pause or Resume, Settings, Launch at login (when supported), Quit. The scheduler is idle exactly when reminders are
  * paused (it starts at launch), so idle shows Resume and every other phase
  * shows Pause.
  */
 export function buildTrayMenu(
   snapshot: Snapshot,
   formatTime: (epochMs: number) => string,
+  autostart: AutostartState = AUTOSTART_UNSUPPORTED,
 ): TrayMenuModel {
   const status = statusText(snapshot, formatTime);
   const paused = snapshot.state.phase === 'idle';
@@ -67,6 +77,17 @@ export function buildTrayMenu(
       { kind: 'item', id: 'status', label: status, enabled: false },
       { kind: 'item', id: 'toggle', label: paused ? TRAY_COPY.resume : TRAY_COPY.pause, enabled: true },
       { kind: 'item', id: 'settings', label: TRAY_COPY.settings, enabled: true },
+      ...(autostart.supported
+        ? [
+            {
+              kind: 'item',
+              id: 'autostart',
+              label: TRAY_COPY.launchAtLogin,
+              enabled: true,
+              checked: autostart.enabled,
+            } as const,
+          ]
+        : []),
       { kind: 'separator' },
       { kind: 'item', id: 'quit', label: TRAY_COPY.quit, enabled: true },
     ],

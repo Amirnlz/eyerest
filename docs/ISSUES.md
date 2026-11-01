@@ -39,3 +39,7 @@ Severity: `HIGH` blocks use or a release, `MEDIUM` degrades use, `LOW` polish or
 | I17 | MEDIUM | Idle (4.2) | Electron does not document `getSystemIdleTime` on native Wayland. If it reads 0 there, idle detection never triggers. Not verified on any OS. | NEEDS INFO (owner: run `EYEREST_DEBUG=1 EYEREST_FAST=1 npm run dev`, stop touching input for 3 s, look for `[idle] away`) |
 | I18 | LOW | Idle (4.2) | No e2e for idle: Playwright cannot produce OS input idleness. Covered in jsdom-free logic tests (engine, policy, monitor, runtime). The e2e suite sets `EYEREST_IDLE=0`. | OPEN |
 | I19 | LOW | Idle (4.2) | Threshold (60 s) has no setting. A settings field needs a new `IdleConfig` entry in the settings file and form. | DEFERRED (candidate) |
+| I20 | MEDIUM | Autostart (4.3) | Nothing verified on a real OS: Windows Run key, macOS login item (unsigned build), Linux `.desktop` entry on GNOME, KDE and Xfce. Verify from an installed build (`npm run package`), not `npm run dev`. | NEEDS INFO (owner) |
+| I21 | LOW | Autostart (4.3) | No e2e: Playwright cannot click a native tray menu, and a dev run reports autostart as unsupported by design. Covered by logic tests for the adapters, the factory and the tray controller. | OPEN |
+| I22 | LOW | Autostart (4.3) | Linux `Exec` has no `--no-sandbox` or display flags. If the installed app needs them at login, the entry must carry them. | NEEDS INFO |
+

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, powerMonitor, screen } from 'electron';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createAutostart } from './autostart/create-autostart';
 import { DimLayerManager } from './dim/dim-layer-manager';
 import {
   createElectronDimDisplayPort,
@@ -152,6 +153,19 @@ void app.whenReady().then(() => {
       resume: () => runtime?.controller.resume(),
       openSettings: () => settingsWindow?.open(),
       quit: () => app.quit(),
+    },
+    undefined,
+    {
+      autostart: createAutostart({
+        platform: process.platform,
+        isPackaged: app.isPackaged,
+        env: process.env,
+        execPath: process.execPath,
+        loginItemApp: app,
+        fs: settingsFs,
+        configHome: app.getPath('appData'),
+      }),
+      log: (message) => console.warn(`[autostart] ${message}`),
     },
   );
 

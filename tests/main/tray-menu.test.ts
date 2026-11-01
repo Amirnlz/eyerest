@@ -82,3 +82,42 @@ describe('buildTrayMenu', () => {
     expect(buildTrayMenu(IDLE, fmt).tooltip).toBe('eyerest: Paused');
   });
 });
+
+describe('buildTrayMenu launch at login', () => {
+  const item = (model: ReturnType<typeof buildTrayMenu>) =>
+    model.items.find((entry) => entry.kind === 'item' && entry.id === 'autostart');
+
+  it('has no such item by default or when unsupported', () => {
+    expect(item(buildTrayMenu(WORKING, fmt))).toBeUndefined();
+    expect(item(buildTrayMenu(WORKING, fmt, { supported: false }))).toBeUndefined();
+  });
+
+  it.each([true, false])('is a checkbox item reflecting enabled=%s', (enabled) => {
+    const model = buildTrayMenu(WORKING, fmt, { supported: true, enabled });
+    expect(item(model)).toEqual({
+      kind: 'item',
+      id: 'autostart',
+      label: TRAY_COPY.launchAtLogin,
+      enabled: true,
+      checked: enabled,
+    });
+  });
+
+  it('sits right after Settings and before the separator and Quit', () => {
+    const model = buildTrayMenu(WORKING, fmt, { supported: true, enabled: false });
+    expect(model.items.map((entry) => (entry.kind === 'separator' ? '---' : entry.id))).toEqual([
+      'status',
+      'toggle',
+      'settings',
+      'autostart',
+      '---',
+      'quit',
+    ]);
+  });
+
+  it('is offered in every phase, including paused and away', () => {
+    for (const snapshot of [IDLE, AWAY, warning(10), resting(10)]) {
+      expect(item(buildTrayMenu(snapshot, fmt, { supported: true, enabled: true }))).toBeDefined();
+    }
+  });
+});

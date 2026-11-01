@@ -82,6 +82,7 @@ Known platform risks (we handle them in the step that owns them):
 | 4.1c | Settings window, tray entry, e2e | IN REVIEW (branch `feat/4.1c-settings-window`) |
 | 4.1d | Settings fixes: close path, digits-only fields, limits, scrollbar, e2e fixes; `docs/ISSUES.md` | IN REVIEW (branch `fix/settings-issues`, stacked on 4.1c) |
 | 4.2 | Idle detection: pause on idle, reset after a long absence | IN REVIEW (branch `feat/4.2-idle-detection`) |
+| 4.3 | Launch at login: tray checkbox, per-OS autostart | IN REVIEW (branch `feat/4.3-launch-at-login`) |
 | 4.x | Feature backlog (chosen together) | TODO |
 
 ---

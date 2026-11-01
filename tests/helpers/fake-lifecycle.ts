@@ -1,3 +1,4 @@
+import type { AutostartPort, AutostartState } from '../../src/main/autostart/ports';
 import type { SettingsFs } from '../../src/main/settings/settings';
 import type { TrayActions, TrayPort } from '../../src/main/tray/tray-controller';
 import type { TrayItemId, TrayMenuModel } from '../../src/main/tray/tray-menu';
@@ -79,5 +80,26 @@ export class FakeSettingsFs implements SettingsFs {
   }
   ensureDir(path: string): void {
     this.ops.push(`ensureDir ${path}`);
+  }
+}
+
+/** Autostart port with a settable OS state and optional failures. */
+export class FakeAutostart implements AutostartPort {
+  readonly calls: boolean[] = [];
+  reads = 0;
+  setError: Error | null = null;
+  readError: Error | null = null;
+  /** A refused change throws and leaves `state` as it was. */
+  constructor(public state: AutostartState = { supported: true, enabled: false }) {}
+
+  getState(): AutostartState {
+    this.reads += 1;
+    if (this.readError) throw this.readError;
+    return this.state;
+  }
+  setEnabled(enabled: boolean): void {
+    this.calls.push(enabled);
+    if (this.setError) throw this.setError;
+    this.state = { supported: true, enabled };
   }
 }

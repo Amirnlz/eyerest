@@ -1,4 +1,5 @@
 import type { Snapshot } from '../../core/scheduler';
+import { AUTOSTART_UNSUPPORTED, type AutostartPort, type AutostartState } from '../autostart/ports';
 import type { SnapshotSender } from '../scheduler-controller';
 import { buildTrayMenu, type TrayItemId, type TrayMenuModel } from './tray-menu';
 
@@ -16,6 +17,12 @@ export interface TrayActions {
   quit(): void;
 }
 
+export interface TrayControllerOptions {
+  /** Launch at login. Without it the menu has no such item. */
+  readonly autostart?: AutostartPort;
+  readonly log?: (message: string) => void;
+}
+
 export function formatClockTime(epochMs: number): string {
   return new Date(epochMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -31,25 +38,63 @@ export function formatClockTime(epochMs: number): string {
 export class TrayController implements SnapshotSender {
   private lastModelKey: string | null = null;
   private lastPhase: Snapshot['state']['phase'] | null = null;
+  private lastSnapshot: Snapshot | null = null;
+  private autostartState: AutostartState | null = null;
   private disposed = false;
 
   constructor(
     private readonly tray: TrayPort,
     private readonly actions: TrayActions,
     private readonly formatTime: (epochMs: number) => string = formatClockTime,
+    private readonly options: TrayControllerOptions = {},
   ) {}
 
   send(snapshot: Snapshot): void {
     if (this.disposed) return;
     this.lastPhase = snapshot.state.phase;
+    this.lastSnapshot = snapshot;
+    this.render(snapshot);
+  }
 
-    const model = buildTrayMenu(snapshot, this.formatTime);
+  private render(snapshot: Snapshot): void {
+    const model = buildTrayMenu(snapshot, this.formatTime, this.currentAutostart());
     // Snapshots arrive every second during the warning and rest; only touch
     // the real tray when something visible changed.
     const key = JSON.stringify(model);
     if (key === this.lastModelKey) return;
     this.lastModelKey = key;
     this.tray.setMenu(model, (id) => this.handle(id));
+  }
+
+  /** Read once and after each toggle, never per snapshot: the OS read can touch the disk. */
+  private currentAutostart(): AutostartState {
+    if (this.autostartState === null) this.autostartState = this.readAutostart();
+    return this.autostartState;
+  }
+
+  private readAutostart(): AutostartState {
+    const port = this.options.autostart;
+    if (port === undefined) return AUTOSTART_UNSUPPORTED;
+    try {
+      return port.getState();
+    } catch (error) {
+      this.options.log?.(`autostart state unreadable: ${String(error)}`);
+      return AUTOSTART_UNSUPPORTED;
+    }
+  }
+
+  private toggleAutostart(): void {
+    const port = this.options.autostart;
+    const state = this.currentAutostart();
+    if (port === undefined || !state.supported) return;
+    try {
+      port.setEnabled(!state.enabled);
+    } catch (error) {
+      this.options.log?.(`autostart change failed: ${String(error)}`);
+    }
+    // Re-read the OS either way, so the checkbox shows what is really registered.
+    this.autostartState = this.readAutostart();
+    if (this.lastSnapshot !== null) this.render(this.lastSnapshot);
   }
 
   /** Runs a menu action. Ignored after dispose and before the first snapshot. */
@@ -63,6 +108,10 @@ export class TrayController implements SnapshotSender {
         return;
       case 'settings':
         this.actions.openSettings();
+        return;
+      case 'autostart':
+        if (this.lastSnapshot === null) return;
+        this.toggleAutostart();
         return;
       case 'quit':
         this.actions.quit();

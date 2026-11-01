@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TrayController } from '../../src/main/tray/tray-controller';
 import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
-import { FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
+import { FakeAutostart, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
 
 function setup() {
   const tray = new FakeTray();
@@ -131,5 +131,113 @@ describe('TrayController', () => {
       expect(tray.menus).toHaveLength(1);
       expect(actions.calls).toEqual([]);
     });
+  });
+});
+
+describe('TrayController launch at login', () => {
+  function withAutostart(autostart = new FakeAutostart()) {
+    const tray = new FakeTray();
+    const actions = new FakeTrayActions();
+    const log: string[] = [];
+    const controller = new TrayController(tray, actions, (ms) => `T${ms}`, {
+      autostart,
+      log: (message) => log.push(message),
+    });
+    return { tray, actions, controller, autostart, log };
+  }
+
+  const checked = (tray: FakeTray) => {
+    const entry = tray.menu.items.find((item) => item.kind === 'item' && item.id === 'autostart');
+    return entry?.kind === 'item' ? entry.checked : undefined;
+  };
+
+  it('shows an unchecked item when the OS entry is off, a checked one when on', () => {
+    const off = withAutostart();
+    off.controller.send(WORKING);
+    expect(checked(off.tray)).toBe(false);
+
+    const on = withAutostart(new FakeAutostart({ supported: true, enabled: true }));
+    on.controller.send(WORKING);
+    expect(checked(on.tray)).toBe(true);
+  });
+
+  it('has no item when unsupported, and clicking it does nothing', () => {
+    const { tray, controller, autostart } = withAutostart(new FakeAutostart({ supported: false }));
+    controller.send(WORKING);
+    expect(checked(tray)).toBeUndefined();
+    controller.handle('autostart');
+    expect(autostart.calls).toEqual([]);
+  });
+
+  it('has no item at all without a port (the existing constructor)', () => {
+    const { tray, controller } = setup();
+    controller.send(WORKING);
+    expect(checked(tray)).toBeUndefined();
+  });
+
+  it('click turns it on and the menu is rebuilt checked', () => {
+    const { tray, controller, autostart } = withAutostart();
+    controller.send(WORKING);
+    tray.click('autostart');
+    expect(autostart.calls).toEqual([true]);
+    expect(checked(tray)).toBe(true);
+  });
+
+  it('a second click turns it off again', () => {
+    const { tray, controller, autostart } = withAutostart();
+    controller.send(WORKING);
+    tray.click('autostart');
+    tray.click('autostart');
+    expect(autostart.calls).toEqual([true, false]);
+    expect(checked(tray)).toBe(false);
+  });
+
+  it('keeps the current phase text after a toggle', () => {
+    const { tray, controller } = withAutostart();
+    controller.send(warning(10));
+    tray.click('autostart');
+    expect(tray.labels[0]).toBe('Rest starting soon');
+  });
+
+  it('reads the OS once, not on every snapshot', () => {
+    const { controller, autostart } = withAutostart();
+    controller.send(WORKING);
+    controller.send(warning(10));
+    controller.send(warning(9));
+    controller.send(resting(5));
+    expect(autostart.reads).toBe(1);
+  });
+
+  it('a refused change is logged and the checkbox shows the real OS state', () => {
+    const { tray, controller, autostart, log } = withAutostart();
+    autostart.setError = new Error('permission denied');
+    controller.send(WORKING);
+
+    tray.click('autostart');
+
+    expect(log).toEqual([expect.stringContaining('permission denied')]);
+    expect(checked(tray)).toBe(false);
+  });
+
+  it('an unreadable OS state hides the item instead of crashing', () => {
+    const { tray, controller, autostart, log } = withAutostart();
+    autostart.readError = new Error('registry locked');
+    controller.send(WORKING);
+    expect(checked(tray)).toBeUndefined();
+    expect(log).toEqual([expect.stringContaining('registry locked')]);
+  });
+
+  it('click before the first snapshot does nothing and does not throw', () => {
+    const { controller, autostart } = withAutostart();
+    controller.handle('autostart');
+    expect(autostart.calls).toEqual([]);
+  });
+
+  it('is ignored after dispose', () => {
+    const { controller, autostart } = withAutostart();
+    controller.send(WORKING);
+    controller.dispose();
+    controller.handle('autostart');
+    expect(autostart.calls).toEqual([]);
   });
 });

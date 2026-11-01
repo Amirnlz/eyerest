@@ -107,6 +107,16 @@ Pause/Resume reminders, Quit). Pause stops the scheduler and hides the overlay a
 Resume starts a fresh cycle. A second launch exits immediately. On Linux the tray needs a
 StatusNotifier/AppIndicator host (GNOME needs the AppIndicator extension), otherwise no icon is shown.
 
+Launch at login: a "Launch at login" checkbox in the tray menu, off by default, shown only in packaged builds
+(a dev run would register the bare Electron binary). The OS is the source of truth and nothing is stored in
+`settings.json`; the checkbox re-reads the OS after each click, so a refused change shows as unchecked and is
+logged as `[autostart]`. Windows and macOS use Electron's login item API (Windows registry Run key, macOS login
+item; an unsigned macOS build may be refused by the OS). Linux writes `~/.config/autostart/eyerest.desktop`
+(`$XDG_CONFIG_HOME` is honoured) with the AppImage file or the installed binary as `Exec`; the entry is ignored
+by desktops that do not implement XDG autostart, and an entry disabled in the desktop's own startup settings
+shows as unchecked. Not verified on any OS yet. The tray adapter renders a native checkbox item; whether a
+Linux StatusNotifier host shows the check mark is untested.
+
 Settings: optional JSON file `settings.json` in the Electron user data dir (Linux `~/.config/eyerest`,
 macOS `~/Library/Application Support/eyerest`, Windows `%APPDATA%\eyerest`). Keys are the config fields,
 all optional, durations in milliseconds: `workIntervalMs`, `warningMs`, `eyeRestMs`, `longRestMs`,
