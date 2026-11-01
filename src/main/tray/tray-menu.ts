@@ -7,6 +7,7 @@ import type { Snapshot } from '../../core/scheduler';
 export const TRAY_COPY = {
   appName: 'eyerest',
   paused: 'Paused',
+  away: 'Away: timer paused',
   warning: 'Rest starting soon',
   resting: 'Resting',
   restingLong: 'Long rest in progress',
@@ -38,6 +39,8 @@ export function statusText(snapshot: Snapshot, formatTime: (epochMs: number) => 
   switch (state.phase) {
     case 'idle':
       return TRAY_COPY.paused;
+    case 'away':
+      return TRAY_COPY.away;
     case 'working':
       return TRAY_COPY.nextRest(formatTime(state.restAt));
     case 'warning':

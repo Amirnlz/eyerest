@@ -343,6 +343,89 @@ describe('RestScheduler.reconfigure', () => {
   });
 });
 
+describe('RestScheduler away and back', () => {
+  it('freezes the countdown: no warning or rest while away, however long', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    time.advance(5 * MIN);
+    scheduler.away(time.now() - SEC);
+    events.length = 0;
+
+    time.advance(2 * 60 * MIN);
+
+    expect(events).toEqual([]);
+    expect(scheduler.getSnapshot()).toEqual({
+      state: { phase: 'away', since: 5 * MIN - SEC, remainingMs: 15 * MIN + SEC, restsDone: 0 },
+      secondsRemaining: null,
+    });
+  });
+
+  it('back resumes with the time that was left, so the rest comes later than planned', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    time.advance(5 * MIN);
+    scheduler.away(5 * MIN); // idle since the 5 minute mark, 15 min left
+    time.advance(5 * MIN); // away 5 min, under the 10 min long rest
+    scheduler.back(); // at 10 min: rest due at 25 min
+    events.length = 0;
+
+    time.advance(15 * MIN - 15 * SEC);
+    expect(events.map((event) => event.type)).toEqual(['warning-started']);
+    time.advance(15 * SEC);
+    expect(events.map((event) => event.type)).toEqual(['warning-started', 'rest-started']);
+  });
+
+  it('a long absence restarts the work interval and consumes a rest slot', () => {
+    const { scheduler, time, events } = setup();
+    scheduler.start();
+    time.advance(5 * MIN);
+    scheduler.away(5 * MIN);
+    time.advance(10 * MIN);
+    scheduler.back(); // at 15 min, away 10 min: fresh 20 min interval
+    expect(events.at(-1)).toEqual({ type: 'away-ended', reset: true });
+    expect(scheduler.getSnapshot().state).toEqual({
+      phase: 'working',
+      restAt: 35 * MIN,
+      restsDone: 1,
+    });
+  });
+
+  it('is a no-op when stopped, and back is a no-op when not away', () => {
+    const { scheduler, events } = setup();
+    scheduler.away(0);
+    scheduler.back();
+    expect(events).toEqual([]);
+
+    scheduler.start();
+    events.length = 0;
+    scheduler.back();
+    expect(events).toEqual([]);
+  });
+
+  it('keeps ticking while away so Pause and a restart still work', () => {
+    const { scheduler, time } = setup();
+    scheduler.start();
+    scheduler.away(time.now());
+    expect(time.activeTickers).toBe(1);
+
+    scheduler.stop();
+    expect(scheduler.getSnapshot().state).toEqual({ phase: 'idle' });
+    expect(time.activeTickers).toBe(0);
+  });
+
+  it('reconfigure while away restarts the cycle like Pause then Resume', () => {
+    const { scheduler, time } = setup();
+    scheduler.start();
+    scheduler.away(time.now());
+    scheduler.reconfigure(createConfig({ workIntervalMs: 30 * MIN }));
+    expect(scheduler.getSnapshot().state).toEqual({
+      phase: 'working',
+      restAt: time.now() + 30 * MIN,
+      restsDone: 0,
+    });
+  });
+});
+
 describe('RestScheduler with real timers', () => {
   beforeEach(() => {
     vi.useFakeTimers();

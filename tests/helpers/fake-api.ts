@@ -58,6 +58,11 @@ export const WORKING: Snapshot = {
   secondsRemaining: null,
 };
 
+export const AWAY: Snapshot = {
+  state: { phase: 'away', since: 0, remainingMs: 600_000, restsDone: 0 },
+  secondsRemaining: null,
+};
+
 export const warning = (seconds: number): Snapshot => ({
   state: { phase: 'warning', restAt: 20_000, restsDone: 0 },
   secondsRemaining: seconds,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TRAY_COPY, buildTrayMenu, statusText } from '../../src/main/tray/tray-menu';
-import { IDLE, WORKING, resting, warning } from '../helpers/fake-api';
+import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
 
 const fmt = (epochMs: number) => `T${epochMs}`;
 
@@ -19,8 +19,21 @@ describe('statusText', () => {
     expect(statusText(resting(590, 'long'), fmt)).toBe(TRAY_COPY.restingLong);
   });
 
+  it('says the timer is paused while the person is away', () => {
+    expect(statusText(AWAY, fmt)).toBe(TRAY_COPY.away);
+  });
+
   it('says paused when idle', () => {
     expect(statusText(IDLE, fmt)).toBe(TRAY_COPY.paused);
+  });
+});
+
+describe('buildTrayMenu while away', () => {
+  it('still offers Pause: reminders are running, only the countdown is frozen', () => {
+    const model = buildTrayMenu(AWAY, fmt);
+    const toggle = model.items.find((item) => item.kind === 'item' && item.id === 'toggle');
+    expect(toggle).toMatchObject({ label: TRAY_COPY.pause, enabled: true });
+    expect(model.tooltip).toBe(`${TRAY_COPY.appName}: ${TRAY_COPY.away}`);
   });
 });
 

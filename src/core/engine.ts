@@ -38,6 +38,11 @@ function working(restAt: number, restsDone: number): EngineState {
  * - resting -> working when the rest ends; next rest is scheduled
  *   `workIntervalMs` after `now`.
  * - skip (resting only): consumes the rest slot, next rest in `workIntervalMs`.
+ * - away (working only): freezes the work countdown at what was left when the
+ *   person last touched the machine. Never applies to a warning or a rest.
+ * - back (away only): resumes the frozen countdown. If the absence lasted at
+ *   least `longRestMs` it counts as a rest instead: a fresh work interval, and
+ *   the rest slot is consumed (like a skipped rest).
  * - postpone (resting only): does not consume the slot; next rest in
  *   `postponeMs`. Because later rests are scheduled relative to when the
  *   previous one finished, every later rest shifts by the same amount.
@@ -72,6 +77,32 @@ export function transition(
       };
     }
 
+    case 'away': {
+      if (state.phase !== 'working') return unchanged(state);
+      // Clamped: after a restart (settings saved) `since` can predate the new interval.
+      const remaining = Math.min(Math.max(state.restAt - action.since, 0), config.workIntervalMs);
+      return {
+        state: {
+          phase: 'away',
+          since: action.since,
+          remainingMs: remaining,
+          restsDone: state.restsDone,
+        },
+        events: [{ type: 'away-started', since: action.since }],
+      };
+    }
+
+    case 'back': {
+      if (state.phase !== 'away') return unchanged(state);
+      const reset = action.now - state.since >= config.longRestMs;
+      return {
+        state: reset
+          ? working(action.now + config.workIntervalMs, state.restsDone + 1)
+          : working(action.now + state.remainingMs, state.restsDone),
+        events: [{ type: 'away-ended', reset }],
+      };
+    }
+
     case 'postpone': {
       if (state.phase !== 'resting') return unchanged(state);
       const newRestAt = action.now + config.postponeMs;
@@ -86,6 +117,7 @@ export function transition(
 function tick(state: EngineState, now: number, config: RestConfig): Transition {
   switch (state.phase) {
     case 'idle':
+    case 'away':
       return unchanged(state);
 
     case 'working':

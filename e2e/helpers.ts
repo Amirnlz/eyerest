@@ -27,6 +27,8 @@ export async function launchApp(layout: Layout = 'positioned', options: LaunchOp
     env: {
       ...process.env,
       EYEREST_FAST: '1',
+      // The tests send no input, so real idle detection would freeze the cycle after 3 s.
+      EYEREST_IDLE: '0',
       EYEREST_PLACEMENT: layout,
       ...options.env,
     } as Record<string, string>,

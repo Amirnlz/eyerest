@@ -24,6 +24,7 @@ function setup(
 describe('isDimPhase', () => {
   it.each([
     ['idle', false],
+    ['away', false],
     ['working', false],
     ['warning', false],
     ['resting', true],

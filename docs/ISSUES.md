@@ -10,11 +10,11 @@ Severity: `HIGH` blocks use or a release, `MEDIUM` degrades use, `LOW` polish or
 
 | ID | Sev | Area | Problem | Status | Fix |
 | -- | --- | ---- | ------- | ------ | --- |
-| I1 | HIGH | Settings window | No way to close or minimize. Native Wayland windows have no client-side decorations. | FIXED (in review) | `eyerest:close-settings` IPC, Close button, Escape. Minimize not added (see I13). |
-| I2 | MEDIUM | Settings UI | Number fields show up/down spin buttons. | FIXED (in review) | `NumberField` is a digits-only text input (`inputMode="numeric"`). |
-| I3 | HIGH | Settings validation | No sane range: any number could be entered. | FIXED (in review) | Min and max are half and twice the default (`src/core/settings-limits.ts`), enforced in the form and in main. |
-| I4 | LOW | Settings UI | Default scrollbar does not match the design system. | FIXED (in review) | Token-styled `::-webkit-scrollbar`; the page is the scroll container. |
-| I5 | HIGH | e2e | `getByRole('spinbutton', {name:'Long rest'})` also matched "Long rest every" (strict-mode violation). | FIXED (in review) | `exact: true`. |
+| I1 | HIGH | Settings window | No way to close or minimize. Native Wayland windows have no client-side decorations. | FIXED | `eyerest:close-settings` IPC, Close button, Escape. Minimize not added (see I13). |
+| I2 | MEDIUM | Settings UI | Number fields show up/down spin buttons. | FIXED | `NumberField` is a digits-only text input (`inputMode="numeric"`). |
+| I3 | HIGH | Settings validation | No sane range: any number could be entered. | FIXED | Min and max are half and twice the default (`src/core/settings-limits.ts`), enforced in the form and in main. |
+| I4 | LOW | Settings UI | Default scrollbar does not match the design system. | FIXED | Token-styled `::-webkit-scrollbar`; the page is the scroll container. |
+| I5 | HIGH | e2e | `getByRole('spinbutton', {name:'Long rest'})` also matched "Long rest every" (strict-mode violation). | FIXED | `exact: true`. |
 | I6 | HIGH | e2e | Click on Save times out at "visible, enabled and stable" (2 tests). Root cause unconfirmed. Hypothesis: the settings window does not paint, so `requestAnimationFrame` does not fire and the "stable" check never passes. | NEEDS INFO | Tests submit with Enter, which skips the check. Confirm with `EYEREST_DEBUG=1` (settings window now logs `ready-to-show`, `show`, `closed`) and `npm run e2e`. If the window is not shown, the bug is in the window adapter, not the test. |
 
 ## 2. Earlier issues, from the project docs
@@ -34,5 +34,8 @@ Severity: `HIGH` blocks use or a release, `MEDIUM` degrades use, `LOW` polish or
 | -- | --- | ---- | ------- | ------ |
 | I13 | LOW | Settings window | No minimize. The window is a normal framed window on Windows, macOS and X11, which already minimize. Only frameless Wayland lacks it. Candidate if wanted. | DEFERRED |
 | I14 | LOW | Settings UI | Limits are half and twice the default, so a person who wants a 60 min work interval cannot set it. Product decision, easy to widen in `settings-limits.ts`. | OPEN (owner) |
-| I15 | LOW | Design system | V8 (`border-strong` unused) is resolved by the settings inputs. | FIXED (in review) |
+| I15 | LOW | Design system | V8 (`border-strong` unused) is resolved by the settings inputs. | FIXED |
 | I16 | LOW | Docs | `ROADMAP.md` working agreement still says each step ships a zip. Pushing to GitHub replaced it. | OPEN |
+| I17 | MEDIUM | Idle (4.2) | Electron does not document `getSystemIdleTime` on native Wayland. If it reads 0 there, idle detection never triggers. Not verified on any OS. | NEEDS INFO (owner: run `EYEREST_DEBUG=1 EYEREST_FAST=1 npm run dev`, stop touching input for 3 s, look for `[idle] away`) |
+| I18 | LOW | Idle (4.2) | No e2e for idle: Playwright cannot produce OS input idleness. Covered in jsdom-free logic tests (engine, policy, monitor, runtime). The e2e suite sets `EYEREST_IDLE=0`. | OPEN |
+| I19 | LOW | Idle (4.2) | Threshold (60 s) has no setting. A settings field needs a new `IdleConfig` entry in the settings file and form. | DEFERRED (candidate) |

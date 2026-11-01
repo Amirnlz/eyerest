@@ -1,6 +1,15 @@
 import type { RestConfig } from '../core/config';
-import { RestScheduler, type SchedulerOptions } from '../core/scheduler';
+import { createIdleConfig, type IdleConfig } from '../core/idle';
+import {
+  RestScheduler,
+  systemClock,
+  systemTicker,
+  type SchedulerOptions,
+  type Ticker,
+} from '../core/scheduler';
 import type { IpcMainLike } from '../shared/ipc';
+import { IdleMonitor } from './idle/idle-monitor';
+import type { IdleSource } from './idle/ports';
 import { registerIpcHandlers } from './ipc-handlers';
 import { resolveConfig } from './runtime-config';
 import { SettingsService, type SettingsStorage } from './settings/settings-service';
@@ -30,6 +39,19 @@ export interface MainRuntimeDeps {
   readonly settingsStorage?: SettingsStorage;
   /** Closes the settings window when the renderer asks. Absent in tests that have no window. */
   readonly closeSettingsWindow?: () => void;
+  /**
+   * Idle detection. Without a source there is no monitor, so tests that do not care
+   * about it are unchanged. `EYEREST_FAST=1` shortens the threshold to 3 s and
+   * `EYEREST_IDLE=0` turns the monitor off (the e2e suite sends no input, so it would
+   * otherwise go away mid-cycle).
+   */
+  readonly idle?: {
+    readonly source: IdleSource;
+    readonly config?: Partial<IdleConfig>;
+    /** Test seam. The scheduler's ticker is not reused: a fake ticker holds one callback. */
+    readonly ticker?: Ticker;
+    readonly log?: (message: string) => void;
+  };
   /** Test seam: inject a fake clock and ticker. */
   readonly schedulerOptions?: SchedulerOptions;
 }
@@ -54,6 +76,22 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
     ...(deps.extraSenders ?? []),
   ]);
   const controller = new SchedulerController(scheduler, sender);
+  const idleMonitor =
+    deps.idle === undefined || deps.env['EYEREST_IDLE'] === '0'
+      ? null
+      : new IdleMonitor(
+          deps.idle.source,
+          scheduler,
+          deps.schedulerOptions?.clock ?? systemClock,
+          deps.idle.ticker ?? systemTicker,
+          {
+            config: createIdleConfig({
+              ...(deps.env['EYEREST_FAST'] === '1' ? { thresholdMs: 3_000 } : {}),
+              ...deps.idle.config,
+            }),
+            log: deps.idle.log,
+          },
+        );
   const settings = new SettingsService({
     env: deps.env,
     initialOverrides: deps.settingsOverrides,
@@ -68,8 +106,12 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
 
   return {
     controller,
-    start: () => controller.start(),
+    start: () => {
+      controller.start();
+      idleMonitor?.start();
+    },
     dispose: () => {
+      idleMonitor?.dispose();
       removeIpcHandlers();
       controller.dispose();
     },

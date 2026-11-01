@@ -25,6 +25,15 @@ describe('toOverlayViewModel', () => {
     expect(toOverlayViewModel(idle)).toBe(HIDDEN_VIEW_MODEL);
   });
 
+  it('hides the overlay while away', () => {
+    expect(
+      toOverlayViewModel({
+        state: { phase: 'away', since: 0, remainingMs: 600_000, restsDone: 0 },
+        secondsRemaining: null,
+      }),
+    ).toBe(HIDDEN_VIEW_MODEL);
+  });
+
   it('hides the overlay while working', () => {
     expect(toOverlayViewModel(working)).toBe(HIDDEN_VIEW_MODEL);
   });

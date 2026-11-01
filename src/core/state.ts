@@ -10,6 +10,16 @@ export type RestKind = 'eye' | 'long';
  */
 export type EngineState =
   | { readonly phase: 'idle' }
+  /**
+   * The person walked away during the work phase. The work countdown is frozen:
+   * `remainingMs` is what was left when they last touched the machine (`since`).
+   */
+  | {
+      readonly phase: 'away';
+      readonly since: number;
+      readonly remainingMs: number;
+      readonly restsDone: number;
+    }
   | { readonly phase: 'working'; readonly restAt: number; readonly restsDone: number }
   | { readonly phase: 'warning'; readonly restAt: number; readonly restsDone: number }
   | {
@@ -31,14 +41,20 @@ export type EngineEvent =
   | { readonly type: 'rest-started'; readonly kind: RestKind; readonly endsAt: number }
   | { readonly type: 'rest-completed'; readonly kind: RestKind }
   | { readonly type: 'rest-skipped'; readonly kind: RestKind }
-  | { readonly type: 'rest-postponed'; readonly newRestAt: number };
+  | { readonly type: 'rest-postponed'; readonly newRestAt: number }
+  | { readonly type: 'away-started'; readonly since: number }
+  /** `reset` is true when the absence was long enough to count as a rest. */
+  | { readonly type: 'away-ended'; readonly reset: boolean };
 
 export type EngineAction =
   | { readonly type: 'start'; readonly now: number }
   | { readonly type: 'stop' }
   | { readonly type: 'tick'; readonly now: number }
   | { readonly type: 'skip'; readonly now: number }
-  | { readonly type: 'postpone'; readonly now: number };
+  | { readonly type: 'postpone'; readonly now: number }
+  /** `since` is when the last input happened, which is before `now`. */
+  | { readonly type: 'away'; readonly now: number; readonly since: number }
+  | { readonly type: 'back'; readonly now: number };
 
 export interface Transition {
   readonly state: EngineState;

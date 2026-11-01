@@ -64,6 +64,7 @@ export function toOverlayViewModel(snapshot: Snapshot): OverlayViewModel {
       };
 
     case 'idle':
+    case 'away':
     case 'working':
       return HIDDEN_VIEW_MODEL;
   }

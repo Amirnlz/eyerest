@@ -17,6 +17,7 @@ function setup(workArea = HD) {
 describe('isOverlayPhase', () => {
   it.each([
     ['idle', false],
+    ['away', false],
     ['working', false],
     ['warning', true],
     ['resting', true],

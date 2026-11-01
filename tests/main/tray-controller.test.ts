@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TrayController } from '../../src/main/tray/tray-controller';
-import { IDLE, WORKING, resting, warning } from '../helpers/fake-api';
+import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
 import { FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
 
 function setup() {
@@ -61,6 +61,7 @@ describe('TrayController', () => {
     it.each([
       ['warning', warning(10)],
       ['resting', resting(10)],
+      ['away', AWAY],
     ])('Pause during the %s runs pause', (_name, snapshot) => {
       const { tray, actions, controller } = setup();
       controller.send(snapshot);

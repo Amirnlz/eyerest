@@ -106,6 +106,16 @@ export class RestScheduler {
     this.dispatch({ type: 'postpone', now: this.clock.now() });
   }
 
+  /** The person went idle; `sinceMs` is the clock time of their last input. Work phase only. */
+  away(sinceMs: number): void {
+    this.dispatch({ type: 'away', now: this.clock.now(), since: sinceMs });
+  }
+
+  /** The person is active again. Resumes or resets the work countdown. */
+  back(): void {
+    this.dispatch({ type: 'back', now: this.clock.now() });
+  }
+
   /**
    * Replaces the config. While reminders are running the cycle restarts with a
    * fresh work interval, exactly like Pause then Resume: the in-flight

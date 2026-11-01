@@ -126,6 +126,15 @@ rejects anything outside that range. The limits live in `src/core/settings-limit
 `EYEREST_OPEN_SETTINGS=1` opens the settings window at launch (used by the Playwright settings test,
 which cannot click a native tray menu).
 
+Idle detection: after 60 s without keyboard or pointer input (`powerMonitor.getSystemIdleTime()`, polled
+once per second) the work countdown freezes and the tray says "Away: timer paused". When input returns the
+countdown resumes with the time that was left. If the absence lasted at least the long rest length (10 min),
+it counts as a rest: a fresh work interval starts and the rest counter advances, as if the rest was skipped.
+A warning or a rest in progress is never affected. `EYEREST_IDLE=0` turns it off (the e2e suite sets it);
+`EYEREST_FAST=1` shortens the threshold to 3 s. Windows, macOS and Linux X11 are expected to report idle
+time; Electron does not document native Wayland, where a reading of 0 leaves the feature inert. Not
+verified on any OS yet. There is no setting for the threshold in this step.
+
 Fast mode (`EYEREST_FAST=1`): 20 s work, 5 s warning, 5 s eye rest, 10 s long rest, 10 s postpone.
 On Windows PowerShell: `$env:EYEREST_FAST=1; npm run dev`.
 

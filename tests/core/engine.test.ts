@@ -327,10 +327,116 @@ describe('postpone', () => {
   });
 });
 
+describe('away and back', () => {
+  const working = (restAt: number, restsDone = 0): EngineState => ({ phase: 'working', restAt, restsDone });
+  const away = (since: number, remainingMs: number, restsDone = 0): EngineState => ({
+    phase: 'away',
+    since,
+    remainingMs,
+    restsDone,
+  });
+
+  it('freezes the countdown at what was left when the last input happened', () => {
+    // Rest due at 20 min. Last input at 5 min, noticed at 6 min: 15 min were left.
+    const { state, events } = run(working(20 * MIN), [{ type: 'away', now: 6 * MIN, since: 5 * MIN }]);
+    expect(state).toEqual(away(5 * MIN, 15 * MIN));
+    expect(events).toEqual([{ type: 'away-started', since: 5 * MIN }]);
+  });
+
+  it('keeps the rest counter', () => {
+    const { state } = run(working(20 * MIN, 2), [{ type: 'away', now: 6 * MIN, since: 5 * MIN }]);
+    expect(state).toMatchObject({ phase: 'away', restsDone: 2 });
+  });
+
+  it('clamps the remaining time to one work interval and never below zero', () => {
+    const early = transition(working(20 * MIN), { type: 'away', now: 0, since: -10 * MIN }, config);
+    expect(early.state).toMatchObject({ remainingMs: 20 * MIN });
+    const late = transition(working(20 * MIN), { type: 'away', now: 30 * MIN, since: 25 * MIN }, config);
+    expect(late.state).toMatchObject({ remainingMs: 0 });
+  });
+
+  it.each([
+    ['idle', IDLE_STATE],
+    ['warning', { phase: 'warning', restAt: 20 * MIN, restsDone: 0 } as EngineState],
+    ['resting', { phase: 'resting', kind: 'eye', endsAt: 20 * MIN, restsDone: 0 } as EngineState],
+    ['away', away(1, 1)],
+  ])('away is ignored while %s', (_name, state) => {
+    const result = transition(state, { type: 'away', now: 5 * MIN, since: 4 * MIN }, config);
+    expect(result.state).toBe(state);
+    expect(result.events).toEqual([]);
+  });
+
+  it('ticks never move an away state, however late', () => {
+    const state = away(5 * MIN, 15 * MIN);
+    const result = transition(state, { type: 'tick', now: 10 * 60 * MIN }, config);
+    expect(result.state).toBe(state);
+    expect(result.events).toEqual([]);
+  });
+
+  it('skip and postpone are ignored while away', () => {
+    const state = away(5 * MIN, 15 * MIN);
+    expect(transition(state, { type: 'skip', now: 6 * MIN }, config).state).toBe(state);
+    expect(transition(state, { type: 'postpone', now: 6 * MIN }, config).state).toBe(state);
+  });
+
+  it('start is ignored while away, stop goes idle', () => {
+    const state = away(5 * MIN, 15 * MIN);
+    expect(transition(state, { type: 'start', now: 6 * MIN }, config).state).toBe(state);
+    expect(transition(state, { type: 'stop' }, config).state).toEqual({ phase: 'idle' });
+  });
+
+  it('a short absence resumes the frozen countdown from now', () => {
+    // Away since 5 min with 15 min left. Back at 8 min: rest due at 8 + 15 = 23 min.
+    const { state, events } = run(away(5 * MIN, 15 * MIN, 1), [{ type: 'back', now: 8 * MIN }]);
+    expect(state).toEqual(working(23 * MIN, 1));
+    expect(events).toEqual([{ type: 'away-ended', reset: false }]);
+  });
+
+  it('an absence just under the long rest length still resumes', () => {
+    const { state, events } = run(away(0, 15 * MIN), [{ type: 'back', now: 10 * MIN - 1 }]);
+    expect(state).toEqual(working(10 * MIN - 1 + 15 * MIN, 0));
+    expect(events).toEqual([{ type: 'away-ended', reset: false }]);
+  });
+
+  it('an absence of exactly the long rest length resets: fresh interval, slot consumed', () => {
+    const { state, events } = run(away(0, 15 * MIN, 1), [{ type: 'back', now: 10 * MIN }]);
+    expect(state).toEqual(working(10 * MIN + 20 * MIN, 2));
+    expect(events).toEqual([{ type: 'away-ended', reset: true }]);
+  });
+
+  it('a reset absence can make the next rest the long one', () => {
+    // restsDone 1 -> 2, so the next rest is the 3rd: long.
+    const { state } = run(away(0, 15 * MIN, 1), [{ type: 'back', now: 30 * MIN }]);
+    expect(state.phase === 'working' && nextRestKind(state.restsDone, config)).toBe('long');
+  });
+
+  it.each([
+    ['idle', IDLE_STATE],
+    ['working', working(20 * MIN)],
+    ['warning', { phase: 'warning', restAt: 20 * MIN, restsDone: 0 } as EngineState],
+    ['resting', { phase: 'resting', kind: 'eye', endsAt: 20 * MIN, restsDone: 0 } as EngineState],
+  ])('back is ignored while %s', (_name, state) => {
+    const result = transition(state, { type: 'back', now: 5 * MIN }, config);
+    expect(result.state).toBe(state);
+    expect(result.events).toEqual([]);
+  });
+
+  it('after resuming, the normal warning and rest follow the new rest time', () => {
+    const { state, events } = run(away(5 * MIN, 15 * MIN), [
+      { type: 'back', now: 8 * MIN },
+      { type: 'tick', now: 23 * MIN - 15 * SEC },
+      { type: 'tick', now: 23 * MIN },
+    ]);
+    expect(state).toMatchObject({ phase: 'resting', kind: 'eye' });
+    expect(events.map((event) => event.type)).toEqual(['away-ended', 'warning-started', 'rest-started']);
+  });
+});
+
 describe('remainingMs', () => {
   it('is null when there is no countdown to show', () => {
     expect(remainingMs(IDLE_STATE, 0)).toBeNull();
     expect(remainingMs({ phase: 'working', restAt: 1_000, restsDone: 0 }, 0)).toBeNull();
+    expect(remainingMs({ phase: 'away', since: 0, remainingMs: 5_000, restsDone: 0 }, 9_000)).toBeNull();
   });
 
   it('never goes negative', () => {

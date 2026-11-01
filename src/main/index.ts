@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, powerMonitor, screen } from 'electron';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DimLayerManager } from './dim/dim-layer-manager';
@@ -11,6 +11,7 @@ import {
   createElectronWindowFactory,
   type RendererTarget,
 } from './overlay/electron-adapters';
+import { createElectronIdleSource } from './idle/electron-idle-source';
 import { createMediaController } from './media/create-media-controller';
 import { RestMediaPauser } from './media/rest-media-pauser';
 import { OverlayWindowManager } from './overlay/overlay-window-manager';
@@ -158,6 +159,10 @@ void app.whenReady().then(() => {
     env: process.env,
     settingsOverrides: settings.overrides,
     closeSettingsWindow: () => settingsWindow?.close(),
+    idle: {
+      source: createElectronIdleSource(powerMonitor),
+      log: debug ? (message) => console.info(`[idle] ${message}`) : undefined,
+    },
     settingsStorage: {
       save: (overrides) => saveSettings(settingsFs, settingsPath, overrides),
     },
