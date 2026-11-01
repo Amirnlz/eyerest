@@ -24,6 +24,8 @@ export const TRAY_COPY = {
   theme: 'Theme',
   themeNames: { system: 'System', light: 'Light', dark: 'Dark' } satisfies Record<ThemePreference, string>,
   eyeExercises: 'Eye exercises',
+  doNotDisturb: 'Do not disturb',
+  doNotDisturbStatus: 'Do not disturb: rests skipped',
   quit: 'Quit',
   nextRest: (time: string) => `Next rest at ${time}`,
 } as const;
@@ -40,6 +42,7 @@ export type TrayItemId =
   | VolumeItemId
   | ThemeItemId
   | 'exercises'
+  | 'dnd'
   | 'quit';
 
 /** The theme a tray item id stands for, or null for any other id. */
@@ -76,7 +79,11 @@ export interface TrayMenuModel {
  * Status line for the tray. The warning and the rest show no seconds on
  * purpose: a menu that rebuilds every second flickers while it is open.
  */
-export function statusText(snapshot: Snapshot, formatTime: (epochMs: number) => string): string {
+export function statusText(
+  snapshot: Snapshot,
+  formatTime: (epochMs: number) => string,
+  quiet = false,
+): string {
   const { state } = snapshot;
   switch (state.phase) {
     case 'idle':
@@ -84,6 +91,8 @@ export function statusText(snapshot: Snapshot, formatTime: (epochMs: number) => 
     case 'away':
       return TRAY_COPY.away;
     case 'working':
+      // Under do not disturb the next rest will be skipped, so a time would mislead.
+      if (quiet) return TRAY_COPY.doNotDisturbStatus;
       return TRAY_COPY.nextRest(formatTime(state.restAt));
     case 'warning':
       return TRAY_COPY.warning;
@@ -137,7 +146,7 @@ function themeMenu(theme: ThemePreference): TrayMenuItem {
 
 /**
  * Menu per scheduler state: status, Pause or Resume, Settings, Launch at login (when supported),
- * sound mute and volume, Theme and Eye exercises (when wired), Quit. The scheduler is idle exactly when reminders are
+ * sound mute and volume, Theme, Do not disturb and Eye exercises (when wired), Quit. The scheduler is idle exactly when reminders are
  * paused (it starts at launch), so idle shows Resume and every other phase
  * shows Pause.
  */
@@ -148,8 +157,9 @@ export function buildTrayMenu(
   sound: SoundPrefs | null = null,
   theme: ThemePreference | null = null,
   exercises: boolean | null = null,
+  dnd: boolean | null = null,
 ): TrayMenuModel {
-  const status = statusText(snapshot, formatTime);
+  const status = statusText(snapshot, formatTime, dnd === true);
   const paused = snapshot.state.phase === 'idle';
   return {
     tooltip: `${TRAY_COPY.appName}: ${status}`,
@@ -170,6 +180,17 @@ export function buildTrayMenu(
         : []),
       ...(sound === null ? [] : soundItems(sound)),
       ...(theme === null ? [] : [themeMenu(theme)]),
+      ...(dnd === null
+        ? []
+        : [
+            {
+              kind: 'item',
+              id: 'dnd',
+              label: TRAY_COPY.doNotDisturb,
+              enabled: true,
+              checked: dnd,
+            } as const,
+          ]),
       ...(exercises === null
         ? []
         : [

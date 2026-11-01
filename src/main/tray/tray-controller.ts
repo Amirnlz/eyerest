@@ -4,6 +4,7 @@ import type { SoundPrefs } from '../../shared/sound';
 import type { ThemePreference } from '../../shared/theme';
 import type { SnapshotSender } from '../scheduler-controller';
 import type { SoundPrefsPort } from '../sound/ports';
+import type { DndPort } from '../dnd/ports';
 import type { ExercisesPort } from '../exercises/ports';
 import type { ThemePort } from '../theme/ports';
 import { buildTrayMenu, themeOfItem, volumeOfItem, type TrayItemId, type TrayMenuModel } from './tray-menu';
@@ -31,6 +32,8 @@ export interface TrayControllerOptions {
   readonly theme?: ThemePort;
   /** Guided exercises switch. Without it the menu has no such item. */
   readonly exercises?: ExercisesPort;
+  /** Do not disturb switch. Without it the menu has no such item. */
+  readonly dnd?: DndPort;
   readonly log?: (message: string) => void;
 }
 
@@ -75,6 +78,7 @@ export class TrayController implements SnapshotSender {
       this.options.sound?.get() ?? null,
       this.options.theme?.get() ?? null,
       this.options.exercises?.get() ?? null,
+      this.options.dnd?.get() ?? null,
     );
     // Snapshots arrive every second during the warning and rest; only touch
     // the real tray when something visible changed.
@@ -144,6 +148,9 @@ export class TrayController implements SnapshotSender {
       case 'theme-dark':
         this.changeTheme(themeOfItem(id));
         return;
+      case 'dnd':
+        this.toggleDnd();
+        return;
       case 'exercises':
         this.toggleExercises();
         return;
@@ -167,6 +174,14 @@ export class TrayController implements SnapshotSender {
     if (port === undefined || next === null || this.lastSnapshot === null) return;
     port.set(next);
     this.render(this.lastSnapshot);
+  }
+
+  private toggleDnd(): void {
+    const port = this.options.dnd;
+    if (port === undefined || this.lastSnapshot === null) return;
+    port.set(!port.get());
+    // Setting it may already have produced a newer snapshot (a rest swallowed). Render what is held.
+    if (this.lastSnapshot !== null) this.render(this.lastSnapshot);
   }
 
   private toggleExercises(): void {

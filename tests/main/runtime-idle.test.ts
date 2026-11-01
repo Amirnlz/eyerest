@@ -152,3 +152,30 @@ describe('idle detection through the runtime', () => {
     expect(idleTicker.activeTickers).toBe(0);
   });
 });
+
+describe('do not disturb through the runtime', () => {
+  it('no warning, rest or overlay phase reaches any sender while on; the cycle still advances', () => {
+    const { runtime, pass, snapshots } = setup({ idle: false });
+    runtime.controller.setQuiet(true);
+    snapshots.length = 0;
+
+    pass(20); // work interval in fast mode
+    pass(20);
+
+    expect(snapshots).toEqual(expect.not.arrayContaining(['warning', 'resting']));
+    expect(runtime.controller.getSnapshot().state).toMatchObject({ phase: 'working', restsDone: 2 });
+  });
+
+  it('turning it on mid-rest hides the rest at once, turning it off brings rests back', () => {
+    const { runtime, pass, phase } = setup({ idle: false });
+    pass(20);
+    expect(phase()).toBe('resting');
+
+    runtime.controller.setQuiet(true);
+    expect(phase()).toBe('working');
+
+    runtime.controller.setQuiet(false);
+    pass(20);
+    expect(phase()).toBe('resting');
+  });
+});

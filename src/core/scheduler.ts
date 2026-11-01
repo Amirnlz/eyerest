@@ -63,6 +63,7 @@ export class RestScheduler {
   private state: EngineState = IDLE_STATE;
   private stopTicker: (() => void) | null = null;
   private lastEmittedSeconds: number | null = null;
+  private quiet = false;
 
   constructor(
     private config: RestConfig,
@@ -130,6 +131,21 @@ export class RestScheduler {
     this.start();
   }
 
+  /**
+   * Do not disturb. While on, no warning or rest starts, and one in progress ends at once; due
+   * rests are swallowed and count toward the cycle. Kept across Pause, Resume and `reconfigure`.
+   * Applied immediately, so the overlay goes away without waiting for the next tick.
+   */
+  setQuiet(quiet: boolean): void {
+    if (this.quiet === quiet) return;
+    this.quiet = quiet;
+    this.tick();
+  }
+
+  isQuiet(): boolean {
+    return this.quiet;
+  }
+
   /** Stops timers and drops listeners. The instance must not be reused. */
   dispose(): void {
     this.releaseTicker();
@@ -138,7 +154,7 @@ export class RestScheduler {
   }
 
   private tick(): void {
-    this.dispatch({ type: 'tick', now: this.clock.now() });
+    this.dispatch({ type: 'tick', now: this.clock.now(), quiet: this.quiet });
   }
 
   private dispatch(action: EngineAction): void {

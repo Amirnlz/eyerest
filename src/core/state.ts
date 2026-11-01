@@ -42,6 +42,8 @@ export type EngineEvent =
   | { readonly type: 'rest-completed'; readonly kind: RestKind }
   | { readonly type: 'rest-skipped'; readonly kind: RestKind }
   | { readonly type: 'rest-postponed'; readonly newRestAt: number }
+  /** Do not disturb swallowed a rest that was due. The slot is consumed, like a skipped rest. */
+  | { readonly type: 'rest-suppressed'; readonly kind: RestKind }
   | { readonly type: 'away-started'; readonly since: number }
   /** `reset` is true when the absence was long enough to count as a rest. */
   | { readonly type: 'away-ended'; readonly reset: boolean };
@@ -49,7 +51,8 @@ export type EngineEvent =
 export type EngineAction =
   | { readonly type: 'start'; readonly now: number }
   | { readonly type: 'stop' }
-  | { readonly type: 'tick'; readonly now: number }
+  /** `quiet`: do not disturb is on, so no warning or rest may start or go on. */
+  | { readonly type: 'tick'; readonly now: number; readonly quiet?: boolean }
   | { readonly type: 'skip'; readonly now: number }
   | { readonly type: 'postpone'; readonly now: number }
   /** `since` is when the last input happened, which is before `now`. */

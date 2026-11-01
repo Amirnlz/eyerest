@@ -1,6 +1,7 @@
 import type { AutostartPort, AutostartState } from '../../src/main/autostart/ports';
 import type { SoundPrefsPort } from '../../src/main/sound/ports';
 import type { ThemePort } from '../../src/main/theme/ports';
+import type { DndPort } from '../../src/main/dnd/ports';
 import type { ExercisesPort } from '../../src/main/exercises/ports';
 import type { SoundPrefs } from '../../src/shared/sound';
 import type { ThemePreference } from '../../src/shared/theme';
@@ -144,5 +145,17 @@ export class FakeExercisesPort implements ExercisesPort {
   set(next: boolean): void {
     this.changes.push(next);
     this.enabled = next;
+  }
+}
+
+export class FakeDndPort implements DndPort {
+  readonly changes: boolean[] = [];
+  constructor(public on = false) {}
+  get(): boolean {
+    return this.on;
+  }
+  set(next: boolean): void {
+    this.changes.push(next);
+    this.on = next;
   }
 }

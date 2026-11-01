@@ -20,6 +20,7 @@ import { createBroadcastCueOutput } from './sound/cue-output';
 import { SoundCueSender } from './sound/sound-cue-sender';
 import { PREFERENCES_FILE_NAME } from './preferences/preferences';
 import { PreferencesStore, soundPrefsView } from './preferences/preferences-store';
+import { DndService } from './dnd/dnd-service';
 import { createBroadcastExercisesOutput } from './exercises/exercises-output';
 import { ExercisesService } from './exercises/exercises-service';
 import { createBroadcastThemeOutput } from './theme/theme-output';
@@ -95,6 +96,8 @@ void app.whenReady().then(() => {
     preferences,
     createBroadcastExercisesOutput(getRendererTargets),
   );
+  // In memory only, on purpose: see DndService. The runtime exists by the time a tray click can arrive.
+  const dnd = new DndService(() => runtime?.controller);
   const soundCues = new SoundCueSender(soundPrefs, createBroadcastCueOutput(getRendererTargets));
 
   overlay = new OverlayWindowManager(
@@ -186,6 +189,7 @@ void app.whenReady().then(() => {
       sound: soundPrefs,
       theme,
       exercises,
+      dnd,
     },
   );
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TrayController } from '../../src/main/tray/tray-controller';
 import { AWAY, IDLE, WORKING, resting, warning } from '../helpers/fake-api';
-import { FakeAutostart, FakeExercisesPort, FakeSoundPrefs, FakeThemePort, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
+import { FakeAutostart, FakeDndPort, FakeExercisesPort, FakeSoundPrefs, FakeThemePort, FakeTray, FakeTrayActions } from '../helpers/fake-lifecycle';
 
 function setup() {
   const tray = new FakeTray();
@@ -448,5 +448,60 @@ describe('TrayController eye exercises', () => {
     const bare = setup();
     bare.controller.send(WORKING);
     expect(() => bare.controller.handle('exercises')).not.toThrow();
+  });
+});
+
+describe('TrayController do not disturb', () => {
+  function withDnd(dnd = new FakeDndPort()) {
+    const tray = new FakeTray();
+    const controller = new TrayController(tray, new FakeTrayActions(), (ms) => `T${ms}`, { dnd });
+    return { tray, controller, dnd };
+  }
+
+  const item = (tray: FakeTray) =>
+    tray.menu.items.find((entry) => entry.kind === 'item' && entry.id === 'dnd');
+
+  it('has no item without a port', () => {
+    const { tray, controller } = setup();
+    controller.send(WORKING);
+    expect(item(tray)).toBeUndefined();
+  });
+
+  it('starts unchecked and shows the next rest time', () => {
+    const { tray, controller } = withDnd();
+    controller.send(WORKING);
+    expect(item(tray)).toMatchObject({ checked: false });
+    expect(tray.labels[0]).toBe('Next rest at T20000');
+  });
+
+  it('a click flips the switch; the checkbox and status follow at once', () => {
+    const { tray, controller, dnd } = withDnd();
+    controller.send(WORKING);
+
+    tray.click('dnd');
+    expect(dnd.changes).toEqual([true]);
+    expect(item(tray)).toMatchObject({ checked: true });
+    expect(tray.labels[0]).toBe('Do not disturb: rests skipped');
+
+    tray.click('dnd');
+    expect(dnd.changes).toEqual([true, false]);
+    expect(item(tray)).toMatchObject({ checked: false });
+    expect(tray.labels[0]).toBe('Next rest at T20000');
+  });
+
+  it('ignores a click before the first snapshot, after dispose, and with no port', () => {
+    const early = withDnd();
+    early.controller.handle('dnd');
+    expect(early.dnd.changes).toEqual([]);
+
+    const late = withDnd();
+    late.controller.send(WORKING);
+    late.controller.dispose();
+    late.controller.handle('dnd');
+    expect(late.dnd.changes).toEqual([]);
+
+    const bare = setup();
+    bare.controller.send(WORKING);
+    expect(() => bare.controller.handle('dnd')).not.toThrow();
   });
 });

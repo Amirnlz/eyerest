@@ -43,6 +43,7 @@ function working(restAt: number, restsDone: number): EngineState {
  * - back (away only): resumes the frozen countdown. If the absence lasted at
  *   least `longRestMs` it counts as a rest instead: a fresh work interval, and
  *   the rest slot is consumed (like a skipped rest).
+ * - tick with `quiet` (do not disturb): see `quietTick`. Nothing shows; due rests are swallowed.
  * - postpone (resting only): does not consume the slot; next rest in
  *   `postponeMs`. Because later rests are scheduled relative to when the
  *   previous one finished, every later rest shifts by the same amount.
@@ -67,7 +68,7 @@ export function transition(
     }
 
     case 'tick':
-      return tick(state, action.now, config);
+      return tick(state, action.now, config, action.quiet === true);
 
     case 'skip': {
       if (state.phase !== 'resting') return unchanged(state);
@@ -114,7 +115,8 @@ export function transition(
   }
 }
 
-function tick(state: EngineState, now: number, config: RestConfig): Transition {
+function tick(state: EngineState, now: number, config: RestConfig, quiet: boolean): Transition {
+  if (quiet) return quietTick(state, now, config);
   switch (state.phase) {
     case 'idle':
     case 'away':
@@ -152,4 +154,35 @@ function beginRest(restsDone: number, now: number, config: RestConfig): Transiti
     state: { phase: 'resting', kind, endsAt, restsDone },
     events: [{ type: 'rest-started', kind, endsAt }],
   };
+}
+
+/**
+ * A tick while do not disturb is on. Nothing may appear: no warning, no rest.
+ * - working: the rest is swallowed when it falls due (slot consumed, next one a full interval later).
+ * - warning: swallowed at once, so the warning goes away the moment do not disturb turns on.
+ * - resting: ends at once like a skip, so the overlay goes away.
+ * - idle and away: unchanged (away resumes later and meets this rule then).
+ * Every swallowed or ended rest counts toward the "every 3rd is long" cycle, as a skip does.
+ */
+function quietTick(state: EngineState, now: number, config: RestConfig): Transition {
+  switch (state.phase) {
+    case 'idle':
+    case 'away':
+      return unchanged(state);
+
+    case 'working':
+    case 'warning': {
+      if (state.phase === 'working' && now < state.restAt) return unchanged(state);
+      return {
+        state: working(now + config.workIntervalMs, state.restsDone + 1),
+        events: [{ type: 'rest-suppressed', kind: nextRestKind(state.restsDone, config) }],
+      };
+    }
+
+    case 'resting':
+      return {
+        state: working(now + config.workIntervalMs, state.restsDone + 1),
+        events: [{ type: 'rest-skipped', kind: state.kind }],
+      };
+  }
 }

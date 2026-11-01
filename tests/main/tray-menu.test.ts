@@ -297,3 +297,45 @@ describe('buildTrayMenu eye exercises item', () => {
     expect(ids).toEqual(['status', 'toggle', 'settings', 'Theme', 'exercises', '---', 'quit']);
   });
 });
+
+describe('buildTrayMenu do not disturb item', () => {
+  const find = (model: ReturnType<typeof buildTrayMenu>) =>
+    model.items.find((entry) => entry.kind === 'item' && entry.id === 'dnd');
+
+  it('is absent unless wired', () => {
+    expect(find(buildTrayMenu(WORKING, fmt))).toBeUndefined();
+  });
+
+  it.each([true, false])('is a checkbox that is checked=%s', (on) => {
+    const model = buildTrayMenu(WORKING, fmt, undefined, null, null, null, on);
+    expect(find(model)).toEqual({
+      kind: 'item',
+      id: 'dnd',
+      label: 'Do not disturb',
+      enabled: true,
+      checked: on,
+    });
+  });
+
+  it('replaces the next rest time while working, since that rest will be skipped', () => {
+    expect(buildTrayMenu(WORKING, fmt, undefined, null, null, null, true).items[0]).toMatchObject({
+      label: TRAY_COPY.doNotDisturbStatus,
+    });
+    expect(buildTrayMenu(WORKING, fmt, undefined, null, null, null, false).items[0]).toMatchObject({
+      label: 'Next rest at T20000',
+    });
+    expect(statusText(WORKING, fmt, true)).toBe(TRAY_COPY.doNotDisturbStatus);
+  });
+
+  it('keeps Paused when paused, whatever the switch says', () => {
+    expect(statusText(IDLE, fmt, true)).toBe(TRAY_COPY.paused);
+  });
+
+  it('sits after Theme and before Eye exercises', () => {
+    const model = buildTrayMenu(WORKING, fmt, undefined, null, 'system', true, true);
+    const ids = model.items.map((entry) =>
+      entry.kind === 'separator' ? '---' : entry.kind === 'submenu' ? entry.label : entry.id,
+    );
+    expect(ids).toEqual(['status', 'toggle', 'settings', 'Theme', 'dnd', 'exercises', '---', 'quit']);
+  });
+});
