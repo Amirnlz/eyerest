@@ -11,9 +11,10 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  # Gate for releases: static checks, tests, build and installers on every OS.
   check:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -47,6 +48,47 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v5
+        with:
+          name: installers-${{ matrix.os }}
+          path: |
+            release/*.AppImage
+            release/*.deb
+            release/*.exe
+            release/*.dmg
+          if-no-files-found: error
+
+  # Real-app UI flows. Separate from `check` so a flaky display or a stale e2e spec cannot
+  # block packaging; it still reports red on pull requests.
+  e2e:
+    name: e2e ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
       # Linux has no display on the runner: run the real app under xvfb.
       - name: E2E (Linux, xvfb)
         if: runner.os == 'Linux'
@@ -66,22 +108,6 @@ jobs:
         if: runner.os == 'Linux'
         run: npm run e2e:gallery
 
-      - name: Package
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder
-
-      - name: Upload installers
-        uses: actions/upload-artifact@v5
-        with:
-          name: installers-${{ matrix.os }}
-          path: |
-            release/*.AppImage
-            release/*.deb
-            release/*.exe
-            release/*.dmg
-          if-no-files-found: error
-
       - name: Upload e2e results
         if: failure()
         uses: actions/upload-artifact@v5
@@ -90,7 +116,7 @@ jobs:
           path: test-results/
           if-no-files-found: ignore
 
-  # Publishes a GitHub Release when a `v*` tag passes every matrix job.
+  # Publishes a GitHub Release when a `v*` tag passes every `check` job.
   # Tag format: v<package.json version>, e.g. v0.1.0.
   release:
     name: Publish release

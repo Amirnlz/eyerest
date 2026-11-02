@@ -111,18 +111,23 @@ describe('CI workflow', () => {
     expect(workflow).toContain('fail-fast: false');
   });
 
-  it('runs every stage in order: typecheck, lint, tests, build, e2e, package', () => {
+  it('packages after typecheck, lint, tests and build', () => {
     const stages = [
       'npm run typecheck',
       'npm run lint',
       'npm test',
       'npm run build',
-      'npx playwright test',
       'npx electron-builder',
     ];
     const positions = stages.map((stage) => workflow.indexOf(stage));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+  });
+
+  it('runs e2e in its own job so it cannot block packaging', () => {
+    expect(workflow).toMatch(/\n {2}e2e:\n/);
+    expect(workflow.indexOf('npx electron-builder')).toBeLessThan(workflow.indexOf('\n  e2e:\n'));
+    expect(workflow).not.toMatch(/needs:[^\n]*e2e/);
   });
 
   it('runs the Linux e2e under xvfb', () => {
