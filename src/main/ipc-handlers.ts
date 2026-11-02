@@ -1,6 +1,7 @@
 import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
 import type { WorkSchedule } from '../core/schedule';
+import type { DailyStats } from '../core/stats';
 import { IPC, type IpcMainLike, type SaveScheduleResult, type SaveSettingsResult } from '../shared/ipc';
 
 /** What the IPC layer needs from the app. */
@@ -19,6 +20,7 @@ export interface IpcSettings {
   saveSettings(payload: unknown): SaveSettingsResult;
   closeSettings(): void;
   getSchedule(): WorkSchedule;
+  getStats(): readonly DailyStats[];
   /** `unknown` for the same reason as `saveSettings`. */
   saveSchedule(payload: unknown): SaveScheduleResult;
 }
@@ -39,6 +41,7 @@ export function registerIpcHandlers(
   ipc.handle(IPC.getSnapshot.channel, () => controller.getSnapshot());
   ipc.handle(IPC.getSettings.channel, () => settings.getSettings());
   ipc.handle(IPC.saveSettings.channel, (_event, payload) => settings.saveSettings(payload));
+  ipc.handle(IPC.getStats.channel, () => settings.getStats());
   ipc.handle(IPC.getSchedule.channel, () => settings.getSchedule());
   ipc.handle(IPC.saveSchedule.channel, (_event, payload) => settings.saveSchedule(payload));
   ipc.on(IPC.skip.channel, onSkip);
@@ -49,6 +52,7 @@ export function registerIpcHandlers(
     ipc.removeHandler(IPC.getSnapshot.channel);
     ipc.removeHandler(IPC.getSettings.channel);
     ipc.removeHandler(IPC.saveSettings.channel);
+    ipc.removeHandler(IPC.getStats.channel);
     ipc.removeHandler(IPC.getSchedule.channel);
     ipc.removeHandler(IPC.saveSchedule.channel);
     ipc.removeListener(IPC.skip.channel, onSkip);

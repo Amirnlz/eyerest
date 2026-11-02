@@ -18,6 +18,10 @@ import { isNativeWayland, resolvePlacement } from './overlay/placement';
 import { resolveStartupConfig } from './platform-switches';
 import { createBroadcastCueOutput } from './sound/cue-output';
 import { SoundCueSender } from './sound/sound-cue-sender';
+import { STATS_FILE_NAME } from './stats/stats-file';
+import { StatsRecorder } from './stats/stats-recorder';
+import { StatsStore } from './stats/stats-store';
+import { systemClock } from '../core/scheduler';
 import { PREFERENCES_FILE_NAME } from './preferences/preferences';
 import { PreferencesStore, soundPrefsView } from './preferences/preferences-store';
 import { DndService } from './dnd/dnd-service';
@@ -98,6 +102,13 @@ void app.whenReady().then(() => {
   );
   // In memory only, on purpose: see DndService. The runtime exists by the time a tray click can arrive.
   const dnd = new DndService(() => runtime?.controller);
+  // Rest statistics stay on this machine, in stats.json next to settings.json.
+  const stats = new StatsStore(
+    settingsFs,
+    join(app.getPath('userData'), STATS_FILE_NAME),
+    (message) => console.warn(`[stats] ${message}`),
+  );
+  const statsRecorder = new StatsRecorder(stats, systemClock);
   const soundCues = new SoundCueSender(soundPrefs, createBroadcastCueOutput(getRendererTargets));
 
   overlay = new OverlayWindowManager(
@@ -213,7 +224,8 @@ void app.whenReady().then(() => {
     },
     ipcMain,
     getTargets: getRendererTargets,
-    extraSenders: [overlay, dim, soundCues, tray],
+    getStats: () => stats.recent(systemClock.now(), 7),
+    extraSenders: [overlay, dim, soundCues, statsRecorder, tray],
   });
 
   dim.start();

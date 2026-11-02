@@ -1,5 +1,6 @@
 import { vi, type Mock } from 'vitest';
 import { DEFAULT_CONFIG, type RestConfig } from '../../src/core/config';
+import type { DailyStats } from '../../src/core/stats';
 import { DEFAULT_SCHEDULE, type WorkSchedule } from '../../src/core/schedule';
 import type { Snapshot } from '../../src/core/scheduler';
 import type { EyerestApi, SaveScheduleResult, SaveSettingsResult } from '../../src/shared/ipc';
@@ -28,6 +29,7 @@ export interface FakeApi extends EyerestApi {
   closeSettings: Mock<() => void>;
   getSettings: Mock<() => Promise<RestConfig>>;
   saveSettings: Mock<(settings: RestConfig) => Promise<SaveSettingsResult>>;
+  getStats: Mock<() => Promise<readonly DailyStats[]>>;
   getSchedule: Mock<() => Promise<WorkSchedule>>;
   saveSchedule: Mock<(schedule: WorkSchedule) => Promise<SaveScheduleResult>>;
 }
@@ -77,6 +79,7 @@ export function createFakeApi(): FakeApi {
     saveSettings: vi.fn<(settings: RestConfig) => Promise<SaveSettingsResult>>((settings) =>
       Promise.resolve({ ok: true, settings }),
     ),
+    getStats: vi.fn<() => Promise<readonly DailyStats[]>>(() => Promise.resolve([])),
     getSchedule: vi.fn<() => Promise<WorkSchedule>>(() => Promise.resolve(DEFAULT_SCHEDULE)),
     saveSchedule: vi.fn<(schedule: WorkSchedule) => Promise<SaveScheduleResult>>((schedule) =>
       Promise.resolve({ ok: true, schedule }),

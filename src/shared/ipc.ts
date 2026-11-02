@@ -1,6 +1,7 @@
 import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
 import type { WorkSchedule } from '../core/schedule';
+import type { DailyStats } from '../core/stats';
 import type { PlayCue } from './sound';
 import type { ThemePreference } from './theme';
 
@@ -19,6 +20,7 @@ export const IPC = {
   getSnapshot: { channel: 'eyerest:get-snapshot', kind: 'invoke' },
   getSettings: { channel: 'eyerest:get-settings', kind: 'invoke' },
   saveSettings: { channel: 'eyerest:save-settings', kind: 'invoke' },
+  getStats: { channel: 'eyerest:get-stats', kind: 'invoke' },
   getSchedule: { channel: 'eyerest:get-schedule', kind: 'invoke' },
   saveSchedule: { channel: 'eyerest:save-schedule', kind: 'invoke' },
   skip: { channel: 'eyerest:skip', kind: 'send' },
@@ -66,6 +68,8 @@ export interface EyerestApi {
    * rejected save resolves with `ok: false` instead of throwing.
    */
   saveSettings(settings: RestConfig): Promise<SaveSettingsResult>;
+  /** The last seven days of rest statistics, newest first, today included. */
+  getStats(): Promise<readonly DailyStats[]>;
   /** The working hours: days and times when reminders run. */
   getSchedule(): Promise<WorkSchedule>;
   /** Validates, stores and applies working hours. Main re-validates; a rejection resolves `ok: false`. */

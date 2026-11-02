@@ -1,5 +1,6 @@
 import type { RestConfig } from '../core/config';
 import type { WorkSchedule } from '../core/schedule';
+import type { DailyStats } from '../core/stats';
 import type { Snapshot } from '../core/scheduler';
 import {
   IPC,
@@ -25,6 +26,8 @@ export function createBridge(ipc: IpcRendererLike): EyerestApi {
     getSettings: () => ipc.invoke(IPC.getSettings.channel) as Promise<RestConfig>,
     saveSettings: (settings) =>
       ipc.invoke(IPC.saveSettings.channel, settings) as Promise<SaveSettingsResult>,
+
+    getStats: () => ipc.invoke(IPC.getStats.channel) as Promise<readonly DailyStats[]>,
 
     getSchedule: () => ipc.invoke(IPC.getSchedule.channel) as Promise<WorkSchedule>,
     saveSchedule: (schedule) =>

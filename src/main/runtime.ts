@@ -1,6 +1,7 @@
 import type { RestConfig } from '../core/config';
 import { createIdleConfig, type IdleConfig } from '../core/idle';
 import { DEFAULT_SCHEDULE } from '../core/schedule';
+import type { DailyStats } from '../core/stats';
 import {
   RestScheduler,
   systemClock,
@@ -65,6 +66,8 @@ export interface MainRuntimeDeps {
     readonly ticker?: Ticker;
     readonly log?: (message: string) => void;
   };
+  /** The last seven days of statistics for the settings window. Without it the window shows none. */
+  readonly getStats?: () => readonly DailyStats[];
   /** Test seam: inject a fake clock and ticker. */
   readonly schedulerOptions?: SchedulerOptions;
 }
@@ -133,6 +136,7 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
     getSettings: () => settings.getSettings(),
     saveSettings: (payload) => settings.saveSettings(payload),
     closeSettings: () => deps.closeSettingsWindow?.(),
+    getStats: () => deps.getStats?.() ?? [],
     getSchedule: () => scheduleService?.get() ?? DEFAULT_SCHEDULE,
     saveSchedule: (payload) =>
       scheduleService?.save(payload) ?? {

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_CONFIG } from '../../src/core/config';
 import { DEFAULT_SCHEDULE } from '../../src/core/schedule';
+import type { DailyStats } from '../../src/core/stats';
 import { registerIpcHandlers } from '../../src/main/ipc-handlers';
 import { IPC, type SaveScheduleResult, type SaveSettingsResult } from '../../src/shared/ipc';
 import { createFakeIpcMain } from '../helpers/fake-ipc';
@@ -19,6 +20,7 @@ function setup() {
       error: `rejected ${JSON.stringify(payload)}`,
     })),
     closeSettings: vi.fn(),
+    getStats: vi.fn(() => [] as readonly DailyStats[]),
     getSchedule: vi.fn(() => DEFAULT_SCHEDULE),
     saveSchedule: vi.fn<(payload: unknown) => SaveScheduleResult>((payload) => ({
       ok: false,
@@ -74,6 +76,14 @@ describe('registerIpcHandlers', () => {
     expect(settings.saveSettings.mock.calls[0]).toHaveLength(1);
   });
 
+  it('answers getStats with the statistics side value', () => {
+    const { ipc, settings } = setup();
+    const days: DailyStats[] = [{ date: '2026-11-02', taken: 2, skipped: 1, postponed: 0 }];
+    settings.getStats.mockReturnValue(days);
+    expect(ipc.invoke(IPC.getStats.channel)).toBe(days);
+    expect(settings.getStats).toHaveBeenCalledTimes(1);
+  });
+
   it('answers getSchedule with the schedule side value', () => {
     const { ipc, settings } = setup();
     expect(ipc.invoke(IPC.getSchedule.channel)).toBe(DEFAULT_SCHEDULE);
@@ -101,7 +111,7 @@ describe('registerIpcHandlers', () => {
 
   it('removes every handler on dispose', () => {
     const { ipc, dispose } = setup();
-    expect(ipc.handlers.size + ipc.listeners.size).toBe(8);
+    expect(ipc.handlers.size + ipc.listeners.size).toBe(9);
 
     dispose();
 

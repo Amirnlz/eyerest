@@ -132,6 +132,14 @@ the window keeps reminders running until the window next ends. Stored in `prefer
 file, like every other key. The tray shows "Paused" outside the window (a dedicated label is a candidate).
 Not verified on real hardware: behavior across a daylight saving change and a long sleep.
 
+Statistics: every rest outcome is counted per local day in `stats.json` in the user data dir, on this machine only
+(nothing is sent anywhere). `taken` is a rest that ran out by itself; `skipped` is Skip, a rest that Do not disturb
+skipped or ended; `postponed` counts each use of Postpone. A rest cut short by Pause and an absence that resets
+the cycle are not counted. The last 90 days are kept. The settings window shows the last 7 days and a total under
+"Statistics", loaded when the window opens (it does not refresh while open). A file that cannot be read is renamed
+`stats.json.bad` and counting starts again, so a corrupt file is never overwritten. The file is
+`{"version":1,"days":{"YYYY-MM-DD":{"taken":n,"skipped":n,"postponed":n}}}`.
+
 Guided eye exercises: during the 20 s eye rest the message becomes three prompts, one third of the rest each:
 look far away, roll your eyes, blink. A small looping picture sits beside the text and stops under the OS
 "reduce motion" setting (the still picture stays). Each new prompt is read out once by a screen reader. The 10 min

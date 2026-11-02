@@ -2,6 +2,7 @@ export * from './config';
 export * from './idle';
 export * from './schedule';
 export * from './settings-limits';
+export * from './stats';
 export * from './state';
 export { nextRestKind, transition } from './engine';
 export {

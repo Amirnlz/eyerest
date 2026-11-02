@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import type { RestConfig } from '../../core/config';
 import type { WorkSchedule } from '../../core/schedule';
+import type { DailyStats } from '../../core/stats';
 import type { EyerestApi } from '../../shared/ipc';
 import { copy } from '../copy';
 import { Button, Text } from '../ui';
 import { ScheduleForm } from './ScheduleForm';
+import { StatsPanel } from './StatsPanel';
 import { SettingsForm } from './SettingsForm';
 import './SettingsPage.css';
 
 export type SettingsSource = Pick<
   EyerestApi,
-  'getSettings' | 'saveSettings' | 'getSchedule' | 'saveSchedule' | 'closeSettings'
+  'getSettings' | 'saveSettings' | 'getSchedule' | 'saveSchedule' | 'getStats' | 'closeSettings'
 >;
 
 export interface SettingsPageProps {
@@ -19,7 +21,13 @@ export interface SettingsPageProps {
 
 type Load =
   | { readonly kind: 'loading' }
-  | { readonly kind: 'ready'; readonly settings: RestConfig; readonly schedule: WorkSchedule }
+  | {
+      readonly kind: 'ready';
+      readonly settings: RestConfig;
+      readonly schedule: WorkSchedule;
+      /** Null when only the statistics failed to load: they are secondary and never block settings. */
+      readonly stats: readonly DailyStats[] | null;
+    }
   | { readonly kind: 'failed' };
 
 /** The settings screen: loads the saved values from main, then hands them to the form. */
@@ -28,9 +36,13 @@ export function SettingsPage({ api }: SettingsPageProps) {
 
   useEffect(() => {
     let active = true;
-    Promise.all([api.getSettings(), api.getSchedule()])
-      .then(([settings, schedule]) => {
-        if (active) setLoad({ kind: 'ready', settings, schedule });
+    Promise.all([
+      api.getSettings(),
+      api.getSchedule(),
+      api.getStats().catch(() => null),
+    ])
+      .then(([settings, schedule, stats]) => {
+        if (active) setLoad({ kind: 'ready', settings, schedule, stats });
       })
       .catch(() => {
         if (active) setLoad({ kind: 'failed' });
@@ -73,6 +85,7 @@ export function SettingsPage({ api }: SettingsPageProps) {
             onClose={() => api.closeSettings()}
           />
           <ScheduleForm initial={load.schedule} onSave={(schedule) => api.saveSchedule(schedule)} />
+          <StatsPanel days={load.stats} />
         </>
       ) : null}
     </main>

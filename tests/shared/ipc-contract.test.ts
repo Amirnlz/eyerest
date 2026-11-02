@@ -18,6 +18,7 @@ const settings = {
   getSettings: () => DEFAULT_CONFIG,
   saveSettings: () => ({ ok: true as const, settings: DEFAULT_CONFIG }),
   closeSettings: () => {},
+  getStats: () => [],
   getSchedule: () => DEFAULT_SCHEDULE,
   saveSchedule: () => ({ ok: true as const, schedule: DEFAULT_SCHEDULE }),
 };
@@ -51,6 +52,7 @@ describe('IPC contract', () => {
     await api.getSnapshot();
     await api.getSettings();
     await api.saveSettings(DEFAULT_CONFIG);
+    await api.getStats();
     await api.getSchedule();
     await api.saveSchedule(DEFAULT_SCHEDULE);
     api.skip();

@@ -1,0 +1,51 @@
+/* Statistics table layout. Tokens only; text styles come from the Text primitive and the body type role. */
+
+.er-stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-4);
+  max-inline-size: 28rem;
+  margin-block-start: var(--er-space-6);
+  padding-block-start: var(--er-space-6);
+  border-block-start: var(--er-stroke-hairline) solid var(--er-color-border-strong);
+  color: var(--er-color-text-primary);
+}
+
+.er-stats-panel__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-family: var(--er-font-family-sans);
+  font-size: var(--er-type-body-size);
+  font-weight: var(--er-type-body-weight);
+  line-height: var(--er-type-body-line-height);
+  font-variant-numeric: var(--er-type-body-numeric);
+}
+
+.er-stats-panel__table th,
+.er-stats-panel__table td {
+  padding-block: var(--er-space-2);
+  padding-inline: var(--er-space-2);
+  border-block-end: var(--er-stroke-hairline) solid var(--er-color-border-strong);
+  text-align: end;
+}
+
+/* The first column is the row label and reads from the start edge. */
+
+.er-stats-panel__table th:first-child {
+  text-align: start;
+}
+
+.er-stats-panel__table thead th {
+  color: var(--er-color-text-secondary);
+  font-weight: var(--er-type-label-weight);
+}
+
+.er-stats-panel__table tbody th {
+  font-weight: var(--er-type-body-weight);
+}
+
+.er-stats-panel__table tfoot th,
+.er-stats-panel__table tfoot td {
+  font-weight: var(--er-type-label-weight);
+  border-block-end: 0;
+}

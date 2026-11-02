@@ -112,6 +112,17 @@ export const copy = {
       endBeforeStart: 'The end must be later than the start.',
     },
   },
+  /** Rest statistics section of the settings window. */
+  stats: {
+    title: 'Statistics',
+    note: 'The last 7 days, kept on this computer only. Skipped includes rests that Do not disturb skipped. Postponed counts every use of Postpone.',
+    empty: 'No rests recorded yet.',
+    loadFailed: 'Could not load statistics.',
+    columns: { day: 'Day', taken: 'Taken', skipped: 'Skipped', postponed: 'Postponed' },
+    today: 'Today',
+    yesterday: 'Yesterday',
+    total: 'Total',
+  },
   /** Spoken to screen readers at milestones only, never every second. */
   announcements: {
     warning: (duration: string) => `Eye rest starts in ${duration}.`,

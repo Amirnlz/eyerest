@@ -35,6 +35,14 @@ describe('createBridge', () => {
     expect(ipc.invokedArgs).toEqual([[settings]]);
   });
 
+  it('getStats invokes its channel with no arguments and resolves with the answer', async () => {
+    const days = [{ date: '2026-11-02', taken: 1, skipped: 0, postponed: 0 }];
+    const ipc = createFakeIpcRenderer(days);
+    await expect(createBridge(ipc).getStats()).resolves.toEqual(days);
+    expect(ipc.invoked).toEqual([IPC.getStats.channel]);
+    expect(ipc.invokedArgs).toEqual([[]]);
+  });
+
   it('getSchedule invokes its channel with no arguments and resolves with the answer', async () => {
     const ipc = createFakeIpcRenderer(DEFAULT_SCHEDULE);
     await expect(createBridge(ipc).getSchedule()).resolves.toEqual(DEFAULT_SCHEDULE);

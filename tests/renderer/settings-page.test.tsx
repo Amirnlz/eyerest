@@ -157,4 +157,26 @@ describe('SettingsPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(copy.settings.status.loadFailed);
     expect(screen.queryByRole('form', { name: copy.schedule.title })).toBeNull();
   });
+
+  it('shows the statistics from main below the working hours', async () => {
+    const api = createFakeApi();
+    api.getStats.mockResolvedValue([
+      { date: '2026-11-02', taken: 4, skipped: 2, postponed: 1 },
+    ]);
+    render(<SettingsPage api={api} />);
+
+    const table = await screen.findByRole('table', { name: copy.stats.title });
+    expect(table).toHaveTextContent('4');
+    expect(api.getStats).toHaveBeenCalledTimes(1);
+  });
+
+  it('still shows the settings when only the statistics cannot be loaded', async () => {
+    const api = createFakeApi();
+    api.getStats.mockRejectedValue(new Error('ipc down'));
+    render(<SettingsPage api={api} />);
+
+    expect(await screen.findByRole('form', { name: copy.settings.title })).toBeInTheDocument();
+    expect(screen.getByText(copy.stats.loadFailed)).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
 });
