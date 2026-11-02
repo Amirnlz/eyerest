@@ -34,9 +34,9 @@ describe('DndService', () => {
 
   it('reads the target when it is used, not when it is built', () => {
     const setQuiet = vi.fn<(quiet: boolean) => void>();
-    let target: QuietTarget | undefined;
-    const service = new DndService(() => target);
-    target = { setQuiet };
+    const holder: { target: QuietTarget | undefined } = { target: undefined };
+    const service = new DndService(() => holder.target);
+    holder.target = { setQuiet };
     service.set(true);
     expect(setQuiet).toHaveBeenCalledWith(true);
   });
