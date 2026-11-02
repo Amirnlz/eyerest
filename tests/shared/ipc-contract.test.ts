@@ -74,6 +74,7 @@ describe('IPC contract', () => {
     await api.getSnapshot();
     await api.getSettings();
     await api.saveSettings(DEFAULT_CONFIG);
+    await api.getStats();
     await api.getSchedule();
     await api.saveSchedule(DEFAULT_SCHEDULE);
     api.skip();

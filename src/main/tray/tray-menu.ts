@@ -183,14 +183,14 @@ export function buildTrayMenu(
       ...(dnd === null
         ? []
         : [
-            {
-              kind: 'item',
-              id: 'dnd',
-              label: TRAY_COPY.doNotDisturb,
-              enabled: true,
-              checked: dnd,
-            } as const,
-          ]),
+          {
+            kind: 'item',
+            id: 'dnd',
+            label: TRAY_COPY.doNotDisturb,
+            enabled: true,
+            checked: dnd,
+          } as const,
+        ]),
       ...(exercises === null
         ? []
         : [

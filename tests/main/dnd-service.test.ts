@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DndService } from '../../src/main/dnd/dnd-service';
+import type { QuietTarget } from '../../src/main/dnd/ports';
 
 describe('DndService', () => {
   it('starts off, always: it is not remembered across launches', () => {
@@ -32,10 +33,11 @@ describe('DndService', () => {
   });
 
   it('reads the target when it is used, not when it is built', () => {
-    let target: { setQuiet: ReturnType<typeof vi.fn> } | undefined;
-    const service = new DndService(() => target);
-    target = { setQuiet: vi.fn() };
+    const setQuiet = vi.fn<(quiet: boolean) => void>();
+    const holder: { target: QuietTarget | undefined } = { target: undefined };
+    const service = new DndService(() => holder.target);
+    holder.target = { setQuiet };
     service.set(true);
-    expect(target.setQuiet).toHaveBeenCalledWith(true);
+    expect(setQuiet).toHaveBeenCalledWith(true);
   });
 });
