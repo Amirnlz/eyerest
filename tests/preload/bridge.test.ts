@@ -243,3 +243,30 @@ describe('createBridge exercises', () => {
     expect(ipc.listenerCount(IPC.exercises.channel)).toBe(0);
   });
 });
+
+describe('createBridge shortcuts', () => {
+  it('delivers valid hints and drops malformed payloads', () => {
+    const ipc = createFakeIpcRenderer();
+    const listener = vi.fn();
+    createBridge(ipc).onShortcuts(listener);
+
+    ipc.push(IPC.shortcuts.channel, { skip: 'Ctrl+Alt+Shift+S', postpone: null });
+    expect(listener).toHaveBeenCalledWith({ skip: 'Ctrl+Alt+Shift+S', postpone: null });
+
+    for (const payload of [undefined, null, 'x', [], { skip: 'a' }, { skip: 1, postpone: null }]) {
+      ipc.push(IPC.shortcuts.channel, payload);
+    }
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('never exposes the IPC event object, and unsubscribe removes the listener', () => {
+    const ipc = createFakeIpcRenderer();
+    const listener = vi.fn();
+    const off = createBridge(ipc).onShortcuts(listener);
+    ipc.push(IPC.shortcuts.channel, { skip: null, postpone: null });
+    expect(listener.mock.calls[0]).toHaveLength(1);
+    expect(ipc.listenerCount(IPC.shortcuts.channel)).toBe(1);
+    off();
+    expect(ipc.listenerCount(IPC.shortcuts.channel)).toBe(0);
+  });
+});

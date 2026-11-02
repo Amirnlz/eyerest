@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, powerMonitor, screen } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, powerMonitor, screen } from 'electron';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAutostart } from './autostart/create-autostart';
@@ -29,6 +29,9 @@ import { createBroadcastExercisesOutput } from './exercises/exercises-output';
 import { ExercisesService } from './exercises/exercises-service';
 import { createBroadcastThemeOutput } from './theme/theme-output';
 import { ThemeService } from './theme/theme-service';
+import { createElectronShortcutRegistrar } from './shortcuts/electron-shortcut-registrar';
+import { createBroadcastShortcutHintsOutput } from './shortcuts/shortcut-hints-output';
+import { ShortcutController } from './shortcuts/shortcut-controller';
 import { createMainRuntime, type MainRuntime } from './runtime';
 import { createElectronSettingsWindowFactory } from './settings/electron-settings-window';
 import { createNodeSettingsFs } from './settings/node-settings-fs';
@@ -52,6 +55,7 @@ let runtime: MainRuntime | null = null;
 let overlay: OverlayWindowManager | null = null;
 let dim: DimLayerManager | null = null;
 let tray: TrayController | null = null;
+let shortcuts: ShortcutController | null = null;
 let settingsWindow: SettingsWindowManager | null = null;
 
 // Single instance: a second launch quits at once and shows nothing.
@@ -109,6 +113,18 @@ void app.whenReady().then(() => {
     (message) => console.warn(`[stats] ${message}`),
   );
   const statsRecorder = new StatsRecorder(stats, systemClock);
+  // Global Skip and Postpone keys, held only while a rest shows. Off on native Wayland, which has
+  // no global key grab; the OS refusing a key is logged and leaves the buttons as the only way.
+  shortcuts = new ShortcutController(
+    createElectronShortcutRegistrar(globalShortcut),
+    () => runtime?.controller,
+    createBroadcastShortcutHintsOutput(getRendererTargets),
+    {
+      enabled: !isNativeWayland(process.platform, process.env, ozone),
+      platform: process.platform,
+      log: (message) => console.warn(`[shortcuts] ${message}`),
+    },
+  );
   const soundCues = new SoundCueSender(soundPrefs, createBroadcastCueOutput(getRendererTargets));
 
   overlay = new OverlayWindowManager(
@@ -225,7 +241,7 @@ void app.whenReady().then(() => {
     ipcMain,
     getTargets: getRendererTargets,
     getStats: () => stats.recent(systemClock.now(), 7),
-    extraSenders: [overlay, dim, soundCues, statsRecorder, tray],
+    extraSenders: [overlay, dim, soundCues, statsRecorder, shortcuts, tray],
   });
 
   dim.start();
@@ -243,6 +259,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  shortcuts?.dispose();
+  shortcuts = null;
   runtime?.dispose();
   runtime = null;
   overlay?.dispose();

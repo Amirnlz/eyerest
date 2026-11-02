@@ -9,6 +9,7 @@ import {
   type SaveScheduleResult,
   type SaveSettingsResult,
 } from '../shared/ipc';
+import { parseShortcutHints } from '../shared/shortcuts';
 import { parsePlayCue } from '../shared/sound';
 import { isThemePreference } from '../shared/theme';
 
@@ -62,6 +63,15 @@ export function createBridge(ipc: IpcRendererLike): EyerestApi {
       };
       ipc.on(IPC.exercises.channel, handler);
       return () => ipc.removeListener(IPC.exercises.channel, handler);
+    },
+
+    onShortcuts(listener) {
+      const handler = (_event: unknown, payload: unknown) => {
+        const hints = parseShortcutHints(payload);
+        if (hints !== null) listener(hints);
+      };
+      ipc.on(IPC.shortcuts.channel, handler);
+      return () => ipc.removeListener(IPC.shortcuts.channel, handler);
     },
 
     skip: () => ipc.send(IPC.skip.channel),

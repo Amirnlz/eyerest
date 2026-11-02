@@ -27,6 +27,8 @@ export const copy = {
   actions: {
     skip: 'Skip',
     postpone: 'Postpone',
+    /** Read with the button it describes, such as "Shortcut: Ctrl+Alt+Shift+S". */
+    shortcut: (keys: string) => `Shortcut: ${keys}`,
   },
   settings: {
     title: 'Settings',

@@ -132,6 +132,17 @@ the window keeps reminders running until the window next ends. Stored in `prefer
 file, like every other key. The tray shows "Paused" outside the window (a dedicated label is a candidate).
 Not verified on real hardware: behavior across a daylight saving change and a long sleep.
 
+Global shortcuts: while a rest is showing, `Ctrl+Alt+Shift+S` skips it and `Ctrl+Alt+Shift+P` postpones it
+(`⌥⇧⌘S` and `⌥⇧⌘P` on macOS), from any app and without taking focus. The keys are registered when the rest starts and
+released the moment it ends (completed, Skip, Postpone, Pause or Do not disturb), so no other app loses them for the
+rest of the day, and Skip and Postpone stay valid only during a rest, as the spec says. During the heads-up the keys
+are not held. If the OS refuses a key (another app owns it) it is logged as `[shortcuts]`, the other key still works,
+and the buttons show a shortcut only for a key that was accepted: a tooltip and a description read with the button,
+with no visible text in the panel (its size is fixed; a visible hint is a design decision). Windows, macOS and Linux
+X11 use Electron's `globalShortcut`. Native Linux Wayland has no global key grab, so the feature is off there
+(`EYEREST_OZONE=x11` forces X11). The keys are fixed for now; they cannot be changed or switched off in the UI.
+Not verified on real hardware: key delivery on any OS, and the combination against other apps' shortcuts.
+
 Statistics: every rest outcome is counted per local day in `stats.json` in the user data dir, on this machine only
 (nothing is sent anywhere). `taken` is a rest that ran out by itself; `skipped` is Skip, a rest that Do not disturb
 skipped or ended; `postponed` counts each use of Postpone. A rest cut short by Pause and an absence that resets

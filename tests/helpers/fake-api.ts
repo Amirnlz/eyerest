@@ -5,6 +5,7 @@ import { DEFAULT_SCHEDULE, type WorkSchedule } from '../../src/core/schedule';
 import type { Snapshot } from '../../src/core/scheduler';
 import type { EyerestApi, SaveScheduleResult, SaveSettingsResult } from '../../src/shared/ipc';
 import type { PlayCue } from '../../src/shared/sound';
+import type { ShortcutHints } from '../../src/shared/shortcuts';
 import type { ThemePreference } from '../../src/shared/theme';
 
 export interface FakeApi extends EyerestApi {
@@ -24,6 +25,9 @@ export interface FakeApi extends EyerestApi {
   /** Simulates main pushing the exercises switch. */
   pushExercises(enabled: boolean): void;
   exercisesListenerCount(): number;
+  /** Simulates main pushing the registered global shortcuts. */
+  pushShortcuts(hints: ShortcutHints): void;
+  shortcutsListenerCount(): number;
   skip: Mock<() => void>;
   postpone: Mock<() => void>;
   closeSettings: Mock<() => void>;
@@ -39,6 +43,7 @@ export function createFakeApi(): FakeApi {
   const cueListeners = new Set<(cue: PlayCue) => void>();
   const themeListeners = new Set<(preference: ThemePreference) => void>();
   const exercisesListeners = new Set<(enabled: boolean) => void>();
+  const shortcutListeners = new Set<(hints: ShortcutHints) => void>();
   let resolveSnapshot!: (snapshot: Snapshot) => void;
   let rejectSnapshot!: (error: unknown) => void;
   const initial = new Promise<Snapshot>((resolve, reject) => {
@@ -72,6 +77,12 @@ export function createFakeApi(): FakeApi {
         exercisesListeners.delete(listener);
       };
     },
+    onShortcuts: (listener) => {
+      shortcutListeners.add(listener);
+      return () => {
+        shortcutListeners.delete(listener);
+      };
+    },
     skip: vi.fn<() => void>(),
     postpone: vi.fn<() => void>(),
     closeSettings: vi.fn<() => void>(),
@@ -102,6 +113,10 @@ export function createFakeApi(): FakeApi {
       for (const listener of [...exercisesListeners]) listener(enabled);
     },
     exercisesListenerCount: () => exercisesListeners.size,
+    pushShortcuts: (hints) => {
+      for (const listener of [...shortcutListeners]) listener(hints);
+    },
+    shortcutsListenerCount: () => shortcutListeners.size,
   };
 }
 

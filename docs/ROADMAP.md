@@ -89,6 +89,7 @@ Known platform risks (we handle them in the step that owns them):
 | 4.7 | Do not disturb: manual tray checkbox; due rests are skipped and count toward the cycle | IN REVIEW (branch `feat/4.7-do-not-disturb`). Automatic detection of fullscreen or calls: candidate |
 | 4.8 | Working hours schedule: active days and one time window; reminders pause outside it | IN REVIEW (branch `feat/4.8-working-hours-schedule`). Overnight windows, a window per day, and a tray label for "outside working hours": candidates |
 | 4.9 | Stats: rests taken, skipped and postponed per day, local only; last 7 days in the settings window | IN REVIEW (branch `feat/4.9-stats`). Candidates: a tray line for today, a clear-stats action, a longer range, live refresh while the window is open |
+| 4.12 | Global shortcuts: Skip and Postpone from the keyboard while a rest shows; keys held only during the rest | IN REVIEW (branch `feat/4.12-global-shortcuts`). Off on native Wayland until verified. Candidates: a tray or settings switch, user-chosen keys, a visible hint in the panel (needs a design decision), Wayland through the GlobalShortcuts portal |
 | 4.x | Feature backlog (chosen together) | TODO |
 
 ---

@@ -1,3 +1,4 @@
+import type { ShortcutHints } from '../../shared/shortcuts';
 import { useAnnouncement } from '../hooks/use-announcement';
 import type { OverlayViewModel } from '../view-model';
 import { Announcer } from './Announcer';
@@ -8,6 +9,8 @@ export interface OverlayProps {
   readonly viewModel: OverlayViewModel;
   readonly onSkip: () => void;
   readonly onPostpone: () => void;
+  /** Registered global shortcuts, shown during a rest only. */
+  readonly shortcuts?: ShortcutHints;
 }
 
 /**
@@ -17,7 +20,7 @@ export interface OverlayProps {
  * Focus is never moved here. The overlay window is shown without taking focus from the user's
  * app, and a focused Skip button would turn a stray Space or Enter into a skipped rest.
  */
-export function Overlay({ viewModel, onSkip, onPostpone }: OverlayProps) {
+export function Overlay({ viewModel, onSkip, onPostpone, shortcuts }: OverlayProps) {
   const announcement = useAnnouncement(viewModel);
 
   switch (viewModel.mode) {
@@ -33,7 +36,12 @@ export function Overlay({ viewModel, onSkip, onPostpone }: OverlayProps) {
     case 'rest':
       return (
         <>
-          <RestPanel viewModel={viewModel} onSkip={onSkip} onPostpone={onPostpone} />
+          <RestPanel
+            viewModel={viewModel}
+            onSkip={onSkip}
+            onPostpone={onPostpone}
+            shortcuts={shortcuts}
+          />
           <Announcer text={announcement} />
         </>
       );

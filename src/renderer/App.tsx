@@ -4,6 +4,7 @@ import type { EyerestApi } from '../shared/ipc';
 import { Overlay } from './components/Overlay';
 import './components/IntegratedDim.css';
 import { useExercisesEnabled } from './hooks/use-exercises-enabled';
+import { useShortcutHints } from './hooks/use-shortcut-hints';
 import { useRestTotal } from './hooks/use-rest-total';
 import { useSchedulerSnapshot } from './hooks/use-scheduler-snapshot';
 import { useSoundCues } from './hooks/use-sound-cues';
@@ -58,6 +59,7 @@ export function App({
   const snapshot = useSchedulerSnapshot(api);
   useSoundCues(api, soundPlayer);
   const exercisesEnabled = useExercisesEnabled(api, initialExercises);
+  const shortcutHints = useShortcutHints(api);
 
   // Hooks above and below run on every render, before any early return.
   const base = snapshot === null ? HIDDEN_VIEW_MODEL : toOverlayViewModel(snapshot);
@@ -70,6 +72,7 @@ export function App({
       viewModel={viewModel}
       onSkip={() => api.skip()}
       onPostpone={() => api.postpone()}
+      shortcuts={shortcutHints}
     />
   );
 

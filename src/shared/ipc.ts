@@ -2,6 +2,7 @@ import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
 import type { WorkSchedule } from '../core/schedule';
 import type { DailyStats } from '../core/stats';
+import type { ShortcutHints } from './shortcuts';
 import type { PlayCue } from './sound';
 import type { ThemePreference } from './theme';
 
@@ -30,6 +31,7 @@ export const IPC = {
   playCue: { channel: 'eyerest:play-cue', kind: 'push' },
   theme: { channel: 'eyerest:theme', kind: 'push' },
   exercises: { channel: 'eyerest:exercises', kind: 'push' },
+  shortcuts: { channel: 'eyerest:shortcuts', kind: 'push' },
 } as const satisfies Record<string, { channel: string; kind: IpcKind }>;
 
 export type IpcName = keyof typeof IPC;
@@ -82,6 +84,8 @@ export interface EyerestApi {
   onTheme(listener: (preference: ThemePreference) => void): () => void;
   /** Subscribes to the tray's guided-exercises switch. Non-boolean payloads are dropped. */
   onExercises(listener: (enabled: boolean) => void): () => void;
+  /** Subscribes to the global shortcuts main has registered. Malformed payloads are dropped. */
+  onShortcuts(listener: (hints: ShortcutHints) => void): () => void;
   /** User pressed Skip. */
   skip(): void;
   /** User pressed Postpone. */
