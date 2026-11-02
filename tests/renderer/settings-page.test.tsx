@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CONFIG } from '../../src/core/config';
+import { DEFAULT_SCHEDULE } from '../../src/core/schedule';
 import { SettingsPage } from '../../src/renderer/components/SettingsPage';
 import { copy } from '../../src/renderer/copy';
 import { createFakeApi } from '../helpers/fake-api';
@@ -28,7 +29,7 @@ describe('SettingsPage', () => {
   it('asks main once for the settings', async () => {
     const api = createFakeApi();
     render(<SettingsPage api={api} />);
-    await screen.findByRole('form');
+    await screen.findByRole('form', { name: copy.settings.title });
     expect(api.getSettings).toHaveBeenCalledTimes(1);
   });
 
@@ -70,7 +71,7 @@ describe('SettingsPage', () => {
     const api = createFakeApi();
     render(<SettingsPage api={api} />);
     const user = userEvent.setup();
-    await screen.findByRole('form');
+    await screen.findByRole('form', { name: copy.settings.title });
 
     await user.keyboard('{Escape}');
 
@@ -92,7 +93,7 @@ describe('SettingsPage', () => {
     const api = createFakeApi();
     render(<SettingsPage api={api} />);
     const user = userEvent.setup();
-    await screen.findByRole('form');
+    await screen.findByRole('form', { name: copy.settings.title });
 
     await user.keyboard('{Enter}a');
 
@@ -116,11 +117,44 @@ describe('SettingsPage', () => {
     const api = createFakeApi();
     const view = render(<SettingsPage api={api} />);
     const user = userEvent.setup();
-    await screen.findByRole('form');
+    await screen.findByRole('form', { name: copy.settings.title });
 
     view.unmount();
     await user.keyboard('{Escape}');
 
     expect(api.closeSettings).not.toHaveBeenCalled();
+  });
+
+  it('shows the working hours form below the rest settings, with the stored schedule', async () => {
+    const api = createFakeApi();
+    api.getSchedule.mockResolvedValue({ ...DEFAULT_SCHEDULE, enabled: true });
+    render(<SettingsPage api={api} />);
+
+    const form = await screen.findByRole('form', { name: copy.schedule.title });
+    expect(form).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: copy.schedule.enable })).toBeChecked();
+    expect(api.getSchedule).toHaveBeenCalledTimes(1);
+  });
+
+  it('saves working hours through the api, apart from the rest settings', async () => {
+    const api = createFakeApi();
+    render(<SettingsPage api={api} />);
+    const user = userEvent.setup();
+
+    await screen.findByRole('form', { name: copy.schedule.title });
+    await user.click(screen.getByRole('checkbox', { name: copy.schedule.enable }));
+    await user.click(screen.getByRole('button', { name: copy.schedule.actions.save }));
+
+    expect(api.saveSchedule).toHaveBeenCalledWith({ ...DEFAULT_SCHEDULE, enabled: true, days: [1, 2, 3, 4, 5] });
+    expect(api.saveSettings).not.toHaveBeenCalled();
+  });
+
+  it('shows the load failure when only the schedule cannot be loaded', async () => {
+    const api = createFakeApi();
+    api.getSchedule.mockRejectedValue(new Error('ipc down'));
+    render(<SettingsPage api={api} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(copy.settings.status.loadFailed);
+    expect(screen.queryByRole('form', { name: copy.schedule.title })).toBeNull();
   });
 });

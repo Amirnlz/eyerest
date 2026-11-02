@@ -34,6 +34,9 @@ async function openSettings(app: App): Promise<Page> {
   return page;
 }
 
+/** The rest settings form. The page also holds the working hours form, with its own status area. */
+const restForm = (page: Page) => page.getByRole('form', { name: 'Settings', exact: true });
+
 const field = (page: Page, name: string) => page.getByRole('textbox', { name, exact: true });
 
 /**
@@ -95,7 +98,7 @@ test(
       await field(page, 'Postpone by').fill('3');
       await submit(page, 'Postpone by');
 
-      await expect(page.getByRole('status')).toHaveText('Settings saved.');
+      await expect(restForm(page).getByRole('status')).toHaveText('Settings saved.');
       // Only the value that differs from the defaults is stored, in milliseconds.
       expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ postponeMs: 180_000 });
     } finally {
@@ -122,7 +125,7 @@ test(
       await field(page, 'Heads-up').fill('');
       await submit(page, 'Heads-up');
 
-      await expect(page.getByRole('alert')).toHaveText('Fix the highlighted fields to save.');
+      await expect(restForm(page).getByRole('alert')).toHaveText('Fix the highlighted fields to save.');
       await expect(field(page, 'Heads-up')).toBeFocused();
       await expect(field(page, 'Heads-up')).toHaveAttribute('aria-invalid', 'true');
       expect(existsSync(join(dir, 'settings.json'))).toBe(false);
@@ -167,7 +170,7 @@ test(
       await field(page, 'Work interval').fill('41');
       await submit(page, 'Work interval');
 
-      await expect(page.getByRole('alert')).toHaveText('Fix the highlighted fields to save.');
+      await expect(restForm(page).getByRole('alert')).toHaveText('Fix the highlighted fields to save.');
       await expect(field(page, 'Work interval')).toHaveAttribute('aria-invalid', 'true');
       expect(existsSync(join(dir, 'settings.json'))).toBe(false);
     } finally {
@@ -182,7 +185,7 @@ test(
     const app = await launchApp('positioned', { env: OPEN_SETTINGS, userDataDir: dir });
     try {
       const page = await openSettings(app);
-      await expect(page.getByRole('spinbutton')).toHaveCount(0);
+      await expect(restForm(page).getByRole('spinbutton')).toHaveCount(0);
 
       const input = field(page, 'Postpone by');
       await input.fill('');

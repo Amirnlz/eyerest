@@ -1,5 +1,6 @@
 import type { RestConfig } from '../core/config';
 import { createIdleConfig, type IdleConfig } from '../core/idle';
+import { DEFAULT_SCHEDULE } from '../core/schedule';
 import {
   RestScheduler,
   systemClock,
@@ -12,6 +13,9 @@ import { IdleMonitor } from './idle/idle-monitor';
 import type { IdleSource } from './idle/ports';
 import { registerIpcHandlers } from './ipc-handlers';
 import { resolveConfig } from './runtime-config';
+import type { SchedulePrefsPort } from './schedule/ports';
+import { ScheduleGate } from './schedule/schedule-gate';
+import { ScheduleService } from './schedule/schedule-service';
 import { SettingsService, type SettingsStorage } from './settings/settings-service';
 import {
   SchedulerController,
@@ -49,6 +53,15 @@ export interface MainRuntimeDeps {
     readonly source: IdleSource;
     readonly config?: Partial<IdleConfig>;
     /** Test seam. The scheduler's ticker is not reused: a fake ticker holds one callback. */
+    readonly ticker?: Ticker;
+    readonly log?: (message: string) => void;
+  };
+  /**
+   * Working hours. Without it there is no gate and the schedule cannot be saved, so tests that do
+   * not care about it are unchanged. The gate has its own ticker seam for the same reason as idle.
+   */
+  readonly schedule?: {
+    readonly prefs: SchedulePrefsPort;
     readonly ticker?: Ticker;
     readonly log?: (message: string) => void;
   };
@@ -92,6 +105,24 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
           log: deps.idle.log,
         },
       );
+  const scheduleGate =
+    deps.schedule === undefined
+      ? null
+      : new ScheduleGate(
+        () => deps.schedule?.prefs.get() ?? DEFAULT_SCHEDULE,
+        {
+          isRunning: () => controller.getSnapshot().state.phase !== 'idle',
+          pause: () => controller.pause(),
+          resume: () => controller.resume(),
+        },
+        deps.schedulerOptions?.clock ?? systemClock,
+        deps.schedule.ticker ?? systemTicker,
+        { log: deps.schedule.log },
+      );
+  const scheduleService =
+    deps.schedule === undefined
+      ? null
+      : new ScheduleService(deps.schedule.prefs, () => scheduleGate?.evaluate());
   const settings = new SettingsService({
     env: deps.env,
     initialOverrides: deps.settingsOverrides,
@@ -102,6 +133,12 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
     getSettings: () => settings.getSettings(),
     saveSettings: (payload) => settings.saveSettings(payload),
     closeSettings: () => deps.closeSettingsWindow?.(),
+    getSchedule: () => scheduleService?.get() ?? DEFAULT_SCHEDULE,
+    saveSchedule: (payload) =>
+      scheduleService?.save(payload) ?? {
+        ok: false,
+        error: 'Working hours storage is unavailable.',
+      },
   });
 
   return {
@@ -109,9 +146,11 @@ export function createMainRuntime(deps: MainRuntimeDeps): MainRuntime {
     start: () => {
       controller.start();
       idleMonitor?.start();
+      scheduleGate?.start();
     },
     dispose: () => {
       idleMonitor?.dispose();
+      scheduleGate?.dispose();
       removeIpcHandlers();
       controller.dispose();
     },

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_CONFIG } from '../../src/core/config';
+import { DEFAULT_SCHEDULE } from '../../src/core/schedule';
 import type { Snapshot } from '../../src/core/scheduler';
 import { createBridge } from '../../src/preload/bridge';
 import { IPC } from '../../src/shared/ipc';
@@ -32,6 +33,24 @@ describe('createBridge', () => {
 
     expect(ipc.invoked).toEqual([IPC.saveSettings.channel]);
     expect(ipc.invokedArgs).toEqual([[settings]]);
+  });
+
+  it('getSchedule invokes its channel with no arguments and resolves with the answer', async () => {
+    const ipc = createFakeIpcRenderer(DEFAULT_SCHEDULE);
+    await expect(createBridge(ipc).getSchedule()).resolves.toEqual(DEFAULT_SCHEDULE);
+    expect(ipc.invoked).toEqual([IPC.getSchedule.channel]);
+    expect(ipc.invokedArgs).toEqual([[]]);
+  });
+
+  it('saveSchedule invokes its channel with the schedule as the only argument', async () => {
+    const result = { ok: true, schedule: DEFAULT_SCHEDULE };
+    const ipc = createFakeIpcRenderer(result);
+    const schedule = { ...DEFAULT_SCHEDULE, enabled: true };
+
+    await expect(createBridge(ipc).saveSchedule(schedule)).resolves.toEqual(result);
+
+    expect(ipc.invoked).toEqual([IPC.saveSchedule.channel]);
+    expect(ipc.invokedArgs).toEqual([[schedule]]);
   });
 
   it('skip sends the skip channel exactly once', () => {

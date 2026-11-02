@@ -21,6 +21,11 @@ export class FakeTime implements Clock, Ticker {
     };
   }
 
+  /** Sets the clock to an absolute time without firing the ticker, like a wake or a clock change. */
+  jump(to: number): void {
+    this.current = to;
+  }
+
   /** Advances time in ticker-sized steps, firing the callback each step. */
   advance(ms: number): void {
     const step = this.interval || ms;

@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import type { RestConfig } from '../../core/config';
+import type { WorkSchedule } from '../../core/schedule';
 import type { EyerestApi } from '../../shared/ipc';
 import { copy } from '../copy';
 import { Button, Text } from '../ui';
+import { ScheduleForm } from './ScheduleForm';
 import { SettingsForm } from './SettingsForm';
 import './SettingsPage.css';
 
-export type SettingsSource = Pick<EyerestApi, 'getSettings' | 'saveSettings' | 'closeSettings'>;
+export type SettingsSource = Pick<
+  EyerestApi,
+  'getSettings' | 'saveSettings' | 'getSchedule' | 'saveSchedule' | 'closeSettings'
+>;
 
 export interface SettingsPageProps {
   readonly api: SettingsSource;
@@ -14,7 +19,7 @@ export interface SettingsPageProps {
 
 type Load =
   | { readonly kind: 'loading' }
-  | { readonly kind: 'ready'; readonly settings: RestConfig }
+  | { readonly kind: 'ready'; readonly settings: RestConfig; readonly schedule: WorkSchedule }
   | { readonly kind: 'failed' };
 
 /** The settings screen: loads the saved values from main, then hands them to the form. */
@@ -23,10 +28,9 @@ export function SettingsPage({ api }: SettingsPageProps) {
 
   useEffect(() => {
     let active = true;
-    api
-      .getSettings()
-      .then((settings) => {
-        if (active) setLoad({ kind: 'ready', settings });
+    Promise.all([api.getSettings(), api.getSchedule()])
+      .then(([settings, schedule]) => {
+        if (active) setLoad({ kind: 'ready', settings, schedule });
       })
       .catch(() => {
         if (active) setLoad({ kind: 'failed' });
@@ -62,11 +66,14 @@ export function SettingsPage({ api }: SettingsPageProps) {
         </>
       ) : null}
       {load.kind === 'ready' ? (
-        <SettingsForm
-          initial={load.settings}
-          onSave={(settings) => api.saveSettings(settings)}
-          onClose={() => api.closeSettings()}
-        />
+        <>
+          <SettingsForm
+            initial={load.settings}
+            onSave={(settings) => api.saveSettings(settings)}
+            onClose={() => api.closeSettings()}
+          />
+          <ScheduleForm initial={load.schedule} onSave={(schedule) => api.saveSchedule(schedule)} />
+        </>
       ) : null}
     </main>
   );

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_SCHEDULE } from '../../src/core/schedule';
 import {
   DEFAULT_PREFERENCES,
   parsePreferences,
@@ -10,7 +11,7 @@ import { FakeSettingsFs } from '../helpers/fake-lifecycle';
 describe('parsePreferences', () => {
   it('reads every key', () => {
     expect(parsePreferences('{"soundMuted":true,"soundVolume":"high","theme":"dark"}')).toEqual({
-      prefs: { sound: { muted: true, volume: 'high' }, theme: 'dark', exercises: true },
+      prefs: { sound: { muted: true, volume: 'high' }, theme: 'dark', exercises: true, schedule: DEFAULT_SCHEDULE },
       status: 'loaded',
       issues: [],
     });
@@ -21,6 +22,7 @@ describe('parsePreferences', () => {
       sound: { muted: true, volume: 'medium' },
       theme: 'system',
       exercises: true,
+      schedule: DEFAULT_SCHEDULE,
     });
     expect(parsePreferences('{}').prefs).toEqual(DEFAULT_PREFERENCES);
     expect(parsePreferences('{"theme":"light"}').prefs.sound).toEqual(DEFAULT_PREFERENCES.sound);
@@ -31,6 +33,7 @@ describe('parsePreferences', () => {
       sound: { muted: false, volume: 'medium' },
       theme: 'system',
       exercises: true,
+      schedule: DEFAULT_SCHEDULE,
     });
   });
 
@@ -67,6 +70,7 @@ describe('parsePreferences', () => {
       sound: { muted: true, volume: 'low' },
       theme: 'light',
       exercises: false,
+      schedule: { enabled: true, days: [1, 3], startMinute: 480, endMinute: 1440 },
     } as const;
     expect(parsePreferences(serializePreferences(prefs)).prefs).toEqual(prefs);
   });
@@ -77,6 +81,7 @@ describe('parsePreferences', () => {
       soundVolume: 'medium',
       theme: 'system',
       exercises: true,
+      schedule: DEFAULT_SCHEDULE,
     });
   });
 });
@@ -129,6 +134,7 @@ describe('PreferencesStore', () => {
       sound: { muted: true, volume: 'low' },
       theme: 'system',
       exercises: true,
+      schedule: DEFAULT_SCHEDULE,
     });
   });
 
@@ -164,10 +170,10 @@ describe('PreferencesStore', () => {
   it('a change to one part keeps the other part', () => {
     const { store } = setup('{"soundMuted":true,"soundVolume":"high"}');
     store.update({ theme: 'light' });
-    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'light', exercises: true });
+    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'light', exercises: true, schedule: DEFAULT_SCHEDULE });
 
     store.update({ sound: { muted: false, volume: 'low' } });
-    expect(store.get()).toEqual({ sound: { muted: false, volume: 'low' }, theme: 'light', exercises: true });
+    expect(store.get()).toEqual({ sound: { muted: false, volume: 'low' }, theme: 'light', exercises: true, schedule: DEFAULT_SCHEDULE });
   });
 
   it('both parts survive a restart', () => {
@@ -178,6 +184,7 @@ describe('PreferencesStore', () => {
       sound: { muted: true, volume: 'low' },
       theme: 'dark',
       exercises: true,
+      schedule: DEFAULT_SCHEDULE,
     });
   });
 
@@ -203,7 +210,7 @@ describe('soundPrefsView', () => {
     expect(view.get()).toEqual({ muted: false, volume: 'medium' });
     view.set({ muted: true, volume: 'high' });
 
-    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'dark', exercises: true });
+    expect(store.get()).toEqual({ sound: { muted: true, volume: 'high' }, theme: 'dark', exercises: true, schedule: DEFAULT_SCHEDULE });
     expect(view.get()).toEqual({ muted: true, volume: 'high' });
   });
 
@@ -212,5 +219,47 @@ describe('soundPrefsView', () => {
     const next = { muted: false, volume: 'low' as const };
     soundPrefsView(store).set(next);
     expect(store.get().sound).not.toBe(next);
+  });
+});
+
+describe('schedule preference', () => {
+  const valid = { enabled: true, days: [3, 1], startMinute: 480, endMinute: 1440 };
+
+  it('is off by default, on weekdays from 09:00 to 17:00', () => {
+    expect(DEFAULT_PREFERENCES.schedule).toEqual({
+      enabled: false,
+      days: [1, 2, 3, 4, 5],
+      startMinute: 540,
+      endMinute: 1020,
+    });
+  });
+
+  it('reads a valid schedule and normalizes the day order', () => {
+    const load = parsePreferences(JSON.stringify({ schedule: valid }));
+    expect(load.status).toBe('loaded');
+    expect(load.prefs.schedule).toEqual({ ...valid, days: [1, 3] });
+  });
+
+  it.each([
+    ['a string', '"always"'],
+    ['null', 'null'],
+    ['an empty day list', JSON.stringify({ ...valid, days: [] })],
+    ['an end before the start', JSON.stringify({ ...valid, startMinute: 600, endMinute: 540 })],
+    ['an unknown field', JSON.stringify({ ...valid, nights: true })],
+  ])('rejects the whole file for %s', (_name, raw) => {
+    const load = parsePreferences(`{"theme":"dark","schedule":${raw}}`);
+    expect(load.status).toBe('invalid');
+    expect(load.prefs).toEqual(DEFAULT_PREFERENCES);
+    expect(load.issues[0]).toContain('schedule');
+  });
+
+  it('round-trips through serialize and survives a restart of the store', () => {
+    const fs = new FakeSettingsFs();
+    const store = new PreferencesStore(fs, '/data/preferences.json');
+    store.update({ schedule: { enabled: true, days: [1, 3], startMinute: 480, endMinute: 1440 } });
+    expect(new PreferencesStore(fs, '/data/preferences.json').get().schedule).toEqual({
+      ...valid,
+      days: [1, 3],
+    });
   });
 });

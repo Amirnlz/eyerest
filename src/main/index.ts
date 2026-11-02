@@ -197,6 +197,13 @@ void app.whenReady().then(() => {
     env: process.env,
     settingsOverrides: settings.overrides,
     closeSettingsWindow: () => settingsWindow?.close(),
+    schedule: {
+      prefs: {
+        get: () => preferences.get().schedule,
+        set: (next) => preferences.update({ schedule: next }),
+      },
+      log: debug ? (message) => console.info(`[schedule] ${message}`) : undefined,
+    },
     idle: {
       source: createElectronIdleSource(powerMonitor),
       log: debug ? (message) => console.info(`[idle] ${message}`) : undefined,

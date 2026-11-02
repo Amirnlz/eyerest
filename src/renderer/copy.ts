@@ -89,6 +89,29 @@ export const copy = {
       outOfRange: (min: number, max: number) => `Enter a number from ${min} to ${max}.`,
     },
   },
+  /** Working hours section of the settings window. */
+  schedule: {
+    title: 'Working hours',
+    note: 'Reminders run only on the chosen days and between these times. Outside them the app stays quiet.',
+    enable: 'Only remind me during working hours',
+    daysLegend: 'Active days',
+    /** Indexed by `Date.getDay()`: 0 is Sunday. */
+    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    start: 'From',
+    end: 'Until',
+    endHint: 'Choose 00:00 to run until midnight.',
+    actions: { save: 'Save working hours', saving: 'Saving' },
+    status: {
+      saved: 'Working hours saved.',
+      saveFailed: 'Could not save working hours. Try again.',
+      fixErrors: 'Fix the highlighted fields to save.',
+    },
+    errors: {
+      noDays: 'Choose at least one day.',
+      badTime: 'Enter a time such as 09:00.',
+      endBeforeStart: 'The end must be later than the start.',
+    },
+  },
   /** Spoken to screen readers at milestones only, never every second. */
   announcements: {
     warning: (duration: string) => `Eye rest starts in ${duration}.`,

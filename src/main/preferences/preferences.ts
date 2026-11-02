@@ -1,3 +1,4 @@
+import { DEFAULT_SCHEDULE, validateSchedule, type WorkSchedule } from '../../core/schedule';
 import {
   DEFAULT_SOUND_PREFS,
   isSoundVolume,
@@ -18,12 +19,15 @@ export interface Preferences {
   readonly theme: ThemePreference;
   /** Guided eye exercises during the 20 s rest. */
   readonly exercises: boolean;
+  /** Working hours. Off by default. */
+  readonly schedule: WorkSchedule;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = Object.freeze({
   sound: DEFAULT_SOUND_PREFS,
   theme: DEFAULT_THEME_PREFERENCE,
   exercises: true,
+  schedule: DEFAULT_SCHEDULE,
 });
 
 export interface PreferencesLoad {
@@ -53,6 +57,7 @@ export function parsePreferences(text: string): PreferencesLoad {
   let volume = DEFAULT_SOUND_PREFS.volume;
   let theme = DEFAULT_THEME_PREFERENCE;
   let exercises = DEFAULT_PREFERENCES.exercises;
+  let schedule = DEFAULT_SCHEDULE;
   const issues: string[] = [];
   for (const [key, value] of Object.entries(parsed)) {
     if (key === 'soundMuted') {
@@ -69,11 +74,15 @@ export function parsePreferences(text: string): PreferencesLoad {
     } else if (key === 'exercises') {
       if (typeof value !== 'boolean') return invalid('exercises must be true or false');
       exercises = value;
+    } else if (key === 'schedule') {
+      const checked = validateSchedule(value);
+      if (!checked.ok) return invalid(`schedule: ${checked.error}`);
+      schedule = checked.schedule;
     } else {
       issues.push(`ignored unknown preference "${key}"`);
     }
   }
-  return { prefs: { sound: { muted, volume }, theme, exercises }, status: 'loaded', issues };
+  return { prefs: { sound: { muted, volume }, theme, exercises, schedule }, status: 'loaded', issues };
 }
 
 export function serializePreferences(prefs: Preferences): string {
@@ -82,6 +91,7 @@ export function serializePreferences(prefs: Preferences): string {
     soundVolume: prefs.sound.volume,
     theme: prefs.theme,
     exercises: prefs.exercises,
+    schedule: prefs.schedule,
   };
   return `${JSON.stringify(file, null, 2)}\n`;
 }

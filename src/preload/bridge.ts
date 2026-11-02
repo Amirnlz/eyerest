@@ -1,9 +1,11 @@
 import type { RestConfig } from '../core/config';
+import type { WorkSchedule } from '../core/schedule';
 import type { Snapshot } from '../core/scheduler';
 import {
   IPC,
   type EyerestApi,
   type IpcRendererLike,
+  type SaveScheduleResult,
   type SaveSettingsResult,
 } from '../shared/ipc';
 import { parsePlayCue } from '../shared/sound';
@@ -23,6 +25,10 @@ export function createBridge(ipc: IpcRendererLike): EyerestApi {
     getSettings: () => ipc.invoke(IPC.getSettings.channel) as Promise<RestConfig>,
     saveSettings: (settings) =>
       ipc.invoke(IPC.saveSettings.channel, settings) as Promise<SaveSettingsResult>,
+
+    getSchedule: () => ipc.invoke(IPC.getSchedule.channel) as Promise<WorkSchedule>,
+    saveSchedule: (schedule) =>
+      ipc.invoke(IPC.saveSchedule.channel, schedule) as Promise<SaveScheduleResult>,
 
     onSnapshot(listener) {
       const handler = (_event: unknown, snapshot: unknown) => listener(snapshot as Snapshot);

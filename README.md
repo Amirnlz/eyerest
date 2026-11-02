@@ -121,6 +121,17 @@ kept in memory only and starts off at every launch, so one forgotten click canno
 independent of Pause (which stops the cycle) and of idle detection. It is manual: Electron cannot tell a
 fullscreen presentation or a call, so nothing is detected automatically.
 
+Working hours: a "Working hours" section in the settings window (off by default). It has an on/off checkbox, the
+active days and one time window (`From` to `Until`, local time, `Until` excluded; `00:00` as the end means midnight).
+Windows never cross midnight. Outside the window the scheduler is stopped, exactly like the tray's Pause, so no
+warning, rest, sound or overlay appears; when the next window opens it starts a fresh work interval. The app checks
+the clock every 30 s, so sleep, wake and clock changes are caught within that time. Saving applies at once and
+does not restart the work timer. A Pause chosen by hand is never resumed by the schedule, and Resume pressed outside
+the window keeps reminders running until the window next ends. Stored in `preferences.json`, key `schedule`
+(`enabled`, `days` as 0 = Sunday to 6 = Saturday, `startMinute`, `endMinute`); an invalid value rejects the whole
+file, like every other key. The tray shows "Paused" outside the window (a dedicated label is a candidate).
+Not verified on real hardware: behavior across a daylight saving change and a long sleep.
+
 Guided eye exercises: during the 20 s eye rest the message becomes three prompts, one third of the rest each:
 look far away, roll your eyes, blink. A small looping picture sits beside the text and stops under the OS
 "reduce motion" setting (the still picture stays). Each new prompt is read out once by a screen reader. The 10 min

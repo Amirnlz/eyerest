@@ -1,0 +1,119 @@
+/* Working hours form layout. Tokens only; text styles come from the Text primitive. */
+
+.er-schedule-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-4);
+  max-inline-size: 28rem;
+  margin-block-start: var(--er-space-6);
+  padding-block-start: var(--er-space-6);
+  border-block-start: var(--er-stroke-hairline) solid var(--er-color-border-strong);
+  color: var(--er-color-text-primary);
+}
+
+.er-schedule-form__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-3);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.er-schedule-form__group > legend {
+  padding: 0;
+  margin-block-end: var(--er-space-3);
+}
+
+.er-schedule-form__days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-2);
+}
+
+.er-schedule-form__check {
+  display: flex;
+  align-items: center;
+  gap: var(--er-space-3);
+}
+
+.er-schedule-form__check > input {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin: 0;
+  accent-color: var(--er-color-text-primary);
+}
+
+.er-schedule-form__check > input:focus-visible,
+.er-schedule-form__input:focus-visible {
+  outline: var(--er-stroke-focus) solid var(--er-color-focus-ring);
+  outline-offset: var(--er-stroke-focus-offset);
+}
+
+.er-schedule-form__times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--er-space-5);
+}
+
+.er-schedule-form__time {
+  display: flex;
+  flex-direction: column;
+  gap: var(--er-space-1);
+}
+
+.er-schedule-form__input {
+  box-sizing: border-box;
+  inline-size: 8rem;
+  margin: 0;
+  padding-block: var(--er-space-2);
+  padding-inline: var(--er-space-3);
+  border: var(--er-stroke-hairline) solid var(--er-color-border-strong);
+  border-radius: var(--er-radius-sm);
+  color: var(--er-color-text-primary);
+  background-color: var(--er-color-surface-inset);
+  box-shadow: var(--er-elevation-inset-sm);
+  font-family: var(--er-font-family-sans);
+  font-size: var(--er-type-body-size);
+  font-weight: var(--er-type-body-weight);
+  line-height: var(--er-type-body-line-height);
+  font-variant-numeric: var(--er-type-body-numeric);
+}
+
+/* Invalid: the edge takes the primary text color. The message under the box is the real signal. */
+
+.er-schedule-form__input[aria-invalid='true'] {
+  border-color: var(--er-color-text-primary);
+}
+
+@media (hover: hover) {
+  .er-schedule-form__input:hover {
+    border-color: var(--er-color-text-secondary);
+  }
+
+  .er-schedule-form__input[aria-invalid='true']:hover {
+    border-color: var(--er-color-text-primary);
+  }
+}
+
+.er-schedule-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.er-schedule-form__status {
+  min-block-size: var(--er-type-body-line-height);
+  font-family: var(--er-font-family-sans);
+  font-size: var(--er-type-body-size);
+  font-weight: var(--er-type-body-weight);
+  line-height: var(--er-type-body-line-height);
+}
+
+/* Forced colors removes box-shadow and color tokens; system colors keep the edge visible. */
+
+@media (forced-colors: active) {
+  .er-schedule-form__input {
+    border-color: FieldText;
+  }
+}

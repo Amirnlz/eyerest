@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createBridge } from '../../src/preload/bridge';
 import { registerIpcHandlers } from '../../src/main/ipc-handlers';
 import { DEFAULT_CONFIG } from '../../src/core/config';
+import { DEFAULT_SCHEDULE } from '../../src/core/schedule';
 import { channelsOfKind, IPC } from '../../src/shared/ipc';
 import { createFakeIpcMain, createFakeIpcRenderer } from '../helpers/fake-ipc';
 
@@ -17,6 +18,8 @@ const settings = {
   getSettings: () => DEFAULT_CONFIG,
   saveSettings: () => ({ ok: true as const, settings: DEFAULT_CONFIG }),
   closeSettings: () => {},
+  getSchedule: () => DEFAULT_SCHEDULE,
+  saveSchedule: () => ({ ok: true as const, schedule: DEFAULT_SCHEDULE }),
 };
 
 describe('IPC contract', () => {
@@ -48,6 +51,8 @@ describe('IPC contract', () => {
     await api.getSnapshot();
     await api.getSettings();
     await api.saveSettings(DEFAULT_CONFIG);
+    await api.getSchedule();
+    await api.saveSchedule(DEFAULT_SCHEDULE);
     api.skip();
     api.postpone();
     api.closeSettings();
@@ -66,6 +71,8 @@ describe('IPC contract', () => {
     await api.getSnapshot();
     await api.getSettings();
     await api.saveSettings(DEFAULT_CONFIG);
+    await api.getSchedule();
+    await api.saveSchedule(DEFAULT_SCHEDULE);
     api.skip();
     api.postpone();
     api.closeSettings();

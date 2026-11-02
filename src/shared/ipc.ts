@@ -1,5 +1,6 @@
 import type { RestConfig } from '../core/config';
 import type { Snapshot } from '../core/scheduler';
+import type { WorkSchedule } from '../core/schedule';
 import type { PlayCue } from './sound';
 import type { ThemePreference } from './theme';
 
@@ -18,6 +19,8 @@ export const IPC = {
   getSnapshot: { channel: 'eyerest:get-snapshot', kind: 'invoke' },
   getSettings: { channel: 'eyerest:get-settings', kind: 'invoke' },
   saveSettings: { channel: 'eyerest:save-settings', kind: 'invoke' },
+  getSchedule: { channel: 'eyerest:get-schedule', kind: 'invoke' },
+  saveSchedule: { channel: 'eyerest:save-schedule', kind: 'invoke' },
   skip: { channel: 'eyerest:skip', kind: 'send' },
   postpone: { channel: 'eyerest:postpone', kind: 'send' },
   closeSettings: { channel: 'eyerest:close-settings', kind: 'send' },
@@ -44,6 +47,11 @@ export type SaveSettingsResult =
   | { readonly ok: true; readonly settings: RestConfig }
   | { readonly ok: false; readonly error: string };
 
+/** Answer to `saveSchedule`. Same shape and rules as `SaveSettingsResult`. */
+export type SaveScheduleResult =
+  | { readonly ok: true; readonly schedule: WorkSchedule }
+  | { readonly ok: false; readonly error: string };
+
 /**
  * The only surface the renderer gets from the main process.
  * Exposed on `window.eyerest` by the preload script.
@@ -58,6 +66,10 @@ export interface EyerestApi {
    * rejected save resolves with `ok: false` instead of throwing.
    */
   saveSettings(settings: RestConfig): Promise<SaveSettingsResult>;
+  /** The working hours: days and times when reminders run. */
+  getSchedule(): Promise<WorkSchedule>;
+  /** Validates, stores and applies working hours. Main re-validates; a rejection resolves `ok: false`. */
+  saveSchedule(schedule: WorkSchedule): Promise<SaveScheduleResult>;
   /** Subscribes to snapshot pushes. Returns an unsubscribe function. */
   onSnapshot(listener: (snapshot: Snapshot) => void): () => void;
   /** Subscribes to sound cues pushed by main. Payloads are validated; malformed ones are dropped. */
