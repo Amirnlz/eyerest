@@ -11,7 +11,7 @@ const SEC = 1_000;
 const SKIP = DEFAULT_ACCELERATORS.skip;
 const POSTPONE = DEFAULT_ACCELERATORS.postpone;
 
-/** Fast mode: warning from 5 s, rest due at 20 s and lasting 5 s, postpone 10 s. */
+/** Fast mode: warning from 15 s, rest due at 20 s and lasting 5 s, postpone 10 s. */
 function setup() {
   const time = new FakeTime();
   const registrar = new FakeShortcutRegistrar();
@@ -45,11 +45,11 @@ function setup() {
 describe('global shortcuts through the runtime', () => {
   it('holds no key during work and the heads-up, and both during the rest', () => {
     const { registrar, advance, phase } = setup();
-    advance(10);
+    advance(15);
     expect(phase()).toBe('warning');
     expect(registrar.registered).toEqual([]);
 
-    advance(10);
+    advance(5);
     expect(phase()).toBe('resting');
     expect(registrar.registered).toEqual([POSTPONE, SKIP].sort());
   });

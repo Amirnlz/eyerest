@@ -92,8 +92,18 @@ describe('package.json scripts', () => {
 describe('CI workflow', () => {
   const workflow = read('.github/workflows/ci.yml');
 
-  it('runs on push to master and on pull requests', () => {
-    expect(workflow).toMatch(/^on:\n {2}push:\n {4}branches: \[master\]\n {2}pull_request:/m);
+  it('runs on push to master, on v* tags and on pull requests', () => {
+    expect(workflow).toMatch(
+      /^on:\n {2}push:\n {4}branches: \[master\]\n {4}tags: \['v\*'\]\n {2}pull_request:/m,
+    );
+  });
+
+  it('publishes a GitHub Release from tags only, after every OS job passes', () => {
+    expect(workflow).toContain('needs: check');
+    expect(workflow).toContain("if: startsWith(github.ref, 'refs/tags/v')");
+    expect(workflow).toContain('actions/download-artifact');
+    expect(workflow).toContain('gh release create');
+    expect(workflow).toMatch(/release:[\s\S]*permissions:\n {6}contents: write/);
   });
 
   it('covers Linux, Windows and macOS without stopping the others on a failure', () => {
