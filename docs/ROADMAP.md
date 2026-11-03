@@ -90,6 +90,7 @@ Known platform risks (we handle them in the step that owns them):
 | 4.8 | Working hours schedule: active days and one time window; reminders pause outside it | IN REVIEW (branch `feat/4.8-working-hours-schedule`). Overnight windows, a window per day, and a tray label for "outside working hours": candidates |
 | 4.9 | Stats: rests taken, skipped and postponed per day, local only; last 7 days in the settings window | IN REVIEW (branch `feat/4.9-stats`). Candidates: a tray line for today, a clear-stats action, a longer range, live refresh while the window is open |
 | 4.12 | Global shortcuts: Skip and Postpone from the keyboard while a rest shows; keys held only during the rest | IN REVIEW (branch `feat/4.12-global-shortcuts`). Off on native Wayland until verified. Candidates: a tray or settings switch, user-chosen keys, a visible hint in the panel (needs a design decision), Wayland through the GlobalShortcuts portal |
+| V2 | Visual redesign: light and dark, rest card and full-screen, settings, stats, icons, forms, motion | DOCUMENTED, awaiting owner decisions. See `docs/v2/README.md`. Steps V2.1 to V2.13 in `docs/v2/10-plan.md`. No code yet (branch `v2/design-docs`) |
 | 4.x | Feature backlog (chosen together) | TODO |
 
 ---

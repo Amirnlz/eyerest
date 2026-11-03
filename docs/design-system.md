@@ -1,5 +1,7 @@
 # eyerest design system
 
+> V2 notice: the direction in section 1 (soft neumorphism, achromatic, rule F1) is being replaced by the V2 design in `docs/v2/`. Until the V2 steps land, this file describes the shipped code. Do not build new UI from sections 1 and 4.1 to 4.4 without reading `docs/v2/`.
+
 This is the guide for building every visual part of eyerest. It records what exists, the rules
 that govern it, the steps still to do, and where the code already breaks a rule.
 
