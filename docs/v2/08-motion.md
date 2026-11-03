@@ -42,7 +42,7 @@ Electron 45 ships a Chromium that supports `linear()`. Fallback for an unsupport
 | Rest card enter | opacity 0 to 1, scale 0.96 to 1, translateY -8 to 0. Origin top right | `spring-standard` | Opacity only, 150 ms |
 | Rest card exit | Reverse of enter | `spring-quick` | Opacity only, 100 ms |
 | Warning toast enter and exit | Same as card | same | same |
-| Full-screen enter | Scrim opacity, content opacity and scale 0.98 to 1 | `spring-gentle` | Opacity, 200 ms |
+| Full-screen enter | Scrim opacity; card opacity and scale 0.96 to 1 from its center | `spring-gentle` | Opacity, 200 ms |
 | Full-screen exit | Reverse | `spring-standard` | Opacity, 150 ms |
 | Warning to rest swap | Content cross-fades inside the same card, no resize | `--er-duration-fade` | Same |
 | Ring progress | stroke-dashoffset per tick | linear 1 s | Same (not decorative: it is the information) |

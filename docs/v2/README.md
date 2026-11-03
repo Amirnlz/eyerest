@@ -1,12 +1,12 @@
 # eyerest V2 design
 
-Status: DRAFT for owner decision. No V2 code exists. Nothing here changes behavior until the open
-questions in `09-decisions.md` are answered and the owner approves the plan in `10-plan.md`.
+Status: DRAFT, owner answers applied (2026-11-03). No V2 code exists. Nothing changes behavior until
+the owner approves the plan in `10-plan.md`. Open items left: the Q1 default and the Figma checks.
 
 V2 replaces the V1 visual direction (soft neumorphism, achromatic, `docs/design-system.md`) with a
-soft, flat, Apple-like system: dark and light themes, one blue accent, hairline edges instead of
-paired shadows, spring motion. Product behavior (`docs/ROADMAP.md` section 2) is unchanged except
-where `03-rest-modes.md` and `09-decisions.md` state a conflict.
+soft, flat, Apple-like system, governed by its own rules (V1 rules do not apply, see `00-principles.md`): dark and light
+themes, one blue accent, hairline edges instead of paired shadows, spring motion. Product behavior (`docs/ROADMAP.md` section 2) is unchanged except
+the full-screen rest option in `03-rest-modes.md`.
 
 ## Documents
 

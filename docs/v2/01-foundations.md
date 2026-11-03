@@ -59,7 +59,7 @@ Light `surface-base` and `surface-panel` are the same tone. Edge and depth come 
 | `focus-ring` on `surface-panel` | 7.73 | 9.31 | 3 |
 
 Known and accepted: `accent-track` on `surface-panel` is 1.56 in dark. The track is decorative;
-the number beside it carries the information (G15 does not apply to non-informational shapes).
+the number beside it carries the information (G15 covers informational shapes only).
 Rule: no information is carried by the track alone.
 
 `border-subtle` is a hairline, not a control boundary. Inputs need a 3:1 boundary
@@ -73,8 +73,8 @@ Open question Q2 decides the family. Spec below is family independent.
 
 | Role | Size | Line | Weight | Tracking | Use |
 | ---- | ---- | ---- | ------ | -------- | --- |
-| `display` | 3rem (full-screen: 5rem) | 1.05 | 600 | -0.03em | Countdown |
-| `title-lg` | 1.75rem | 1.2 | 600 | -0.02em | Full-screen prompt, settings pane title |
+| `display` | 3rem | 1.05 | 600 | -0.03em | Countdown |
+| `title-lg` | 1.75rem | 1.2 | 600 | -0.02em | Full-screen card title, settings pane title |
 | `title` | 1.25rem | 1.3 | 600 | -0.01em | Card title, group heading |
 | `body` | 0.9375rem | 1.5 | 400 | 0 | Messages, row labels |
 | `label` | 0.875rem | 1.25 | 500 | 0 | Buttons, row labels in controls |
@@ -117,7 +117,7 @@ invisible against a dark desktop and that is intended.
 | ------- | -------- |
 | Rest card, toast | Opaque `surface-panel` |
 | Dim layer | Flat `scrim-dim` |
-| Full-screen rest | Flat scrim at higher opacity (`03-rest-modes.md`) |
+| Full-screen rest | Opaque card on a flat scrim at 80% (`03-rest-modes.md`) |
 | Settings window | Opaque `surface-base` |
 
 Why no blur: `backdrop-filter` in a transparent Electron window blurs only the window's own
@@ -135,7 +135,7 @@ removed. Open check C2: if it reads as decoration on hardware, delete it; nothin
 ## Countdown ring
 
 Track `accent-track`, progress `accent-progress`, round caps. Large 88 px stroke 6 (rest card),
-small 40 px stroke 4 (toast), full-screen 200 px stroke 8. The view model has no total duration
+small 40 px stroke 4 (toast), full-screen 120 px stroke 8. The view model has no total duration
 today (`design-system.md` 2.3a), so the ring needs `totalSeconds` in the snapshot or the renderer
 learns it from the first tick, which is the weakness recorded as I33. Code step 2 in `10-plan.md`
 adds `totalSeconds` to the shared contract.

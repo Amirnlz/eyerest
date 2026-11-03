@@ -1,5 +1,8 @@
 # 09 Decisions and open questions
 
+Owner answers (2026-11-03): Q1 and Q7 answered below. All other open questions: go with the
+recommendations. They are marked ACCEPTED and become decisions unless the owner reopens them.
+
 Format per decision: recommendation, main alternative, why the alternative loses, trade-off.
 "Decided" means settled by the owner in this V2 thread. "Proposed" needs approval.
 
@@ -85,22 +88,22 @@ always-on-top window up.
 
 ## Open questions
 
-Each needs a one-line answer. Defaults apply if the owner says "go with recommendations".
+Status column folded into the question text. ACCEPTED means the recommendation applies.
 
 | ID | Question | Recommendation |
 | -- | -------- | -------------- |
-| Q1 | Full-screen rest is a spec addition (spec says top-right overlay). Approve it as an opt-in preference, default Card? One setting for both eye and long rests, or separate? | Approve opt-in, default Card, one setting |
-| Q2 | Typeface: system font (SF Pro, Segoe UI Variable, distro UI font) and delete the bundled Manrope, or keep Manrope on every platform? | System font. Closer to native, no bundled file, no `FontFace` loader. Cost: slightly different metrics per OS, so layouts get 8 percent slack for width |
-| Q3 | Exit animation needs `OverlayWindowManager` to hide 230 ms late (main change, `e2e` gate). Approve? | Approve |
-| Q4 | Settings Save: `secondary` like other buttons, or one filled accent button? | `secondary` |
-| Q5 | Settings structure: sidebar panes (D5) or keep one page? | Sidebar |
-| Q6 | Add Theme choice to the settings window (closes I30), keeping the tray entry? | Yes |
-| Q7 | Confirm supersession of rule F1 (achromatic only) by D1? | Confirm |
-| Q8 | When the OS reports no color-scheme preference, default to light (no change for current users) or dark (V2 is dark-first)? | Light |
-| Q9 | Keep the Charcoal Blue rest glow (the one gradient) or drop it now? | Keep, review on hardware (C2), delete if it reads as decoration |
-| Q10 | Show shortcut hints visibly in the rest card (today tooltip and screen reader only)? Needs card height or a smaller hint line | Not in V2; candidate |
-| Q11 | During the 10 min long rest, run exercises only in the first 20 s, then a static prompt? | Yes |
-| Q12 | Settings window: 720 by 520 resizable, min 640 by 420, instead of 480 by 760? | Yes |
+| Q1 | ANSWERED. Full-screen applies to the rest phase only, short and long. The rest card is centered, larger, and holds the user to the rest (scrim blocks input, Skip and Postpone remain per spec). One setting for both. Default is not stated by the owner: assumed Card, confirm | Done, confirm default |
+| Q2 | ACCEPTED. Typeface: system font (SF Pro, Segoe UI Variable, distro UI font) and delete the bundled Manrope, or keep Manrope on every platform? | System font. Closer to native, no bundled file, no `FontFace` loader. Cost: slightly different metrics per OS, so layouts get 8 percent slack for width |
+| Q3 | ACCEPTED. Exit animation needs `OverlayWindowManager` to hide 230 ms late (main change, `e2e` gate). Approve? | Approve |
+| Q4 | ACCEPTED. Settings Save: `secondary` like other buttons, or one filled accent button? | `secondary` |
+| Q5 | ACCEPTED. Settings structure: sidebar panes (D5) or keep one page? | Sidebar |
+| Q6 | ACCEPTED. Add Theme choice to the settings window (closes I30), keeping the tray entry? | Yes |
+| Q7 | ANSWERED. Palette expansion confirmed. V1 rules do not carry over to V2 (`00-principles.md`) | Done |
+| Q8 | ACCEPTED. When the OS reports no color-scheme preference, default to light (no change for current users) or dark (V2 is dark-first)? | Light |
+| Q9 | ACCEPTED. Keep the Charcoal Blue rest glow (the one gradient) or drop it now? | Keep, review on hardware (C2), delete if it reads as decoration |
+| Q10 | ACCEPTED. Show shortcut hints visibly in the rest card (today tooltip and screen reader only)? Needs card height or a smaller hint line | Not in V2; candidate |
+| Q11 | ACCEPTED. During the 10 min long rest, run exercises only in the first 20 s, then a static prompt? | Yes |
+| Q12 | ACCEPTED. Settings window: 720 by 520 resizable, min 640 by 420, instead of 480 by 760? | Yes |
 
 ## Open checks (verify before or during the coded step)
 
@@ -108,7 +111,7 @@ Each needs a one-line answer. Defaults apply if the owner says "go with recommen
 | -- | ----- | ---- |
 | C1 | Input fill and edge reach 3:1 against `surface-panel` in both themes; otherwise raise the edge to `text-secondary` 40% | Before the form step, computed by the contrast test |
 | C2 | Glow reads as a quiet state marker on real hardware | Phase 3.3 style hardware pass |
-| C3 | Full-screen text on scrim meets 4.5 over white and black desktops | Full-screen step, contrast test with synthetic backdrops |
+| C3 | Dropped: the full-screen card is opaque, so contrast does not depend on the desktop | n/a |
 | C4 | `leaf` icon for the Rest pane is not cliche; fallback `eye-off` | Icon step review |
 | C5 | Dim windows block clicks in the current code (`setInteractive`); confirm and keep identical for full-screen | Before the full-screen step |
 | C6 | Figma Screens page `5:25` visually verified; full-screen, settings, stats, icons, forms and light screens drawn | When the Figma MCP limit resets, before the step that uses each |

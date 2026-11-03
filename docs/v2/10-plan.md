@@ -55,7 +55,7 @@ spec change.
 | Concern | Windows | macOS | Linux X11 | Linux Wayland |
 | ------- | ------- | ----- | --------- | ------------- |
 | Overlay layout | `positioned` | `positioned` | `positioned` | `surface` |
-| Full-screen mode | Display bounds above taskbar | Above menu bar and Dock | Display bounds | Work area only, panels visible |
+| Full-screen mode | Centered card, scrim over full bounds | Centered card, scrim above menu bar and Dock | Centered card, scrim over full bounds | Centered card, work area only, panels visible |
 | Transparent window | Works | Works | Black without a compositor (V4, C7) | Works |
 | Theme source | Personalization setting | Appearance | Portal or GTK | Portal or GTK |
 | Forced colors | High contrast | Increased contrast query | Not generally available | Not generally available |
@@ -68,9 +68,9 @@ These are not V2 scope. Recorded so they are not lost.
 
 | Id | Candidate |
 | -- | --------- |
-| R1 | Separate rest display for long rests |
+| R1 | Separate rest display setting for long rests |
 | R2 | Native material (`vibrancy` on macOS, `backgroundMaterial` on Windows 11) with opaque fallback |
-| R3 | Full-screen content on the display holding the cursor |
+| R3 | Full-screen card on the display holding the cursor |
 | R4 | Visible shortcut hints on the rest card (Q10) |
 | R5 | Move sound, do not disturb, autostart, idle into settings panes |
 | R6 | Settings window position and size memory |
@@ -81,7 +81,7 @@ These are not V2 scope. Recorded so they are not lost.
 
 | Risk | Mitigation |
 | ---- | ---------- |
-| Full-screen mode covers work the user wants to keep reading | Opt-in, default Card, Skip and Postpone always available, never during the warning |
+| Full-screen mode blocks work the user wants to keep reading | Preference, Skip and Postpone always available, never during the warning |
 | A hidden always-on-top window failing to hide after the exit delay | Delay is cancelable and bounded; main hides on any new phase; test with fake clock |
 | System font metrics shift layouts per OS | 8 percent width slack, gallery overflow checks, no fixed-width text containers |
 | Contrast loss from translucent alpha tokens over unknown desktops | Overlay surfaces are opaque; alpha tokens only on opaque panels |

@@ -60,12 +60,19 @@ section 14.
 5. G1 to G15 each ticked or justified.
 6. Platform behavior stated for Windows, macOS, Linux X11, Linux Wayland.
 
-## Conflicts with existing rules
+## V1 rules do not carry over
 
-| Existing rule | V2 position |
-| ------------- | ----------- |
-| F1 achromatic only | Superseded. Mist Blue and Charcoal Blue are allowed, tested as a closed palette |
-| F3 shadows carry depth only | Kept. Hairlines and fills carry edges; shadow is never the only boundary |
-| Direction: soft neumorphism | Dropped by owner decision |
+Owner decision: V2 is a different direction, designed on its own terms. V1 rules (F1 to F6, T, C,
+S, M, A, V rule IDs in `docs/design-system.md` section 6) are not inherited. V2 is governed by this
+document, the guardrails above, and the per-item documents. A V1 rule applies only when a V2
+document restates it. Where a V2 document cites a V1 ID (S5 optical padding, A2 announcements, A6
+focus policy, M10 transition suppression, T7 themed blocks, C12 forced colors), it is shown as a
+carry-over with its reason, and it can be dropped by the owner at review.
+
+| V1 item | V2 position |
+| ------- | ----------- |
+| F1 achromatic only | Dropped. The palette expands (D1, confirmed by the owner) |
+| Soft neumorphism | Dropped |
 | Light is the default theme | Replaced by system default (`02-theming.md`) |
-| Spec: "All UI is an overlay at the top-right" | Component mode keeps it. Full-screen mode is an opt-in addition (Q1) |
+| Spec: "All UI is an overlay at the top-right" | Component mode keeps it. Full-screen mode centers the rest card (approved, `03-rest-modes.md`) |
+| Contract rules (tokens only, no raw values, AA contrast, security, CSP, no remote assets) | Kept: they are engineering invariants, restated in G14, G15 and `10-plan.md` |
